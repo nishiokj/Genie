@@ -17,13 +17,11 @@ def test_committed_corpus_record_omits_raw_candidate_output() -> None:
                 "prompt": "Normalized committed prompt.",
             },
             "environment_artifact": {
-                "kind": "virtual_workspace",
+                "kind": "executioner_workspace",
                 "payload": {
-                    "files": [
-                        {"path": "src/app.py", "content": "x = 1\n"},
-                        {"path": "tests/test_app.py", "content": "def test_app():\n    assert False\n"},
-                        {"path": "README.md", "content": "Run tests."},
-                    ],
+                    "workspace_root": "/tmp/example-workspace",
+                    "logical_root": "/workspace",
+                    "files": [{"path": "src/app.py"}, {"path": "tests/test_app.py"}, {"path": "README.md"}],
                     "commands": {"test": "python -m pytest -q"},
                 },
             },
@@ -73,6 +71,6 @@ def test_committed_corpus_record_omits_raw_candidate_output() -> None:
     assert "score_x" not in record["candidate"]
     assert "scoring_contract" not in record["candidate"]
     assert record["candidate"]["agent_artifact"]["benchmark_case"]["prompt"] == "Normalized committed prompt."
-    assert record["candidate"]["agent_artifact"]["environment_artifact"]["kind"] == "virtual_workspace"
+    assert record["candidate"]["agent_artifact"]["environment_artifact"]["kind"] == "executioner_workspace"
     assert "version" not in record["candidate"]["agent_artifact"]["environment_artifact"]
     assert record["candidate"]["judge_artifact"]["score_x"]["score_type"] == "rubric"

@@ -6,15 +6,15 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from agents import ProviderError
 from cli_graph import create_graph_callback
 from config import build_runtime_config
 from observability import set_event_callback
 from pipeline import PipelineRunner
+from provider_errors import ProviderError
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run the synthetic data pipeline POC.")
+    parser = argparse.ArgumentParser(description="Run the synthetic data pipeline.")
     parser.add_argument("--domain", required=True, help="Path to domain YAML.")
     parser.add_argument("--target-stage", default="benchmark", choices=["benchmark"])
     parser.add_argument("--target-n", type=int, default=5)
@@ -22,8 +22,6 @@ def main() -> int:
     parser.add_argument("--provider", default=None)
     parser.add_argument("--auth-file", default=None, help="Provider auth file path. Codex defaults to ~/.codex/auth.json.")
     parser.add_argument("--embedding-model", default=None)
-    parser.add_argument("--generator-system-prompt-override", default=None, help="Optional full generator system prompt override.")
-    parser.add_argument("--generator-system-prompt-append", default=None, help="Optional text appended to the generator system prompt.")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--run-id", default="auto")
     parser.add_argument("--no-progress", action="store_true", help="Disable compact stdout progress lines.")
@@ -54,8 +52,6 @@ def main() -> int:
         provider=args.provider,
         auth_file=args.auth_file,
         embedding_model=args.embedding_model,
-        generator_system_prompt_override=args.generator_system_prompt_override,
-        generator_system_prompt_append=args.generator_system_prompt_append,
         console_progress=not args.no_progress,
     )
     if config.console_progress:
@@ -73,7 +69,6 @@ def main() -> int:
     print(f"committed={summary['committed']}")
     print(f"dropped={summary['dropped']}")
     print(f"corpus=data/corpus/benchmark/{summary['run_id']}.jsonl")
-    print(f"materialized=data/materialized/benchmark/{summary['run_id']}")
     print(f"logs=logs/{summary['run_id']}/stage_records.jsonl")
     return 0 if summary["committed"] >= args.target_n else 1
 
@@ -82,7 +77,6 @@ def _existing_run_artifacts(run_id: str) -> list[Path]:
     paths = [
         Path("logs") / run_id,
         Path("data") / "corpus" / "benchmark" / f"{run_id}.jsonl",
-        Path("data") / "materialized" / "benchmark" / run_id,
     ]
     return [path for path in paths if path.exists()]
 

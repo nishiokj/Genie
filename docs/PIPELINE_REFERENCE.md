@@ -6,88 +6,39 @@ A single-page guide to runtime nodes, route codes, context policies, and retry b
 
 ## Runtime Graph
 
-```
-                         ╔══════════════════════════════════╗
-                         ║         PLANNING  BATCH          ║
-                         ║                                  ║
-              ┌──────────╢  ┌─────────────────────────────┐ ║
-              │          ║  │  design                   │ ║
-              │          ║  │  Designer · LLM           │ ║
-              │          ║  └──────────────┬──────────────┘ ║
-              │          ║                 │ design batch      ║
-              │          ║  ┌──────────────▼──────────────┐ ║
-              │          ║  │  validate_design_batch_det     │ ║
-              │          ║  │  Batch design check · Det     │ ║
-              │          ║  └──────────────┬──────────────┘ ║
-              │          ╚═════════════════╪════════════════╝
-              │                           │
-              │   ┌── reject_coverage_mismatch
-              │   │   reject_duplicate ◄──┘  (retry < max_design_retries)
-              │   │
-              └───┘   drop_retry_exhausted ──────────────────────► END
-                                │
-                                │ accept
-                                ▼
-                      ╔═════════════════════════════════════════════╗
-                      ║            PER-SEED  EXECUTION             ║
-                      ║                                            ║
-                      ║   ┌────────────────────────────────────┐   ║
-                      ║   │  select_next_design                  │   ║
-                      ║   │  Queue cursor · Det                │◄──╫──────────────────┐
-                      ║   └──────────────────┬─────────────────┘   ║                  │
-                      ║          design        │         queue        ║                  │
-                      ║       available      │         empty    ────╫──► design      │
-                      ║                      ▼                      ║                  │
-                      ║   ┌────────────────────────────────────┐   ║                  │
-                      ║   │  audit_design                   │   ║                  │
-                      ║   │  DesignAuditor · LLM                 │   ║                  │
-                      ║   └──────────────────┬─────────────────┘   ║                  │
-                      ║     reject_* ────────┼──► drop archive     ║                  │
-                      ║                      │ accept               ║                  │
-                      ║                      ▼                      ║                  │
-                      ║   ┌────────────────────────────────────┐   ║                  │
-                      ║   │  generate                          │◄──╫──┐               │
-                      ║   │  SampleGenerator · LLM             │   ║  │ retry_infra   │
-                      ║   └──────────────────┬─────────────────┘   ║  │ retry_parse   │
-                      ║                      │                      ║  └─ retry_provider_empty
-                      ║     drop_retry_exhausted ─────────────────►╫──► drop archive  │
-                      ║                      │ accept               ║                  │
-                      ║                      ▼                      ║                  │
-                      ║   ┌────────────────────────────────────┐   ║                  │
-                      ║   │  validate_det                      │   ║                  │
-                      ║   │  Schema · leakage · taxonomy · Det │   ║                  │
-                      ║   └──────────────────┬─────────────────┘   ║                  │
-                      ║    reject_schema ─────┤                     ║                  │
-                      ║    reject_leakage ────┼──► generate (FRESH) ║                  │
-                      ║    reject_coverage ───┘                     ║                  │
-                      ║     drop_retry_exhausted ─────────────────►╫──► drop archive  │
-                      ║                      │ accept               ║                  │
-                      ║                      ▼                      ║                  │
-                      ║   ┌────────────────────────────────────┐   ║                  │
-                      ║   │  validate_semantic                 │   ║                  │
-                      ║   │  SemanticValidator · LLM           │   ║                  │
-                      ║   └──────────────────┬─────────────────┘   ║                  │
-                      ║  reject_criteria ─────┤                     ║                  │
-                      ║  reject_semantic ─────┼──► generate (FRESH) ║                  │
-                      ║     drop_retry_exhausted ─────────────────►╫──► drop archive  │
-                      ║                      │ accept               ║                  │
-                      ║                      ▼                      ║                  │
-                      ║   ┌────────────────────────────────────┐   ║                  │
-                      ║   │  curate                            │   ║                  │
-                      ║   │  Novelty + commit · Det            │   ║                  │
-                      ║   └──────────────────┬─────────────────┘   ║                  │
-                      ║   reject_duplicate ───┴──► drop archive     ║                  │
-                      ╚══════════════════════╪════════════════════════                  │
-                                             │ accept                                   │
-                                             ▼                                          │
-                                   ┌──────────────────┐                                │
-                                   │  COMMITTED SAMPLE │                                │
-                                   │  data/corpus/     │                                │
-                                   └────────┬─────────┘                                │
-                            target_n        │       more designs      queue empty /       │
-                            reached         │       queued          target not met      │
-                               ▼            │           └──────────────────────────────┘
-                              END           └──────────► select_next_design
+```mermaid
+flowchart LR
+  design --> validate_design_batch_det
+  validate_design_batch_det -->|accept| select_next_design
+  validate_design_batch_det -->|reject / retry| design
+  validate_design_batch_det -->|drop_retry_exhausted| END
+  select_next_design -->|design available| audit_design
+  select_next_design -->|queue empty| design
+  audit_design -->|accept| generate
+  audit_design -->|reject| drop_archive
+  generate -->|accept| validate_det
+  generate -->|retry_infra / retry_parse / retry_provider_empty| generate
+  generate -->|drop_retry_exhausted| drop_archive
+  validate_det -->|accept, adversary pending| adversary
+  validate_det -->|accept, adversary done| quality_gate
+  validate_det -->|accept, adversary done| rubric_gate
+  validate_det -->|schema / leakage / coverage reject| generate
+  adversary -->|revision needed| revise_from_adversary
+  adversary -->|accept| quality_gate
+  adversary -->|accept| rubric_gate
+  adversary -->|reject / retry| generate
+  revise_from_adversary --> validate_det
+  quality_gate --> join_gates
+  rubric_gate --> join_gates
+  join_gates -->|accept| curate
+  join_gates -->|quality / rubric reject| generate
+  curate -->|accept| commit
+  curate -->|reject_duplicate| drop_archive
+  commit -->|target_n reached| END
+  commit -->|more designs queued| select_next_design
+  commit -->|need fresh design| design
+  drop_archive -->|continue if possible| select_next_design
+  drop_archive -->|need fresh design| design
 ```
 
 Every stage writes one `StageRecord` to `logs/<run_id>/stage_records.jsonl`.
@@ -105,7 +56,11 @@ Every stage writes one `StageRecord` to `logs/<run_id>/stage_records.jsonl`.
   Design audit             audit_design            DesignAuditor       LLM
   Generate sample             generate                   SampleGenerator   LLM
   Deterministic validation    validate_det               —                 Det
-  Semantic validation         validate_semantic          SemanticValidator LLM
+  Adversary search            adversary                  Adversary         LLM
+  Adversary revision          revise_from_adversary      Revisor           LLM
+  Quality gate                quality_gate               QualityGate       LLM
+  Rubric gate                 rubric_gate                RubricGate        LLM
+  Gate join                   join_gates                 —                 Det (router)
   Curate corpus               curate                     —                 Det
 ```
 
@@ -122,13 +77,13 @@ Every stage writes one `StageRecord` to `logs/<run_id>/stage_records.jsonl`.
 ### Content / criteria failures  ← these trigger FRESH resample
 
 ```
-  reject_criteria_mismatch    Failed a stated evaluation criterion       semantic validator
+  reject_criteria_mismatch    Failed a stated evaluation criterion       quality/rubric gate
   reject_schema               Artifact violates JSON/Pydantic schema     det validator
   reject_leakage              Label/answer appears verbatim in inputs    det validator
   reject_duplicate            Embedding distance below novelty τ         batch design check · curator
   reject_coverage_mismatch    Taxonomy cell saturated or mismatched      batch design check · det validator
-  reject_semantic_mismatch    Semantic rule violated (LLM judgment)      semantic validator
-  reject_upstream_invariant   Should have failed an earlier stage        any  (watchlist only, POC 1)
+  reject_semantic_mismatch    Semantic rule violated (LLM judgment)      adversary/quality/rubric gate
+  reject_upstream_invariant   Should have failed an earlier stage        any judge
 ```
 
 ### Infra / execution failures  ← these trigger SAME_INPUT_RETRY
@@ -157,8 +112,7 @@ Every stage writes one `StageRecord` to `logs/<run_id>/stage_records.jsonl`.
   FRESH                   Pure resample after content rejection   Criteria only — no failure context
   SAME_INPUT_RETRY        Infra / parse / provider-empty          Identical input, no failure context
   CRITERIA_ONLY           Any judge invocation                    Artifact + criteria only
-  ROUTE_CODE_ONLY         (Reserved)                              Artifact + route code
-  CRITERIA_PLUS_ROUTE_CODE Reconciliation stage (post-POC 1)     Criteria + route code + subcodes
+  CRITERIA_PLUS_ROUTE_CODE Content retry after rejection         Criteria + route code + subcodes
 ```
 
 ---
@@ -197,12 +151,26 @@ Every stage writes one `StageRecord` to `logs/<run_id>/stage_records.jsonl`.
     └─ drop_retry_exhausted ─────── archive ─────────► select_next_design
 
   validate_det
-    ├─ accept ───────────────────────────────────────► validate_semantic
+    ├─ accept + adversary pending ───────────────────► adversary
+    ├─ accept + adversary done ──────────────────────► quality_gate + rubric_gate
     ├─ reject_schema / reject_leakage / reject_coverage_mismatch
     │    retry < max_generation_retries  ────────────► generate  [FRESH]
     └─ drop_retry_exhausted ─────── archive ─────────► select_next_design
 
-  validate_semantic
+  adversary
+    ├─ accept ───────────────────────────────────────► quality_gate + rubric_gate
+    ├─ revision needed ──────────────────────────────► revise_from_adversary
+    ├─ reject_criteria_mismatch / reject_semantic_mismatch
+    │    retry < max_generation_retries  ────────────► generate  [FRESH]
+    └─ drop_retry_exhausted ─────── archive ─────────► select_next_design
+
+  revise_from_adversary
+    └─ revision emitted ─────────────────────────────► validate_det
+
+  quality_gate + rubric_gate
+    └─ verdicts recorded ────────────────────────────► join_gates
+
+  join_gates
     ├─ accept ───────────────────────────────────────► curate
     ├─ reject_criteria_mismatch / reject_semantic_mismatch
     │    retry < max_generation_retries  ────────────► generate  [FRESH]
@@ -227,7 +195,8 @@ Every stage writes one `StageRecord` to `logs/<run_id>/stage_records.jsonl`.
   ──────────────────────────────────────────────────────────────────────────────────────────────
   design → validate_design_batch_det        Content/coverage   max_design_retries   Drop batch → END
   generate  (infra/parse)                  Infra · parse      max_gen_retries    Drop design
-  generate  (content from det/sem)         Schema · semantic  max_gen_retries    Drop design
+  generate  (content from det/gates)       Schema · gate      max_gen_retries    Drop design
+  adversary → revise_from_adversary        Attack found       max_gen_retries    Return to det validation
   curate    (novelty)                       Duplicate          No retry           Log gap; discard
 ```
 

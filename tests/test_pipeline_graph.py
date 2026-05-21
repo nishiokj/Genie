@@ -4,7 +4,8 @@ import json
 
 from langgraph.graph import END
 
-from config import build_runtime_config
+from config import ModelConfig, build_runtime_config
+from provider_errors import ProviderError, ProviderStructuredOutputError
 from models import (
     AdversaryReport,
     CandidateSample,
@@ -30,9 +31,18 @@ from pipeline import (
     after_terminal_design,
     after_gate_join,
     _graph_recursion_limit,
+    _provider_error_route_code,
     route_from_decision,
 )
 from tests.test_pipeline_smoke import FakeModelClient
+
+
+def test_revision_tool_schema_errors_route_as_parse_retry() -> None:
+    route = _provider_error_route_code(
+        ProviderError("revision patch environment_ops.0.old_text did not match file")
+    )
+
+    assert route == RouteCode.RETRY_PARSE
 
 
 def _code_design(design_id: str, *, environment_premise: dict | None = None) -> DesignBrief:
@@ -131,6 +141,11 @@ def _candidate(design: DesignBrief) -> CandidateSample:
                     }
                 ],
             },
+            "private_root_cause": "The hidden causal issue is upstream normalization corrupting the period-level state before summary formatting.",
+            "expected_fix_properties": ["Repair normalization while preserving period invariants."],
+            "hidden_failure_modes": ["Formatter-only patches should fail stronger invariant checks."],
+            "shallow_solution_traps": ["Round or rewrite only the displayed summary total."],
+            "candidate_visibility_boundaries": ["Do not reveal the upstream normalization cause in candidate-facing materials."],
             "proxy_claim": "A strong score indicates debugging ability because the candidate must connect a misleading downstream symptom to upstream state normalization while preserving an invariant.",
             "diagnostic_pressure": ["misleading downstream symptom", "upstream state invariant"],
             "scoring_contract": {
@@ -213,6 +228,30 @@ def test_graph_recursion_limit_scales_with_run_policy() -> None:
     )
 
     assert _graph_recursion_limit(config) > 25
+
+
+def test_pipeline_runner_uses_role_specific_model_configs(monkeypatch) -> None:
+    monkeypatch.setattr("pipeline.ModelClient", FakeModelClient)
+    config = build_runtime_config(
+        domain_path="domains/benchmark_haiku.yaml",
+        target_stage="benchmark",
+        target_n=1,
+        seed=42,
+        run_id="role-models",
+        models=ModelConfig(provider="openai", model="default-model"),
+        generator_model=ModelConfig(provider="openai", model="generator-model"),
+        adversary_model=ModelConfig(provider="gemini", model="adversary-model"),
+        revisor_model=ModelConfig(provider="gemini", model="revisor-model"),
+        quality_gate_model=ModelConfig(provider="gemini", model="quality-model"),
+    )
+
+    runner = PipelineRunner(config)
+
+    assert runner.generator.client.config.model == "generator-model"
+    assert runner.adversary.client.config.model == "adversary-model"
+    assert runner.revisor.client.config.model == "revisor-model"
+    assert runner.quality_gate.client.config.model == "quality-model"
+    assert runner.rubric_gate.client.config.model == "default-model"
 
 
 def test_design_batch_partition_keeps_valid_designs_from_mixed_batch(tmp_path, monkeypatch) -> None:
@@ -397,8 +436,8 @@ def test_adversary_pass_skips_revision_and_routes_to_gates_as_caveats(tmp_path, 
 
     assert update["adversary_done"] is True
     assert update["last_decision"] is None
-    assert after_adversary(update) == "quality_gate"
-    assert after_validate_det({"det_accepted": True, "adversary_done": update["adversary_done"]}) == "quality_gate"
+    assert after_adversary(update) == ["quality_gate", "rubric_gate"]
+    assert after_validate_det({"det_accepted": True, "adversary_done": update["adversary_done"]}) == ["quality_gate", "rubric_gate"]
 
 
 def test_join_gates_records_rejects_as_caveats_without_rerouting(tmp_path, monkeypatch) -> None:
@@ -420,7 +459,7 @@ def test_join_gates_records_rejects_as_caveats_without_rerouting(tmp_path, monke
         check_kind="quality",
         verdict=Verdict.REJECT,
         route_code=RouteCode.REJECT_SEMANTIC_MISMATCH,
-        subcodes=["answer_leak_in_candidate_materials"],
+        subcodes=["answer_leak_fix_instruction"],
     )
     rubric = SampleVerdict(
         candidate_id=candidate.id,
@@ -441,7 +480,7 @@ def test_join_gates_records_rejects_as_caveats_without_rerouting(tmp_path, monke
     decision = update["last_decision"]
     assert decision.verdict == Verdict.ACCEPT
     assert decision.route_code == RouteCode.ACCEPT
-    assert decision.subcodes == ["quality_gate_rejected", "answer_leak_in_candidate_materials"]
+    assert decision.subcodes == ["quality_gate_rejected", "answer_leak_fix_instruction"]
     assert after_gate_join(update) == "curate"
 
 
@@ -506,3 +545,52 @@ def test_run_from_generation_uses_envelope_and_writes_single_run_result(tmp_path
         for line in (tmp_path / "logs" / "from-generation" / "candidates.jsonl").read_text(encoding="utf-8").splitlines()
     ]
     assert candidates[0]["candidate"]["provenance"]["generation_envelope_id"] == "haiku-envelope-1"
+
+
+def test_quality_gate_invalid_json_records_raw_output_and_routes_parse_retry(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("pipeline.ModelClient", FakeModelClient)
+    config = build_runtime_config(
+        domain_path="domains/benchmark_haiku.yaml",
+        target_stage="benchmark",
+        target_n=1,
+        seed=42,
+        run_id="quality-invalid-json",
+    )
+    config.data_dir = tmp_path / "data"
+    config.logs_dir = tmp_path / "logs"
+    runner = PipelineRunner(config)
+    candidate = _candidate(_haiku_design("bad-quality-json"))
+    raw_output = '{"verdict": "reject", "rationale": "bad\nnewline"}'
+
+    class BadQualityGate:
+        def validate(self, candidate):
+            try:
+                json.loads(raw_output)
+            except json.JSONDecodeError as exc:
+                raise ProviderStructuredOutputError(
+                    "provider returned invalid structured output: bad newline",
+                    raw_content=raw_output,
+                    parsing_error=exc,
+                )
+            raise AssertionError("expected invalid JSON")
+
+    runner.quality_gate = BadQualityGate()
+    update = runner.node_quality_gate(
+        {
+            "candidate": candidate,
+            "gen_attempt": 0,
+        }
+    )
+
+    verdict = update["quality_verdict"]
+    assert verdict.verdict == Verdict.REJECT
+    assert verdict.route_code == RouteCode.RETRY_PARSE
+    assert verdict.subcodes == ["provider_error"]
+
+    traces = [
+        json.loads(line)
+        for line in (tmp_path / "logs" / "quality-invalid-json" / "stage_io.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    quality_error = next(trace for trace in traces if trace["role"] == "quality_gate_candidate")
+    assert quality_error["output"]["raw_provider_output"] == raw_output
+    assert quality_error["output"]["parse_error"]["line"] == 1

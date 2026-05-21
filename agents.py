@@ -1,19 +1,20 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import time
 from copy import deepcopy
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from http.client import IncompleteRead
-from pathlib import Path
 from typing import Any
-import urllib.error
-import urllib.request
-import urllib.parse
 
-from config import DomainConfig, ModelConfig
+from agent_constants import (
+    ADVERSARY_ATTACK_TYPE_TAXONOMY,
+    DESIGN_RETRY_GUIDANCE,
+    GENERATOR_IMPLEMENTATION_CONTRACT,
+    GENERATOR_PRINCIPLES,
+    GENERATOR_RETRY_CODE_MAP,
+    GENERATOR_RETRY_GUIDANCE,
+    REJECT_SIGNAL_CODES,
+)
+from config import DomainConfig
 from models import (
     AdversaryReport,
     CandidateSample,
@@ -27,305 +28,37 @@ from models import (
     Verdict,
     stable_hash,
 )
-from services.virtual_workspace import VirtualWorkspace, VirtualWorkspaceError
-from text_hygiene import normalize_text_tree
+from services.execution_workspace import ExecutionWorkspace
+from structured_schemas import (
+    ADVERSARY_REPORT_SCHEMA as _ADVERSARY_REPORT_SCHEMA,
+    DESIGN_BATCH_SCHEMA as _DESIGN_BATCH_SCHEMA,
+    REVISION_PATCH_SCHEMA as _REVISION_PATCH_SCHEMA,
+    VERDICT_SCHEMA as _VERDICT_SCHEMA,
+    generation_output_schema as _generation_output_schema,
+)
 
 
-class ProviderError(RuntimeError):
-    pass
-
-
-class ModelClient:
-    def __init__(self, config: ModelConfig) -> None:
-        self.config = config
-        self._codex_client: CodexClient | None = None
-
-    def complete_json(self, *, system: str, user: str, temperature: float = 0.4) -> tuple[dict[str, Any], dict[str, Any]]:
-        started = time.perf_counter()
-        response = self._invoke_chat(system=system, user=user, temperature=temperature)
-        latency_ms = int((time.perf_counter() - started) * 1000)
-        content = _message_text(response)
-        if not content:
-            raise ProviderError("provider returned empty JSON content")
-        usage = _usage_metadata(response)
-        meta = {
-            "provider": self.config.provider,
-            "model": _response_model_name(response) or self.config.model,
-            "input_tokens": int(usage.get("input_tokens", 0)),
-            "output_tokens": int(usage.get("output_tokens", 0)),
-            "latency_ms": latency_ms,
-            "cost_usd": 0.0,
-            "reasoning_effort": self.config.reasoning_effort,
-        }
-        try:
-            payload = json.loads(content)
-        except json.JSONDecodeError as exc:
-            raise ProviderError(f"provider returned invalid JSON: {exc}") from exc
-        payload, replacements = normalize_text_tree(payload)
-        meta["text_normalization_replacements"] = replacements
-        return payload, meta
-
-    def complete_text(self, *, system: str, user: str, temperature: float = 0.7) -> tuple[str, dict[str, Any]]:
-        started = time.perf_counter()
-        response = self._invoke_chat(system=system, user=user, temperature=temperature)
-        latency_ms = int((time.perf_counter() - started) * 1000)
-        content = _message_text(response)
-        if not content:
-            raise ProviderError("provider returned empty text content")
-        usage = _usage_metadata(response)
-        content, replacements = normalize_text_tree(content)
-        return content, {
-            "provider": self.config.provider,
-            "model": _response_model_name(response) or self.config.model,
-            "input_tokens": int(usage.get("input_tokens", 0)),
-            "output_tokens": int(usage.get("output_tokens", 0)),
-            "latency_ms": latency_ms,
-            "cost_usd": 0.0,
-            "reasoning_effort": self.config.reasoning_effort,
-            "text_normalization_replacements": replacements,
-        }
-
-    def embed(self, text: str) -> tuple[list[float], dict[str, Any]]:
-        started = time.perf_counter()
-        if self.config.embedding_provider in {"local", "hash", "deterministic"}:
-            vector = _local_embedding(text)
-            latency_ms = int((time.perf_counter() - started) * 1000)
-            return vector, {
-                "provider": self.config.embedding_provider,
-                "model": self.config.embedding_model,
-                "input_tokens": 0,
-                "output_tokens": 0,
-                "latency_ms": latency_ms,
-                "cost_usd": 0.0,
-            }
-        model = self._init_embedding_model()
-        try:
-            embedding = model.embed_query(text)
-        except Exception as exc:
-            raise ProviderError(f"embedding invocation failed: {exc}") from exc
-        latency_ms = int((time.perf_counter() - started) * 1000)
-        return list(embedding), {
-            "provider": self.config.embedding_provider,
-            "model": self.config.embedding_model,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "latency_ms": latency_ms,
-            "cost_usd": 0.0,
-        }
-
-    def _invoke_chat(self, *, system: str, user: str, temperature: float) -> Any:
-        if _model_provider(self.config) == "codex":
-            if self._codex_client is None:
-                self._codex_client = CodexClient(self.config)
-            return self._codex_client.invoke(system=system, user=user)
-        model = self._init_chat_model(temperature=temperature)
-        try:
-            return model.invoke([("system", system), ("user", user)])
-        except Exception as exc:
-            raise ProviderError(f"model invocation failed: {exc}") from exc
-
-    def _init_chat_model(self, *, temperature: float) -> Any:
-        init_chat_model = _load_init_chat_model()
-        kwargs: dict[str, Any] = {"timeout": self.config.request_timeout_seconds}
-        if _supports_temperature(self.config):
-            kwargs["temperature"] = temperature
-        if self.config.base_url:
-            kwargs["base_url"] = self.config.base_url
-        if self.config.api_key is not None:
-            kwargs["api_key"] = self.config.api_key.get_secret_value()
-        if self.config.reasoning_effort and _supports_reasoning_effort(self.config):
-            kwargs["reasoning_effort"] = self.config.reasoning_effort
-        if _model_has_provider_prefix(self.config.model):
-            return init_chat_model(self.config.model, **kwargs)
-        return init_chat_model(self.config.model, model_provider=self.config.provider, **kwargs)
-
-    def _init_embedding_model(self) -> Any:
-        init_embeddings = _load_init_embeddings()
-        kwargs: dict[str, Any] = {}
-        if self.config.base_url and self.config.embedding_provider == self.config.provider:
-            kwargs["base_url"] = self.config.base_url
-        if _model_has_provider_prefix(self.config.embedding_model):
-            return init_embeddings(self.config.embedding_model, **kwargs)
-        return init_embeddings(self.config.embedding_model, provider=self.config.embedding_provider, **kwargs)
-
-
-@dataclass
-class CodexResponse:
-    content: str
-    usage_metadata: dict[str, int]
-    response_metadata: dict[str, Any]
-
-
-class CodexClient:
-    base_url = "https://chatgpt.com/backend-api/codex"
-    token_endpoint = "https://auth.openai.com/oauth/token"
-    client_id = "app_EMoamEEZ73f0CkXaXp7hrann"
-    refresh_buffer_seconds = 300
-
-    def __init__(self, config: ModelConfig) -> None:
-        self.config = config
-        self.auth_file = config.auth_file or Path.home() / ".codex" / "auth.json"
-        self.auth_root: dict[str, Any] = {}
-        self.auth_uses_nested_tokens = False
-        self.tokens = self._load_tokens()
-
-    def invoke(self, *, system: str, user: str) -> CodexResponse:
-        token = self._access_token()
-        body = {
-            "model": self.config.model,
-            "input": [{"type": "message", "role": "user", "content": user}],
-            "stream": True,
-            "store": False,
-            "instructions": system,
-            "reasoning": {"effort": self.config.reasoning_effort or "medium"},
-        }
-        request = urllib.request.Request(
-            f"{self.config.base_url or self.base_url}/responses",
-            data=json.dumps(body).encode("utf-8"),
-            headers=self._headers(token),
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=self.config.request_timeout_seconds) as response:
-                raw = _read_codex_sse(response, timeout_seconds=self.config.request_timeout_seconds)
-        except urllib.error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace")
-            raise ProviderError(f"Codex API error {exc.code}: {detail}") from exc
-        except urllib.error.URLError as exc:
-            raise ProviderError(f"Codex connection error: {exc}") from exc
-        return self._parse_sse(raw)
-
-    def _headers(self, token: str) -> dict[str, str]:
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {token}",
-        }
-        account_id = self.tokens.get("chatgpt_account_id") or self.tokens.get("account_id")
-        if account_id:
-            headers["Chatgpt-Account-Id"] = str(account_id)
-        return headers
-
-    def _load_tokens(self) -> dict[str, Any]:
-        if not self.auth_file.exists():
-            raise ProviderError(f"Codex auth file not found: {self.auth_file}")
-        try:
-            raw = json.loads(self.auth_file.read_text(encoding="utf-8"))
-        except Exception as exc:
-            raise ProviderError(f"Codex auth file could not be read: {self.auth_file}") from exc
-        if not isinstance(raw, dict):
-            raise ProviderError(f"Codex auth file root must be an object: {self.auth_file}")
-        self.auth_root = dict(raw)
-        self.auth_uses_nested_tokens = isinstance(raw.get("tokens"), dict)
-        tokens = raw.get("tokens") if isinstance(raw.get("tokens"), dict) else raw
-        if not isinstance(tokens, dict):
-            raise ProviderError(f"Codex auth file has no token object: {self.auth_file}")
-        access_token = _nonempty_string(tokens.get("access_token"))
-        refresh_token = _nonempty_string(tokens.get("refresh_token"))
-        if not access_token or not refresh_token:
-            raise ProviderError(f"Codex auth file must contain access_token and refresh_token: {self.auth_file}")
-        normalized = dict(tokens)
-        account_id = (
-            _nonempty_string(raw.get("chatgpt_account_id"))
-            or _nonempty_string(tokens.get("chatgpt_account_id"))
-            or _nonempty_string(tokens.get("account_id"))
-            or _extract_codex_account_id(_nonempty_string(tokens.get("id_token")) or "")
-        )
-        if account_id:
-            normalized["chatgpt_account_id"] = account_id
-        normalized["expires_at"] = _positive_number(tokens.get("expires_at")) or _jwt_expiry(access_token) or time.time() + 3600
-        return normalized
-
-    def _access_token(self) -> str:
-        expires_at = float(self.tokens.get("expires_at") or 0)
-        if time.time() < expires_at - self.refresh_buffer_seconds:
-            return str(self.tokens["access_token"])
-        return self._refresh_access_token()
-
-    def _refresh_access_token(self) -> str:
-        body = urllib.parse.urlencode(
-            {
-                "grant_type": "refresh_token",
-                "client_id": self.client_id,
-                "refresh_token": str(self.tokens["refresh_token"]),
-            }
-        ).encode("utf-8")
-        request = urllib.request.Request(
-            self.token_endpoint,
-            data=body,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=self.config.request_timeout_seconds) as response:
-                data = json.loads(response.read().decode("utf-8"))
-        except urllib.error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace")
-            raise ProviderError(f"Codex token refresh failed {exc.code}: {detail}") from exc
-        except urllib.error.URLError as exc:
-            raise ProviderError(f"Codex token refresh connection error: {exc}") from exc
-        access_token = _nonempty_string(data.get("access_token"))
-        if not access_token:
-            raise ProviderError("Codex token refresh response did not include access_token")
-        self.tokens["access_token"] = access_token
-        self.tokens["refresh_token"] = _nonempty_string(data.get("refresh_token")) or self.tokens["refresh_token"]
-        self.tokens["expires_at"] = time.time() + float(data.get("expires_in") or 3600)
-        if data.get("id_token"):
-            self.tokens["id_token"] = data["id_token"]
-            account_id = _extract_codex_account_id(str(data["id_token"]))
-            if account_id:
-                self.tokens["chatgpt_account_id"] = account_id
-        self._store_tokens()
-        return access_token
-
-    def _store_tokens(self) -> None:
-        if self.auth_uses_nested_tokens:
-            self.auth_root["tokens"] = dict(self.tokens)
-            self.auth_root["last_refresh"] = datetime.now(timezone.utc).isoformat()
-            payload = self.auth_root
-        else:
-            payload = dict(self.tokens)
-        self.auth_file.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-        try:
-            self.auth_file.chmod(0o600)
-        except OSError:
-            pass
-
-    def _parse_sse(self, raw: str) -> CodexResponse:
-        content = ""
-        usage: dict[str, int] = {"input_tokens": 0, "output_tokens": 0}
-        model = self.config.model
-        response_id = None
-        for payload in _sse_payloads(raw):
-            try:
-                event = json.loads(payload)
-            except json.JSONDecodeError:
-                continue
-            event_type = event.get("type")
-            if event_type == "response.created":
-                response = event.get("response") if isinstance(event.get("response"), dict) else {}
-                response_id = response.get("id") or event.get("id") or response_id
-            elif event_type == "response.output_text.delta":
-                content += str(event.get("delta") or "")
-            elif event_type == "response.output_text.done":
-                text = event.get("text")
-                if isinstance(text, str) and not content:
-                    content = text
-            elif event_type == "response.completed":
-                response = event.get("response") if isinstance(event.get("response"), dict) else {}
-                model = str(response.get("model") or model)
-                response_id = response.get("id") or response_id
-                if not content:
-                    content = _codex_response_text(response)
-                raw_usage = response.get("usage") if isinstance(response.get("usage"), dict) else {}
-                usage = {
-                    "input_tokens": int(raw_usage.get("input_tokens") or 0),
-                    "output_tokens": int(raw_usage.get("output_tokens") or 0),
-                }
-        return CodexResponse(
-            content=content,
-            usage_metadata=usage,
-            response_metadata={"model_name": model, "id": response_id},
-        )
+from model_client import (
+    ModelClient,
+    _tool_call_arguments,
+)
+from model_helpers import _nonempty_string
+from provider_errors import ProviderError
+from generation_artifacts import (
+    _apply_revision_patch,
+    _candidate_from_generation_payload,
+    _example_output_for_domain,
+    _execute_workspace_tool,
+    _finalize_candidate_tool_parameters,
+    _finalize_payload_from_tool_args,
+    _generation_payload_from_workspace_final,
+    _normalize_tool_call_for_input,
+    _revision_patch_shape,
+    _test_command_from_design,
+    _workspace_tool_final_shape,
+    _workspace_tool_schemas,
+    revision_patch_metrics,
+)
 
 
 class Designer:
@@ -419,8 +152,8 @@ class Designer:
                             "network": "disabled_during_eval, disabled, allowed, or not_applicable",
                         },
                         "environment_artifact_spec": {
-                            "kind": "virtual_workspace or another environment primitive, when the design needs a bounded artifact environment",
-                            "required_capabilities": ["materialized artifacts needed by the eventual evaluated entity"],
+                            "kind": "executioner_workspace when the design needs a bounded artifact environment",
+                            "required_capabilities": ["Executioner workspace files needed by the eventual evaluated entity"],
                             "execution_expectation": "how a deterministic environment check should behave, if applicable",
                             "forbidden_environment_shortcuts": ["environment shapes that would make the benchmark too easy or leaky"],
                         },
@@ -443,7 +176,7 @@ class Designer:
                 "retry_guidance": _design_retry_guidance(retry_subcodes or []),
             }
         user = json.dumps(payload, sort_keys=True)
-        payload, meta = self.client.complete_json(system=system, user=user, temperature=0.7)
+        payload, meta = self.client.complete_json(system=system, user=user, schema=_DESIGN_BATCH_SCHEMA, temperature=0.7)
         designs: list[DesignBrief] = []
         for index, raw in enumerate(payload.get("designs", [])):
             cell = TaxonomyCell(
@@ -490,7 +223,7 @@ class DesignAuditor:
         )
         user = json.dumps(
             {
-                "design": design.model_dump(mode="json"),
+                "design": design_prompt_view(design),
                 "criteria": {
                     "allowed_case_types": self.domain.case_types,
                     "allowed_scenarios": self.domain.scenarios,
@@ -535,7 +268,7 @@ class DesignAuditor:
             },
             sort_keys=True,
         )
-        payload, meta = self.client.complete_json(system=system, user=user, temperature=0.2)
+        payload, meta = self.client.complete_json(system=system, user=user, schema=_VERDICT_SCHEMA, temperature=0.2)
         verdict = _verdict(payload.get("verdict"))
         route_code = _route_code(payload.get("route_code"), default=RouteCode.ACCEPT if verdict == Verdict.ACCEPT else RouteCode.REJECT_CRITERIA_MISMATCH)
         design_verdict = DesignVerdict(
@@ -547,84 +280,6 @@ class DesignAuditor:
             rationale=str(payload.get("rationale", "")),
         )
         return design_verdict, {**meta, "prompt_hash": stable_hash({"system": system, "user": user})}
-
-
-_GENERATOR_PRINCIPLES = """
-You are a Benchmark Case Generator. Your output is training data: a benchmark case used to
-evaluate an LLM's ability. Every case you produce begins as a plausible benchmark
-candidate and must earn promotion into the corpus. Do not claim admission quality.
-Return JSON only.
-
-Your job is not to produce a merely valid benchmark case. Plausible, well-formed,
-or rubric-shaped is not enough. Assume every generated case costs real money,
-evaluation time, and user trust. A useful benchmark candidate should include the
-evidence needed to promote it from plausible to a defensible proxy for ability_z
-in environment_y.
-
-Design the case so a neutral, critical gate can see why it is more than checklist
-compliance. If a weak but careful model could pass by following visible rules,
-making token-level substitutions, adding decorative details, or satisfying
-checklists without showing the target ability, the candidate has not earned
-promotion.
-
-Aim above the smallest plausible task. Favor cases with meaningful structure:
-multiple interacting signals, a realistic self-contained subsystem, a tempting
-wrong path, and a scoring setup that can separate adequate from excellent
-outputs. Do not create complexity by adding noise, verbosity, irrelevant files,
-or confusing wording. Create complexity through causal depth, tradeoffs,
-coverage breadth, and non-obvious failure modes.
-
-Avoid safe benchmark templates unless the design explicitly requires one. In code
-debugging, do not default to trivial off-by-one, typo, missing import, wrong
-operator, or single visible failing assertion cases. If you use a familiar bug
-shape, add a substantive twist: an upstream producer/consumer mismatch, an
-invariant that only fails under an edge case, a misleading product constraint,
-or an explanation burden that reveals real causal reasoning.
-
-Do not create a benchmark whose central exploit can be described as "change this
-one line/default/flag/operator and the visible test passes." Do not rely on
-instructions that forbid the cheap patch. Build benchmark substance: a richer
-causal situation, meaningful invariants, and observable evidence that separates
-causal understanding from local patching. Warnings are not pressure. Negative
-controls are not pressure unless they reflect real failure modes a judge can
-observe.
-
-Never leak the answer in candidate-facing material. If the benchmark asks an
-agent to infer, diagnose, judge, repair, or discover something, the prompt,
-inputs, code comments, labels, filenames, visible outputs, fixtures, and setup
-must not reveal or strongly hint at the intended answer. A case that gives away
-its own answer cannot be promoted no matter how strong the rubric looks.
-
-The JSON boundary is part of the benchmark contract. Everything in
-agent_artifact is seen by the evaluated agent at runtime. Everything in
-judge_artifact is unseen judge/rubric metadata. Put diagnosis, intended causal
-mechanism, expected repair characteristics, scoring rationale, negative-control
-explanations, and gaming/shortcut analysis in judge_artifact only. Never copy
-judge-facing answers into agent_artifact.prompt, setup, workspace comments,
-README text, fixture names, visible test names, or visible outputs.
-
-Prefer benchmark designs that create pressure toward excellent outputs, not only
-filters against bad outputs. The case should make a strong model reveal taste,
-judgment, control, design, or depth that an adequate model would not show.
-Avoid converging on familiar safe templates. If the first design is a standard
-constraint-following prompt, improve it before returning it by adding meaningful
-tradeoff, transformation, preservation, comparison, revision, or other structure
-that creates ceiling pressure.
-
-Hard checks may disqualify bad outputs, but table-stakes compliance is not the same as
-high ability. A useful benchmark should create evidence about ability, including signals
-that can separate adequate from excellent behavior when the domain supports that.
-
-Return only a case you would be willing to defend as a promoted corpus item under
-its stated assumptions and limits.
-""".strip()
-
-
-_GENERATOR_IMPLEMENTATION_CONTRACT = """
-
-DESIGN IMPLEMENTATION CONTRACT
-You are implementing a diagnostic design brief. The design brief decides the target ability, target environment, failure family, diagnostic pressure, shallow paths, and minimum depth. You may choose concrete artifact details, but you may not lower the ambition, simplify the causal structure, replace the failure family, or turn the brief into a smaller benchmark. The design brief's runtime_requirements are binding: do not silently change language, runtime, OS assumptions, dependency policy, package requirements, network posture, or test command shape. If the task needs files, services, tools, packages, or a runtime to execute, declare those requirements in agent_artifact.runtime_requirements and make the environment artifact consistent with them. If implementation choices are needed, choose the strongest faithful artifact that preserves the design's evidence requirements; do not optimize for the smallest possible repository or easiest local patch. Treat agent_artifact as the only material the evaluated agent will see; it must look like an ordinary task workspace with symptoms and constraints, not an answer key. Treat judge_artifact as unseen evaluator metadata; put the intended diagnosis, causal explanation, expected repair boundaries, negative-control explanations, and gaming analysis there instead of in the prompt, source comments, tests, README, fixture names, or visible outputs.
-""".rstrip()
 
 
 def _format_generator_guidance(domain: DomainConfig) -> str:
@@ -647,14 +302,6 @@ def _format_gate_guidance(domain: DomainConfig, rules_attr: str) -> str:
         parts.append("\nDOMAIN GATE RULES")
         for rule in rules:
             parts.append(f"  - {rule}")
-    _format_probe_principles(parts, domain.general_probe_principles)
-    _format_anti_overfit_policy(parts, domain.anti_overfit_policy)
-    guidance = domain.generator_guidance
-    patterns = guidance.get("common_rejection_patterns", [])
-    if patterns:
-        parts.append("\nCOMMON REJECTION PATTERNS")
-        for p in patterns:
-            parts.append(f"  - {p['name']}: {str(p['description']).strip()}")
     return "\n".join(parts)
 
 
@@ -698,234 +345,6 @@ def _string_list(value: Any) -> list[str]:
     return [str(value)]
 
 
-_REVISION_PATCH_KEYS = {"benchmark_case_updates", "metadata_updates", "environment_ops", "revision_rationale"}
-_BENCHMARK_CASE_UPDATE_KEYS = {"prompt", "setup", "inputs", "environment"}
-_METADATA_UPDATE_KEYS = {
-    "score_x",
-    "proxy_claim",
-    "diagnostic_pressure",
-    "scoring_contract",
-    "leakage_risks",
-    "known_limits",
-    "coverage_tags",
-    "negative_controls",
-}
-
-
-def _agent_artifact_from_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    agent_artifact = payload.get("agent_artifact")
-    if not isinstance(agent_artifact, dict):
-        raise ProviderError("generator output must include agent_artifact object")
-    normalized = {
-        "benchmark_case": dict(agent_artifact.get("benchmark_case", {})),
-    }
-    if agent_artifact.get("runtime_requirements") is not None:
-        normalized["runtime_requirements"] = agent_artifact.get("runtime_requirements")
-    if agent_artifact.get("environment_artifact") is not None:
-        normalized["environment_artifact"] = agent_artifact.get("environment_artifact")
-    return normalized
-
-
-def _judge_artifact_from_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    judge_artifact = payload.get("judge_artifact")
-    if not isinstance(judge_artifact, dict):
-        raise ProviderError("generator output must include judge_artifact object")
-    return {
-        "score_x": dict(judge_artifact.get("score_x", {})),
-        "proxy_claim": str(judge_artifact.get("proxy_claim", "")),
-        "diagnostic_pressure": list(judge_artifact.get("diagnostic_pressure", [])),
-        "scoring_contract": dict(judge_artifact.get("scoring_contract", {})),
-        "leakage_risks": list(judge_artifact.get("leakage_risks", [])),
-        "known_limits": list(judge_artifact.get("known_limits", [])),
-        "coverage_tags": list(judge_artifact.get("coverage_tags", [])),
-        "negative_controls": list(judge_artifact.get("negative_controls", [])),
-    }
-
-
-def _revision_patch_shape(domain: DomainConfig) -> dict[str, Any]:
-    shape: dict[str, Any] = {
-        "benchmark_case_updates": {
-            "prompt": "optional complete replacement prompt",
-            "setup": "optional complete replacement setup",
-            "inputs": "optional complete replacement inputs object",
-            "environment": "optional complete replacement environment object",
-        },
-        "metadata_updates": {
-            "score_x": "optional complete replacement scoring object",
-            "proxy_claim": "optional complete replacement proxy claim",
-            "diagnostic_pressure": "optional complete replacement list",
-            "scoring_contract": "optional complete replacement scoring contract",
-            "leakage_risks": "optional complete replacement list",
-            "known_limits": "optional complete replacement list",
-            "coverage_tags": "optional complete replacement list",
-            "negative_controls": "optional complete replacement list",
-        },
-        "environment_ops": [],
-        "revision_rationale": "short private rationale for the patch",
-    }
-    if domain.domain_id == "benchmark_code_debug":
-        shape["environment_ops"] = [
-            {"op": "write_file", "path": "relative/path.py", "content": "complete replacement file contents"},
-            {"op": "delete_file", "path": "obsolete/relative/path.py"},
-        ]
-    return shape
-
-
-def _apply_revision_patch(candidate: CandidateSample, patch: dict[str, Any]) -> dict[str, Any]:
-    if not isinstance(patch, dict):
-        raise ProviderError("revision patch must be a JSON object")
-    current_runtime_requirements = candidate.agent_artifact.runtime_requirements
-    if "runtime_requirements" in patch:
-        returned_runtime_requirements = patch.pop("runtime_requirements")
-        if returned_runtime_requirements != current_runtime_requirements:
-            raise ProviderError("revision patch cannot change runtime_requirements; revise files/metadata while preserving the seed runtime contract")
-    unknown_keys = set(patch) - _REVISION_PATCH_KEYS
-    if unknown_keys:
-        raise ProviderError(f"revision patch contains unsupported top-level keys: {sorted(unknown_keys)}")
-
-    benchmark_case = deepcopy(candidate.agent_artifact.benchmark_case)
-    metadata: dict[str, Any] = {
-        "score_x": deepcopy(candidate.judge_artifact.score_x),
-        "ability_z": deepcopy(candidate.ability_z),
-        "environment_y": deepcopy(candidate.environment_y),
-        "proxy_claim": candidate.judge_artifact.proxy_claim,
-        "diagnostic_pressure": list(candidate.judge_artifact.diagnostic_pressure),
-        "scoring_contract": deepcopy(candidate.judge_artifact.scoring_contract),
-        "leakage_risks": list(candidate.judge_artifact.leakage_risks),
-        "known_limits": list(candidate.judge_artifact.known_limits),
-        "coverage_tags": list(candidate.judge_artifact.coverage_tags),
-        "negative_controls": deepcopy(candidate.judge_artifact.negative_controls),
-    }
-    environment_artifact = (
-        candidate.agent_artifact.environment_artifact.model_dump(mode="json")
-        if candidate.agent_artifact.environment_artifact is not None
-        else None
-    )
-    runtime_requirements = deepcopy(current_runtime_requirements)
-
-    changed = False
-    benchmark_updates = patch.get("benchmark_case_updates", {})
-    if benchmark_updates is None:
-        benchmark_updates = {}
-    if not isinstance(benchmark_updates, dict):
-        raise ProviderError("revision patch benchmark_case_updates must be an object")
-    unknown_benchmark_keys = set(benchmark_updates) - _BENCHMARK_CASE_UPDATE_KEYS
-    if unknown_benchmark_keys:
-        raise ProviderError(f"revision patch contains unsupported benchmark_case_updates keys: {sorted(unknown_benchmark_keys)}")
-    for key, value in benchmark_updates.items():
-        benchmark_case[key] = value
-        changed = True
-
-    metadata_updates = patch.get("metadata_updates", {})
-    if metadata_updates is None:
-        metadata_updates = {}
-    if not isinstance(metadata_updates, dict):
-        raise ProviderError("revision patch metadata_updates must be an object")
-    unknown_metadata_keys = set(metadata_updates) - _METADATA_UPDATE_KEYS
-    if unknown_metadata_keys:
-        raise ProviderError(f"revision patch contains unsupported metadata_updates keys: {sorted(unknown_metadata_keys)}")
-    for key, value in metadata_updates.items():
-        metadata[key] = value
-        changed = True
-
-    environment_ops = patch.get("environment_ops", [])
-    if environment_ops is None:
-        environment_ops = []
-    if not isinstance(environment_ops, list):
-        raise ProviderError("revision patch environment_ops must be a list")
-    if environment_ops:
-        if not environment_artifact or environment_artifact.get("kind") != "virtual_workspace":
-            raise ProviderError("revision patch environment_ops require a virtual_workspace environment_artifact")
-        try:
-            workspace = VirtualWorkspace.from_payload(environment_artifact.get("payload", {}))
-            for index, op in enumerate(environment_ops):
-                if not isinstance(op, dict):
-                    raise ProviderError(f"revision patch environment_ops.{index} must be an object")
-                op_name = op.get("op")
-                path = op.get("path")
-                if op_name == "write_file":
-                    workspace.write_file(path, op.get("content"))
-                elif op_name == "delete_file":
-                    workspace.delete_file(path)
-                else:
-                    raise ProviderError(f"revision patch environment_ops.{index}.op is unsupported: {op_name!r}")
-            environment_artifact["payload"] = workspace.to_payload()
-        except VirtualWorkspaceError as exc:
-            raise ProviderError(f"revision patch virtual workspace error: {exc.subcode} at {exc.path}: {exc.message}") from exc
-        changed = True
-
-    if not changed:
-        raise ProviderError("revision patch made no candidate changes")
-
-    return {
-        "benchmark_case": benchmark_case,
-        "runtime_requirements": runtime_requirements,
-        "environment_artifact": environment_artifact,
-        **metadata,
-    }
-
-
-def _example_output_for_domain(domain: DomainConfig) -> dict[str, Any]:
-    agent_artifact: dict[str, Any] = {
-        "benchmark_case": {
-            "prompt": "agent-facing task prompt string",
-            "setup": "optional agent-facing setup",
-            "inputs": {},
-            "environment": {},
-        }
-    }
-    if domain.domain_id == "benchmark_code_debug":
-        agent_artifact["runtime_requirements"] = {
-            "kind": "filesystem_task",
-            "execution": {"mode": "task_image", "base_image": "python:3.11-slim", "os": "linux", "arch": "amd64"},
-            "language": {"name": "python", "version": "3.11+"},
-            "dependencies": {"policy": "stdlib_plus_runner", "packages": ["pytest"]},
-            "commands": {"test": "python -m pytest -q"},
-            "network": "disabled_during_eval",
-        }
-        agent_artifact["environment_artifact"] = {
-            "kind": "virtual_workspace",
-            "payload": {
-                "files": [
-                    {"path": "relative/path.py", "content": "complete file contents shown to the evaluated agent"},
-                    {"path": "tests/test_behavior.py", "content": "complete visible test or harness contents"},
-                    {"path": "README.md", "content": "complete supporting project instructions"},
-                ],
-                "commands": {"test": "python -m pytest -q"},
-            },
-        }
-    return {
-        "agent_artifact": agent_artifact,
-        "judge_artifact": {
-            "score_x": {
-                "score_type": "one allowed scoring method",
-                "range": [0, 1],
-                "dimensions": [
-                    {
-                        "name": "dimension name",
-                        "weight": 0.5,
-                        "high_score_criterion": "judge-facing behavior that earns full credit",
-                        "low_score_criterion": "judge-facing behavior that earns zero credit",
-                    }
-                ],
-            },
-            "proxy_claim": "judge-facing claim for why score_x should indicate ability_z in environment_y",
-            "diagnostic_pressure": ["judge-facing pressure exerted by this case"],
-            "scoring_contract": {
-                "credit": ["observable behavior that earns credit"],
-                "penalties": ["shallow or bad behavior that loses credit"],
-                "uncertainty_policy": "when judges should mark uncertainty",
-            },
-            "leakage_risks": ["how the case or scorer can be gamed"],
-            "known_limits": ["what this benchmark case does not prove"],
-            "coverage_tags": ["short coverage tags"],
-            "negative_controls": [{"output": "known-bad agent output", "should_fail_because": "why score_x should penalize it"}],
-        },
-        "ability_z": {"name": "target ability", "sub_abilities": ["specific sub-ability"]},
-        "environment_y": {"name": "target environment", "assumptions": ["assumption"]},
-    }
-
-
 class SampleGenerator:
     role_name = "SampleGenerator"
 
@@ -934,15 +353,12 @@ class SampleGenerator:
         client: ModelClient,
         domain: DomainConfig,
         *,
-        system_prompt_override: str = "",
-        system_prompt_append: str = "",
+        execution_workspace: ExecutionWorkspace | None = None,
     ) -> None:
         self.client = client
         self.domain = domain
-        self.system_prompt_append = system_prompt_append.strip()
-        self._system = system_prompt_override.strip() or (
-            _GENERATOR_PRINCIPLES + _format_generator_guidance(domain) + _GENERATOR_IMPLEMENTATION_CONTRACT
-        )
+        self.execution_workspace = execution_workspace
+        self._system = GENERATOR_PRINCIPLES + _format_generator_guidance(domain) + GENERATOR_IMPLEMENTATION_CONTRACT
 
     def generate(
         self,
@@ -952,6 +368,7 @@ class SampleGenerator:
         attempt: int,
         retry_route_code: RouteCode | None = None,
         retry_subcodes: list[str] | None = None,
+        execution_workspace: ExecutionWorkspace | None = None,
     ) -> tuple[CandidateSample, dict[str, Any]]:
         envelope = GenerationEnvelope.from_design(design)
         return self.generate_from_envelope(
@@ -960,6 +377,7 @@ class SampleGenerator:
             attempt=attempt,
             retry_route_code=retry_route_code,
             retry_subcodes=retry_subcodes,
+            execution_workspace=execution_workspace,
         )
 
     def generate_from_envelope(
@@ -970,12 +388,24 @@ class SampleGenerator:
         attempt: int,
         retry_route_code: RouteCode | None = None,
         retry_subcodes: list[str] | None = None,
+        execution_workspace: ExecutionWorkspace | None = None,
     ) -> tuple[CandidateSample, dict[str, Any]]:
         design = envelope.design
-        system = self._system + self._system_prompt_append_section()
+        system = self._system
+        supports_tools = getattr(self.client, "supports_function_tools", lambda: False)
+        if self.domain.domain_id == "benchmark_code_debug" and supports_tools():
+            return self._generate_from_envelope_with_workspace_tools(
+                run_id=run_id,
+                envelope=envelope,
+                attempt=attempt,
+                retry_route_code=retry_route_code,
+                retry_subcodes=retry_subcodes,
+                system=system,
+                execution_workspace=execution_workspace,
+            )
         payload: dict[str, Any] = {
-            "generation_envelope": envelope.model_dump(mode="json"),
-            "design_brief": design.model_dump(mode="json"),
+            "generation_envelope": _generation_envelope_prompt_view(envelope),
+            "design_brief": design_prompt_view(design),
             "domain": {
                 "output_schema": self.domain.output_schema,
                 "benchmark_case_schema": self.domain.benchmark_case_schema,
@@ -995,48 +425,161 @@ class SampleGenerator:
                 "retry_guidance": _generator_retry_guidance(safe_subcodes),
             }
         user = json.dumps(payload, sort_keys=True)
-        payload, meta = self.client.complete_json(system=system, user=user, temperature=0.8)
-        agent_artifact = _agent_artifact_from_payload(payload)
-        judge_artifact = _judge_artifact_from_payload(payload)
-        content = {
-            "generation_envelope_id": envelope.id,
-            "design_id": design.id,
-            "cell": design.cell.model_dump(),
-            "output": {
-                "agent_artifact": agent_artifact,
-                "judge_artifact": judge_artifact,
-                "ability_z": payload.get("ability_z", {}),
-                "environment_y": payload.get("environment_y", {}),
-            },
-            "agent_artifact": agent_artifact,
-            "judge_artifact": judge_artifact,
-            "ability_z": payload.get("ability_z", {}),
-            "environment_y": payload.get("environment_y", {}),
-        }
-        candidate = CandidateSample(
-            id=f"{run_id}-candidate-{design.id}-{attempt}",
-            design_id=design.id,
-            content_hash=stable_hash(content),
-            cell=design.cell,
-            output=dict(content["output"]),
-            agent_artifact=agent_artifact,
-            judge_artifact=judge_artifact,
-            ability_z=dict(payload.get("ability_z", {})),
-            environment_y=dict(payload.get("environment_y", {})),
-            difficulty=design.cell.difficulty,
-            case_type=design.cell.case_type,
-            provenance={
-                "design_id": design.id,
-                "generation_envelope_id": envelope.id,
-                "generator": self.role_name,
-            },
+        payload, meta = self.client.complete_json(
+            system=system,
+            user=user,
+            schema=_generation_output_schema(self.domain),
+            temperature=0.8,
+        )
+        candidate = _candidate_from_generation_payload(
+            run_id=run_id,
+            envelope=envelope,
+            design=design,
+            attempt=attempt,
+            role_name=self.role_name,
+            payload=payload,
         )
         return candidate, {**meta, "prompt_hash": stable_hash({"system": system, "user": user})}
 
-    def _system_prompt_append_section(self) -> str:
-        if not self.system_prompt_append:
-            return ""
-        return "\n\nEXPERIMENT-SUPPLIED GENERATOR INSTRUCTIONS\n" + self.system_prompt_append
+    def _generate_from_envelope_with_workspace_tools(
+        self,
+        *,
+        run_id: str,
+        envelope: GenerationEnvelope,
+        attempt: int,
+        retry_route_code: RouteCode | None,
+        retry_subcodes: list[str] | None,
+        system: str,
+        execution_workspace: ExecutionWorkspace | None = None,
+    ) -> tuple[CandidateSample, dict[str, Any]]:
+        design = envelope.design
+        workspace = execution_workspace or self.execution_workspace or ExecutionWorkspace()
+        workspace.reset(_candidate_workspace_subdir(run_id, design, attempt))
+        workspace.commands = {"test": _test_command_from_design(design)}
+        user_payload: dict[str, Any] = {
+            "generation_envelope": _generation_envelope_prompt_view(envelope),
+            "design_brief": design_prompt_view(design),
+            "domain": {
+                "benchmark_case_schema": self.domain.benchmark_case_schema,
+                "abilities": self.domain.abilities,
+                "environments": self.domain.environments,
+                "diagnostic_pressure_types": self.domain.diagnostic_pressure_types,
+                "scoring_methods": self.domain.scoring_methods,
+            },
+            "workspace_authoring": {
+                "available_tools": ["write_file", "read_file", "list_files", "finalize_candidate"],
+                "rules": [
+                    "Author the execution workspace by calling write_file for every file the evaluated agent should receive.",
+                    "Use read_file and list_files only to inspect the workspace you have already authored.",
+                    "Do not put placeholder content in files.",
+                    "Call finalize_candidate only after the workspace contains source files, tests, and README/setup material.",
+                    "Call finalize_candidate with structured fields matching finalize_candidate_json_schema. Do not pass JSON strings and do not include file contents; the runner records the Executioner workspace reference.",
+                    "The finalize_candidate arguments must include these six top-level keys directly: benchmark_case, runtime_requirements, workspace_commands, judge_artifact, ability_z, environment_y.",
+                ],
+            },
+            "required_final_candidate_shape": _workspace_tool_final_shape(self.domain),
+            "finalize_candidate_json_schema": _finalize_candidate_tool_parameters(self.domain),
+        }
+        if retry_route_code is not None:
+            safe_subcodes = _generator_safe_retry_subcodes(retry_subcodes or [])
+            user_payload["prior_generation_rejection"] = {
+                "route_code": retry_route_code.value,
+                "subcodes": safe_subcodes,
+                "retry_guidance": _generator_retry_guidance(safe_subcodes),
+            }
+        user = json.dumps(user_payload, sort_keys=True)
+        input_items: list[dict[str, Any]] = [
+            {
+                "type": "message",
+                "role": "user",
+                "content": [{"type": "input_text", "text": user}],
+            }
+        ]
+        tools = _workspace_tool_schemas(self.domain)
+        input_tokens = 0
+        output_tokens = 0
+        started = time.perf_counter()
+        finalized: dict[str, Any] | None = None
+        tool_call_count = 0
+        emit_stream_event = getattr(self.client, "emit_stream_event", None)
+        for step in range(1, 25):
+            with self.client.stream_context({"stage_event": "workspace_tool_loop", "tool_loop_step": step}):
+                response = self.client.complete_with_tools(system=system, input_items=input_items, tools=tools)
+            input_tokens += int(response.usage_metadata.get("input_tokens") or 0)
+            output_tokens += int(response.usage_metadata.get("output_tokens") or 0)
+            output_items = list(response.output_items or [])
+            tool_call_items = [item for item in output_items if item.get("type") in {"function_call", "tool_call", "function_tool_call"}]
+            if not output_items:
+                raise ProviderError("workspace tool loop returned no output items")
+            # Normalize to "function_call" input format — codex emits "function_tool_call" in output
+            # but the API only accepts "function_call" items when they appear in the input array.
+            input_items.extend(_normalize_tool_call_for_input(item) for item in tool_call_items)
+            tool_outputs: list[dict[str, Any]] = []
+            for item in tool_call_items:
+                tool_call_count += 1
+                name = str(item.get("name") or "")
+                call_id = _nonempty_string(item.get("call_id")) or _nonempty_string(item.get("id"))
+                if not call_id:
+                    raise ProviderError(f"workspace tool call {name or '<unknown>'} missing call_id")
+                args = _tool_call_arguments(item)
+                try:
+                    result = _execute_workspace_tool(name, args, workspace, self.domain)
+                    if name == "finalize_candidate":
+                        finalized = _finalize_payload_from_tool_args(args, self.domain)
+                except Exception as exc:
+                    result = {"ok": False, "error": str(exc)}
+                if callable(emit_stream_event):
+                    emit_stream_event(
+                        {
+                            "stream_event": "workspace_tool_result",
+                            "stage": "model",
+                            "tool_loop_step": step,
+                            "tool_name": name,
+                            "argument_keys": sorted(args.keys()),
+                            "ok": bool(result.get("ok")),
+                            "error": result.get("error") if not result.get("ok") else None,
+                            "workspace_file_count": len(workspace.list_files()),
+                        }
+                    )
+                tool_outputs.append(
+                    {
+                        "type": "function_call_output",
+                        "call_id": call_id,
+                        "output": json.dumps(result, sort_keys=True),
+                    }
+                )
+            if finalized is not None:
+                break
+            if not tool_outputs:
+                raise ProviderError("workspace tool loop ended without finalize_candidate")
+            input_items.extend(tool_outputs)
+        if finalized is None:
+            raise ProviderError("workspace tool loop exhausted without finalize_candidate")
+        payload = _generation_payload_from_workspace_final(finalized, workspace, design)
+        candidate = _candidate_from_generation_payload(
+            run_id=run_id,
+            envelope=envelope,
+            design=design,
+            attempt=attempt,
+            role_name=self.role_name,
+            payload=payload,
+        )
+        latency_ms = int((time.perf_counter() - started) * 1000)
+        meta = {
+            "provider": self.client.config.provider,
+            "model": self.client.config.model,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "latency_ms": latency_ms,
+            "cost_usd": 0.0,
+            "reasoning_effort": self.client.config.reasoning_effort,
+            "structured_output": False,
+            "workspace_tool_loop": True,
+            "workspace_tool_calls": tool_call_count,
+            "workspace_file_count": len(workspace.list_files()),
+            "text_normalization_replacements": 0,
+        }
+        return candidate, {**meta, "prompt_hash": stable_hash({"system": system, "user": user})}
 
     def revise_from_attack(
         self,
@@ -1046,24 +589,26 @@ class SampleGenerator:
         candidate: CandidateSample,
         report: AdversaryReport,
         attempt: int,
+        execution_workspace: ExecutionWorkspace | None = None,
     ) -> tuple[CandidateSample, dict[str, Any]]:
         system = (
-            self._system
-            + "\n\nREVISION MODE\n"
-            "You are revising your own benchmark candidate after a hostile adversary attacked it. "
-            "The adversary is not helping you and is not responsible for improvements. Treat its report as falsification evidence about why the prior candidate was a weak proxy. "
-            "Your goal is not to minimally survive the attack report. Your goal is to produce a stronger benchmark candidate whose actual artifact gives better evidence of the target ability. "
-            "Address the underlying failure classes exposed by the attack report: leakage, toy local fixes, fake difficulty, scoring ambiguity, and shallow pass paths. "
-            "Do not merely add prose warnings, disallowed-solution text, or a negative control naming the exploit. If the prior artifact's core repair is inherently toy-shaped, replace the weak files with stronger complete file contents rather than decorating the old task. "
-            "Preserve the design's intended ability and environment. Return a revision patch JSON object only, never a complete benchmark candidate. "
-            "Use benchmark_case_updates for allowed benchmark_case replacements, metadata_updates for allowed metadata replacements, and environment_ops for virtual workspace file changes. "
-            "For file changes, emit complete file contents with write_file; delete obsolete files with delete_file. "
+            "You are RevisionGenerator for a benchmark-generation pipeline. "
+            "You revise benchmark artifacts, not solver submissions. "
+            "Use the adversary report as falsification evidence about weaknesses in the prior benchmark candidate. "
+            "Return a revision patch JSON object only. Do not return a complete candidate. "
+            "Preserve the design's intended ability, environment, runtime contract, and benchmark invariants. "
+            "For code-debug benchmarks, the unmodified starter workspace must still fail the declared test command before an evaluated agent edits it. "
+            "Do not solve the agent-facing bug, do not replace buggy starter implementation with the correct solution, and do not make the starter tests pass. "
+            "You may reduce leakage, broaden tests or fixtures, rename misleading candidate-facing material, strengthen metadata, or relocate the intentional defect only when the revised starter still fails for the intended benchmark reason. "
+            "Use benchmark_case_updates for benchmark_case replacements, metadata_updates for judge metadata, and environment_ops for Executioner workspace file changes. "
+            "environment_ops exposes exactly one tool-shaped operation: edit_file. Prefer exact old_text to new_text replacements. Set create_if_missing=true only for genuinely new files. Set replace_all=true only when every exact occurrence should change. "
+            "Keep the patch small and surgical: at most four environment_ops, no full-file rewrites, and short exact text spans only. If the adversary critique would require broad reconstruction, make the smallest metadata or visible-text correction that preserves the starter failure. "
             "Do not include meta-discussion about the adversary or the revision process in candidate-facing materials. Return JSON only."
         )
         user_payload = {
-            "design_brief": design.model_dump(mode="json"),
-            "prior_candidate": candidate.model_dump(mode="json", exclude={"output"}),
-            "adversary_attack_report": report.model_dump(mode="json"),
+            "design_brief": design_prompt_view(design),
+            "prior_candidate": candidate_prompt_view(candidate),
+            "adversary_attack_report": adversary_report_prompt_view(report),
             "domain": {
                 "output_schema": self.domain.output_schema,
                 "benchmark_case_schema": self.domain.benchmark_case_schema,
@@ -1073,18 +618,36 @@ class SampleGenerator:
                 "scoring_methods": self.domain.scoring_methods,
             },
             "required_revision_patch_shape": _revision_patch_shape(self.domain),
+            "benchmark_invariants": [
+                "This is benchmark authoring, not task solving.",
+                "The revised candidate must preserve the intended evaluated-agent task.",
+                "For code-debug workspaces, the unmodified starter code must fail the declared test command for the intended bug before the evaluated agent edits anything.",
+                "Do not patch the starter implementation into the reference solution.",
+                "Environment file changes are allowed only if they preserve or strengthen the benchmark while keeping the required pre-repair failure.",
+            ],
             "revision_patch_rules": [
                 "Return only keys from required_revision_patch_shape.",
                 "Do not return benchmark_case, environment_artifact, score_x, ability_z, environment_y, or any complete candidate object at the top level.",
                 "Do not return runtime_requirements; the seed runtime contract is preserved automatically unless the adversary should have nuked the candidate.",
                 "Do not change ability_z or environment_y; if the candidate cannot be rescued within those, the adversary should have nuked it.",
-                "Every write_file content value must be the complete desired file content, not a diff or partial snippet.",
+                "Every environment_ops item must use op=edit_file. Do not emit write_file, delete_file, insert_after, remove, shell commands, diffs, or multiple operation names.",
+                "Use at most four environment_ops. Each old_text/new_text span must be short and targeted; do not rewrite complete files.",
+                "For existing files, old_text must be an exact non-empty string from the current file and new_text must be the replacement. If old_text matches more than once, the patch fails unless replace_all=true.",
+                "For new files only, omit old_text and set create_if_missing=true with new_text as the complete file content.",
+                "For code-debug candidates, every environment_ops patch must preserve a failing starter workspace; do not solve the bug under test.",
                 "Do not include raw output, ids, provenance, route codes, or stage metadata.",
             ],
         }
         user = json.dumps(user_payload, sort_keys=True)
-        payload, meta = self.client.complete_json(system=system, user=user, temperature=0.6)
-        revised_fields = _apply_revision_patch(candidate, payload)
+        payload, meta = self.client.complete_json(system=system, user=user, schema=_REVISION_PATCH_SCHEMA, temperature=0.2)
+        meta = {**meta, **revision_patch_metrics(payload)}
+        revised_candidate_id = f"{run_id}-candidate-{design.id}-{attempt}-rev"
+        revised_fields = _apply_revision_patch(
+            candidate,
+            payload,
+            execution_workspace=execution_workspace or self.execution_workspace,
+            workspace_subdir=f"candidates/{revised_candidate_id}",
+        )
         content = {
             "design_id": design.id,
             "cell": design.cell.model_dump(),
@@ -1096,6 +659,11 @@ class SampleGenerator:
             },
             "judge_artifact": {
                 "score_x": revised_fields["score_x"],
+                "private_root_cause": revised_fields["private_root_cause"],
+                "expected_fix_properties": list(revised_fields["expected_fix_properties"]),
+                "hidden_failure_modes": list(revised_fields["hidden_failure_modes"]),
+                "shallow_solution_traps": list(revised_fields["shallow_solution_traps"]),
+                "candidate_visibility_boundaries": list(revised_fields["candidate_visibility_boundaries"]),
                 "proxy_claim": revised_fields["proxy_claim"],
                 "diagnostic_pressure": list(revised_fields["diagnostic_pressure"]),
                 "scoring_contract": revised_fields["scoring_contract"],
@@ -1110,7 +678,7 @@ class SampleGenerator:
             "adversary_report": report.model_dump(mode="json"),
         }
         revised = CandidateSample(
-            id=f"{run_id}-candidate-{design.id}-{attempt}-rev",
+            id=revised_candidate_id,
             design_id=design.id,
             content_hash=stable_hash(content),
             cell=design.cell,
@@ -1125,53 +693,63 @@ class SampleGenerator:
         return revised, {**meta, "prompt_hash": stable_hash({"system": system, "user": user})}
 
 
-ADVERSARY_ATTACK_TYPE_TAXONOMY: dict[str, dict[str, str]] = {
-    "answer_leakage": {
-        "coverage_group": "explicit",
-        "definition": "Candidate-facing material reveals or strongly hints at the intended answer, root cause, fix, scoring answer, or hidden expectation.",
-    },
-    "cheap_pass": {
-        "coverage_group": "explicit",
-        "definition": "A weak model can get a high score through a shallow or local exploit such as patching a visible line, matching a traceback, changing a literal/operator/default, editing a test, hard-coding an expected value, or following labels and names that reveal the solution.",
-    },
-    "test_overfitting": {
-        "coverage_group": "explicit",
-        "definition": "Visible tests or fixtures are narrow enough that fixture-specific hard-coding or test-output overfitting can pass without demonstrating the target ability.",
-    },
-    "test_overfitting_loophole": {
-        "coverage_group": "explicit",
-        "definition": "Visible tests or fixtures are narrow enough that fixture-specific hard-coding or test-output overfitting can pass without demonstrating the target ability.",
-    },
-    "straw_negative_control": {
-        "coverage_group": "explicit",
-        "definition": "Negative controls are generic, implausible, or too obviously bad rather than concrete plausible shallow fixes tied to the artifact.",
-    },
-    "proxy_overclaim": {
-        "coverage_group": "indirect",
-        "definition": "The proxy claim overstates what the concrete artifact can actually prove about the target ability.",
-    },
-    "fake_difficulty": {
-        "coverage_group": "indirect",
-        "definition": "The benchmark looks complex but the real repair or success path is decorative, local, or toy-shaped.",
-    },
-    "non_discriminating_regression": {
-        "coverage_group": "indirect",
-        "definition": "Tests or regressions do not distinguish the intended fix from plausible shallow or semantically wrong fixes.",
-    },
-    "scoring_ambiguity": {
-        "coverage_group": "uncovered",
-        "definition": "Candidate-facing requirements and judge-facing scoring criteria disagree, omit necessary invariants, or require optional/manual/private checks that are not enforced by the concrete artifact.",
-    },
-    "other": {
-        "coverage_group": "uncovered",
-        "definition": "An attack that does not fit the named taxonomy.",
-    },
-}
+def _candidate_workspace_subdir(run_id: str, design: DesignBrief, attempt: int) -> str:
+    return f"candidates/{run_id}-candidate-{design.id}-{attempt}"
+
+
+def design_prompt_view(design: DesignBrief) -> dict[str, Any]:
+    """Return the model-facing design brief without transport or lineage metadata."""
+    return {
+        "target_stage": design.target_stage,
+        "cell": design.cell.model_dump(mode="json"),
+        "target_ability": design.target_ability,
+        "target_environment": design.target_environment,
+        "design_intent": design.design_intent,
+        "environment_premise": design.environment_premise,
+        "runtime_requirements": design.runtime_requirements,
+        "environment_artifact_spec": design.environment_artifact_spec,
+        "failure_mode_family": design.failure_mode_family,
+        "diagnostic_pressure": design.diagnostic_pressure,
+        "why_weak_agents_fail": design.why_weak_agents_fail,
+        "tempting_shallow_solutions": design.tempting_shallow_solutions,
+        "success_evidence_required": design.success_evidence_required,
+        "minimum_depth_requirements": design.minimum_depth_requirements,
+        "forbidden_shortcuts": design.forbidden_shortcuts,
+        "non_goals": design.non_goals,
+    }
+
+
+def _generation_envelope_prompt_view(envelope: GenerationEnvelope) -> dict[str, Any]:
+    """Return the generator-facing envelope without transport metadata."""
+    return {"design": design_prompt_view(envelope.design)}
+
+
+def adversary_report_prompt_view(report: AdversaryReport) -> dict[str, Any]:
+    """Return adversary findings without candidate identity metadata."""
+    return {
+        "revision_disposition": report.revision_disposition,
+        "disposition_rationale": report.disposition_rationale,
+        "attack_summary": report.attack_summary,
+        "attacks": report.attacks,
+        "cheap_pass_strategy": report.cheap_pass_strategy,
+        "proxy_damage": report.proxy_damage,
+        "survival_requirements": report.survival_requirements,
+    }
+
+
+def _adversary_report_schema_for_mode(disposition_mode: str) -> dict[str, Any]:
+    schema = deepcopy(_ADVERSARY_REPORT_SCHEMA)
+    if disposition_mode == "binary":
+        properties = schema.get("properties", {})
+        disposition = properties.get("revision_disposition")
+        if isinstance(disposition, dict):
+            disposition["enum"] = ["pass", "revise"]
+    return schema
 
 
 class Adversary:
     role_name = "Adversary"
-    system_prompt = (
+    base_system_prompt = (
         "You are the Adversary for a benchmark-generation pipeline. "
         "You are not a gate, not a reviewer, not a design compliance checker, and not an improver. Your only job is to attack the benchmark candidate as an independent third party. "
         "The design brief is a claim to attack, not an authority to obey. You may reject the design premise, the implementation, the scoring setup, the proxy claim, or all of them. "
@@ -1180,19 +758,38 @@ class Adversary:
         "Be explicit and concrete: name the exact one-line patch, file edit, test edit, flag/default flip, cache bypass, synchronous toggle, sleep/logging hack, or grading loophole a weak solver would use. "
         "If a cheap pass exists, call it out even when the benchmark text says it is forbidden; prose constraints do not stop adversarial solvers. "
         "Decide whether the candidate should pass onward, receive one revision attempt, or be nuked. Choose pass only when you find no blocking attack that would materially damage the proxy claim. Choose revise when the artifact has a substantive core worth preserving but has concrete fixable weaknesses. Choose nuke when the core task is inherently toy-shaped, leaked, fake-hard, or reducible to local patching such that revision would mostly decorate a bad premise. "
+        "The prompt separates agent_visible_artifact from evaluator_private_context. Hidden evaluator-private context may reveal intended scoring or proxy claims; never count that private context as answer leakage. "
+        "Only label answer_leakage when the leak appears in agent_visible_artifact: candidate-facing prompt, files, comments, tests, fixture names, visible outputs, or setup. "
         "Attack candidate-facing prompt, files, comments, tests, fixture names, visible outputs, scoring criteria, negative controls, proxy claims, and known limits. "
         "Prioritize answer leakage, trivial core repairs, fake difficulty, vague scoring, missing operational checks, overbroad proxy claims, and shallow pass strategies. "
         "Return JSON only. Do not reveal hidden chain-of-thought."
     )
+    ternary_disposition_prompt = (
+        "Decide whether the candidate should pass onward, receive one revision attempt, or be nuked. Choose pass only when you find no blocking attack that would materially damage the proxy claim. Choose revise when the artifact has a substantive core worth preserving but has concrete fixable weaknesses. Choose nuke when the core task is inherently toy-shaped, leaked, fake-hard, or reducible to local patching such that revision would mostly decorate a bad premise. "
+    )
+    binary_disposition_prompt = (
+        "Decide whether the candidate should pass onward or receive one revision attempt. Choose pass only when you find no blocking attack that would materially damage the proxy claim. Choose revise for every concrete weakness, including severe, leaked, toy-shaped, fake-hard, or local-patching failures; preserve severity and reason codes in attacks instead of using a terminal discard state. "
+    )
 
-    def __init__(self, client: ModelClient, domain: DomainConfig) -> None:
+    def __init__(self, client: ModelClient, domain: DomainConfig, *, disposition_mode: str = "ternary") -> None:
         self.client = client
         self.domain = domain
+        if disposition_mode not in {"ternary", "binary"}:
+            disposition_mode = "ternary"
+        self.disposition_mode = disposition_mode
+        disposition_prompt = (
+            self.binary_disposition_prompt if disposition_mode == "binary" else self.ternary_disposition_prompt
+        )
+        self.system_prompt = self.base_system_prompt.replace(
+            self.ternary_disposition_prompt,
+            disposition_prompt,
+        )
+        self._schema = _adversary_report_schema_for_mode(disposition_mode)
 
     def attack(self, candidate: CandidateSample, design: DesignBrief | None = None) -> tuple[AdversaryReport, dict[str, Any]]:
         payload = {
-            "design_brief": design.model_dump(mode="json") if design is not None else None,
-            "candidate": candidate.model_dump(mode="json"),
+            "design_brief": design_prompt_view(design) if design is not None else None,
+            "candidate": candidate_prompt_view(candidate),
             "attack_surface": {
                 "domain_id": self.domain.domain_id,
                 "general_probe_principles": self.domain.general_probe_principles,
@@ -1201,8 +798,12 @@ class Adversary:
                 "attack_type_taxonomy": ADVERSARY_ATTACK_TYPE_TAXONOMY,
             },
             "required_json_shape": {
-                "revision_disposition": "pass, revise, or nuke",
-                "disposition_rationale": "why this candidate can proceed, deserves revision, or should be discarded instead",
+                "revision_disposition": "pass or revise"
+                if self.disposition_mode == "binary"
+                else "pass, revise, or nuke",
+                "disposition_rationale": "why this candidate can proceed or deserves revision"
+                if self.disposition_mode == "binary"
+                else "why this candidate can proceed, deserves revision, or should be discarded instead",
                 "attack_summary": "short hostile summary of how this benchmark can be defeated",
                 "attacks": [
                     {
@@ -1220,16 +821,17 @@ class Adversary:
             },
         }
         user = json.dumps(payload, sort_keys=True)
-        raw, meta = self.client.complete_json(system=self.system_prompt, user=user, temperature=0.2)
+        raw, meta = self.client.complete_json(system=self.system_prompt, user=user, schema=self._schema, temperature=0.2)
         disposition = str(raw.get("revision_disposition", "revise")).lower()
-        if disposition not in {"pass", "revise", "nuke"}:
+        allowed_dispositions = {"pass", "revise"} if self.disposition_mode == "binary" else {"pass", "revise", "nuke"}
+        if disposition not in allowed_dispositions:
             disposition = "revise"
         report = AdversaryReport(
             candidate_id=candidate.id,
             revision_disposition=disposition,
             disposition_rationale=str(raw.get("disposition_rationale", "")),
             attack_summary=str(raw.get("attack_summary", "")),
-            attacks=list(raw.get("attacks", [])),
+            attacks=_sanitize_adversary_attacks(list(raw.get("attacks", []))),
             cheap_pass_strategy=str(raw.get("cheap_pass_strategy", "")),
             proxy_damage=str(raw.get("proxy_damage", "")),
             survival_requirements=list(raw.get("survival_requirements", [])),
@@ -1247,20 +849,25 @@ class _GateValidator:
         self.client = client
         self.domain = domain
         self._system = self.system_prompt + _format_gate_guidance(domain, self.rules_attr)
+        self._schema = _verdict_schema_for_domain(domain)
+
+    def _criteria(self, rules: list[str]) -> dict[str, Any]:
+        return {
+            "gate_rules": rules,
+            "route_codes": self.domain.route_codes,
+            "subcodes": self.domain.subcodes,
+        }
+
+    def _candidate_view(self, candidate: CandidateSample) -> dict[str, Any]:
+        return candidate_prompt_view(candidate)
 
     def validate(self, candidate: CandidateSample) -> tuple[SampleVerdict, dict[str, Any]]:
         system = self._system
         rules = getattr(self.domain, self.rules_attr)
         user = json.dumps(
             {
-                "candidate": candidate.model_dump(mode="json"),
-                "criteria": {
-                    "gate_rules": rules,
-                    "general_probe_principles": self.domain.general_probe_principles,
-                    "anti_overfit_policy": self.domain.anti_overfit_policy,
-                    "route_codes": self.domain.route_codes,
-                    "subcodes": self.domain.subcodes,
-                },
+                "candidate": self._candidate_view(candidate),
+                "criteria": self._criteria(rules),
                 "required_json_shape": {
                     "verdict": "accept or reject",
                     "route_code": "accept or reject_semantic_mismatch",
@@ -1271,13 +878,17 @@ class _GateValidator:
             },
             sort_keys=True,
         )
-        payload, meta = self.client.complete_json(system=system, user=user, temperature=0.2)
+        payload, meta = self.client.complete_json(system=system, user=user, schema=self._schema, temperature=0.2)
         verdict = _verdict(payload.get("verdict"))
         subcodes = list(payload.get("subcodes", []))
+        evidence = _evidence(payload.get("evidence", []))
+        subcodes = _sanitize_gate_leakage_subcodes(subcodes, evidence)
         route_code = _route_code(
             payload.get("route_code"),
             default=RouteCode.ACCEPT if verdict == Verdict.ACCEPT else RouteCode.REJECT_SEMANTIC_MISMATCH,
         )
+        if route_code == RouteCode.REJECT_LEAKAGE and not any(_is_answer_leak_subcode(code) for code in subcodes):
+            route_code = RouteCode.REJECT_SEMANTIC_MISMATCH
         verdict, route_code, subcodes = _coerce_gate_verdict(
             verdict=verdict,
             route_code=route_code,
@@ -1289,10 +900,142 @@ class _GateValidator:
             verdict=verdict,
             route_code=route_code,
             subcodes=subcodes,
-            evidence=_evidence(payload.get("evidence", [])),
+            evidence=evidence,
             rationale=str(payload.get("rationale", "")),
         )
         return sample_verdict, {**meta, "prompt_hash": stable_hash({"system": system, "user": user})}
+
+
+def candidate_prompt_view(candidate: CandidateSample, *, include_evaluator_private: bool = True) -> dict[str, Any]:
+    """Return the model-facing benchmark artifact without pipeline bookkeeping.
+
+    Agent-visible material is structurally separated from evaluator-private
+    context so judges cannot confuse hidden scoring/rubric context for leaked
+    benchmark content.
+    """
+    view: dict[str, Any] = {
+        "agent_visible_artifact": candidate.agent_artifact.model_dump(mode="json", exclude_none=True),
+        "benchmark_context": {
+            "ability_z": candidate.ability_z,
+            "environment_y": candidate.environment_y,
+            "difficulty": candidate.difficulty,
+            "case_type": candidate.case_type,
+            "cell": candidate.cell.model_dump(mode="json"),
+        },
+    }
+    if include_evaluator_private:
+        view["evaluator_private_context"] = {
+            "judge_artifact": candidate.judge_artifact.model_dump(mode="json"),
+        }
+    return view
+
+
+def candidate_quality_prompt_view(candidate: CandidateSample) -> dict[str, Any]:
+    """Return only the artifact and target context QualityGate may judge."""
+    return candidate_prompt_view(candidate, include_evaluator_private=False)
+
+
+def _sanitize_gate_leakage_subcodes(subcodes: list[str], evidence: list[EvidenceRef]) -> list[str]:
+    if not any(_is_answer_leak_subcode(code) for code in subcodes):
+        return subcodes
+    if any(_evidence_points_to_agent_visible_material(item) for item in evidence):
+        return subcodes
+    return [code for code in subcodes if not _is_answer_leak_subcode(code)]
+
+
+def _is_answer_leak_subcode(code: str) -> bool:
+    return code.startswith("answer_leak_")
+
+
+def _verdict_schema_for_domain(domain: DomainConfig) -> dict[str, Any]:
+    schema = deepcopy(_VERDICT_SCHEMA)
+    subcodes = schema.get("properties", {}).get("subcodes")
+    if isinstance(subcodes, dict):
+        items = subcodes.setdefault("items", {})
+        if isinstance(items, dict):
+            items["enum"] = list(domain.subcodes)
+    route_code = schema.get("properties", {}).get("route_code")
+    if isinstance(route_code, dict):
+        route_code["enum"] = list(domain.route_codes)
+    return schema
+
+
+def _evidence_points_to_agent_visible_material(evidence: EvidenceRef) -> bool:
+    source = evidence.source.strip().lower()
+    path = evidence.path.strip().lower()
+    if "evaluator_private_context" in path or "judge_artifact" in path:
+        return False
+    if source in {"evaluator_private_context", "judge_artifact", "rubric", "private"}:
+        return False
+    return (
+        source in {"candidate", "agent_visible_artifact", "agent_artifact", "visible"}
+        or path.startswith("agent_visible_artifact.")
+        or path.startswith("agent_artifact.")
+        or path.startswith("benchmark_case.")
+        or path.startswith("environment_artifact.")
+    )
+
+
+def _sanitize_adversary_attacks(attacks: list[Any]) -> list[dict[str, Any]]:
+    sanitized: list[dict[str, Any]] = []
+    for attack in attacks:
+        if not isinstance(attack, dict):
+            continue
+        item = dict(attack)
+        if str(item.get("attack_type") or "").strip().lower() == "answer_leakage" and not _adversary_attack_points_to_visible_leak(item):
+            item["attack_type"] = _non_leakage_attack_type(item)
+        sanitized.append(item)
+    return sanitized
+
+
+def _adversary_attack_points_to_visible_leak(attack: dict[str, Any]) -> bool:
+    evidence = str(attack.get("evidence") or "").lower()
+    exploit = str(attack.get("exploit_path") or "").lower()
+    text = f"{evidence} {exploit}"
+    private_markers = {
+        "evaluator_private_context",
+        "judge_artifact",
+        "scoring_contract",
+        "score_x",
+        "proxy_claim",
+        "negative_controls",
+        "known_limits",
+        "leakage_risks",
+    }
+    if any(marker in text for marker in private_markers):
+        return False
+    visible_markers = {
+        "agent_visible_artifact",
+        "agent_artifact",
+        "benchmark_case",
+        "environment_artifact",
+        "readme",
+        "prompt",
+        "setup",
+        "source comment",
+        "comment",
+        "test name",
+        "fixture",
+        "visible output",
+        "visible test",
+        "tests/",
+        ".py",
+        ".ts",
+        ".js",
+        ".java",
+        ".go",
+        ".rs",
+    }
+    return any(marker in text for marker in visible_markers)
+
+
+def _non_leakage_attack_type(attack: dict[str, Any]) -> str:
+    text = " ".join(str(attack.get(key) or "").lower() for key in ("attack_target", "evidence", "exploit_path"))
+    if "scoring" in text or "score" in text or "rubric" in text:
+        return "scoring_ambiguity"
+    if "proxy" in text:
+        return "proxy_overclaim"
+    return "other"
 
 
 class QualityGate(_GateValidator):
@@ -1301,23 +1044,25 @@ class QualityGate(_GateValidator):
     rules_attr = "quality_gate_rules"
     system_prompt = (
         "You are QualityGate for a benchmark-generation pipeline. "
-        "You are an adversarial quality gate. Your job is to prevent weak, toy, low-effort, or benchmark-shaped-but-empty cases from entering the corpus. "
-        "Treat every candidate as rejected by default until the concrete artifact earns promotion. "
-        "Judge whether the benchmark case is a strong proxy for ability_z in environment_y. "
-        "Focus on diagnostic pressure, proxy validity, difficulty, environment relevance, and leakage mitigation. "
-        "Inspect the candidate-facing prompt, files, tests, visible symptoms, shallow fixes, negative controls, and scoring contract before trusting any proxy_claim. Treat hidden tests or oracle material as scoring support only, not quality evidence. "
-        "Reject if the local artifact is weak even when the wrapper language sounds rigorous. "
-        "Reject benchmarks whose core task is an obvious one-line local patch, typo, missing import, trivial off-by-one, simple slice change, literal/operator swap, or direct traceback repair. Hidden tests, oracle text, negative controls, or rubric language do not rescue a toy core task. "
-        "Reject if hidden tests or oracle requirements are the only source of difficulty but the candidate-facing requirements do not establish that behavior. "
-        "Reject if negative controls are straw men, hidden tests do not discriminate, or weak models can pass through visible-test compliance, pattern matching, mechanical substitution, or generic defensive guards. "
-        "Actively inspect all candidate-facing material for answer leakage: prompts, inputs, code comments, labels, filenames, tests, fixtures, visible outputs, and setup. "
-        "If the benchmark reveals or strongly hints at the intended answer, root cause, fix, or scoring target, reject it even if the rubric is otherwise strong. "
-        "Do not reject merely because scoring is subjective or imperfect; RubricGate judges scoring reliability. "
-        "Do not accept merely plausible, tidy, coherent, or low-difficulty cases. "
-        "Accept only when success would be meaningful evidence of the claimed ability and failure modes are concretely exercised by the artifact. "
-        "Return verdict metadata plus a concise public rationale. Do not reveal hidden chain-of-thought. "
+        "Judge benchmark quality independently of the rubric's self-description. "
+        "Ask whether the concrete candidate artifact is worth grading as a proxy for ability_z in environment_y. "
+        "Accept only when the artifact itself creates meaningful diagnostic pressure and would make success evidence of the claimed ability. "
+        "Reject if the task is toy-shaped, leaked, fake-hard, too local, mostly compliance theater, or passable by pattern matching, visible clues, fixture-specific edits, or generic defensive guards. "
+        "You only receive the evaluated agent's visible artifact and target benchmark context; do not infer hidden rubric validity or hidden answer keys. "
+        "Only use answer_leak_* subcodes when the leak appears in agent_visible_artifact: prompt, setup, README, source comments, test names, fixture names, visible test assertions, or visible outputs. Prefer the most specific answer_leak_* subcode. "
+        "Do not decide whether the rubric precisely grades outputs except when rubric dependence hides a weak artifact. RubricGate handles rubric validity. "
+        "Cite concrete candidate fields in evidence and rationale. "
         "Do not rewrite or repair anything. Return JSON only."
     )
+
+    def _candidate_view(self, candidate: CandidateSample) -> dict[str, Any]:
+        return candidate_quality_prompt_view(candidate)
+
+    def _criteria(self, rules: list[str]) -> dict[str, Any]:
+        criteria = super()._criteria(rules)
+        criteria["general_probe_principles"] = self.domain.general_probe_principles
+        criteria["anti_overfit_policy"] = self.domain.anti_overfit_policy
+        return criteria
 
 
 class RubricGate(_GateValidator):
@@ -1326,226 +1071,15 @@ class RubricGate(_GateValidator):
     rules_attr = "rubric_gate_rules"
     system_prompt = (
         "You are RubricGate for a benchmark-generation pipeline. "
-        "You are an adversarial scoring gate. Treat the scoring setup as rejected by default until it proves it can grade the artifact reliably. "
-        "Judge whether score_x and scoring_contract are reliable enough to grade outputs for this benchmark case. "
-        "Focus on observable criteria, negative controls, boundary handling, judge variance, and whether known-bad outputs are penalized. "
-        "Inspect whether score_x is grounded in the actual artifact evidence, visible tests, shallow fixes, and patch behavior. "
-        "Reject if the rubric rewards benchmark theater, explanation polish, or visible-test passing without executable or inspectable evidence of the claimed ability. "
-        "Reject if known-bad or shallow patches could receive high scores, if negative controls are straw men, or if graders must invent missing ground truth. "
-        "If candidate-facing materials leak the answer so badly that high scores cannot distinguish true ability from clue-following, reject the scoring setup as unreliable. "
-        "Do not reject merely because the benchmark is subjective, hard, or not a perfect proxy; QualityGate judges benchmark quality. "
-        "Do not accept vague, permissive, or merely plausible scoring contracts. "
-        "Accept only when the scoring contract would reliably punish shallow fixes and reward the intended capability in the actual benchmark artifact. Do not accept a scoring setup that makes a toy benchmark look rigorous by adding hidden oracle machinery. "
-        "Return verdict metadata plus a concise public rationale. Do not reveal hidden chain-of-thought. "
+        "Validate the rubric for this exact benchmark artifact. "
+        "Ask whether score_x and scoring_contract match what the candidate actually asks an evaluated agent to do. "
+        "Accept only when the rubric would reward the intended successful behavior and penalize known-bad, shallow, overfit, or non-causal outputs. "
+        "Reject if scoring dimensions are vague, permissive, inconsistent with the artifact, reliant on invented ground truth, or likely to reward visible-test passing, explanation polish, or rubric compliance without the target ability. "
+        "The prompt separates agent_visible_artifact from evaluator_private_context. Hidden evaluator-private context is allowed rubric context; never count it as candidate-facing answer leakage. "
+        "Do not decide whether the benchmark is worth including except when the rubric cannot grade it reliably. QualityGate handles benchmark quality outside the rubric. "
+        "Cite concrete rubric, scoring_contract, negative_controls, tests, or artifact fields in evidence and rationale. "
         "Do not rewrite or repair anything. Return JSON only."
     )
-
-
-def _load_init_chat_model() -> Any:
-    try:
-        from langchain.chat_models import init_chat_model
-    except ImportError as exc:
-        raise ProviderError(
-            "LangChain chat model support is required. Install langchain and the provider integration package."
-        ) from exc
-    return init_chat_model
-
-
-def _load_init_embeddings() -> Any:
-    try:
-        from langchain.embeddings import init_embeddings
-    except ImportError as exc:
-        raise ProviderError(
-            "LangChain embedding support is required. Install langchain and the embedding provider integration package."
-        ) from exc
-    return init_embeddings
-
-
-def _supports_reasoning_effort(config: ModelConfig) -> bool:
-    provider = _model_provider(config)
-    normalized = config.model.lower()
-    return provider == "openai" and normalized.startswith(
-        ("gpt-5", "o1", "o3", "o4", "openai:gpt-5", "openai:o1", "openai:o3", "openai:o4")
-    )
-
-
-def _supports_temperature(config: ModelConfig) -> bool:
-    provider = _model_provider(config)
-    normalized = config.model.lower()
-    return provider != "openai" or not normalized.startswith(("gpt-5", "openai:gpt-5"))
-
-
-def _model_provider(config: ModelConfig) -> str:
-    if _model_has_provider_prefix(config.model):
-        return config.model.split(":", 1)[0].lower().replace("-", "_")
-    return config.provider.lower().replace("-", "_")
-
-
-def _model_has_provider_prefix(model: str) -> bool:
-    return ":" in model and not model.startswith(("http://", "https://"))
-
-
-def _nonempty_string(value: Any) -> str | None:
-    if not isinstance(value, str):
-        return None
-    stripped = value.strip()
-    return stripped or None
-
-
-def _positive_number(value: Any) -> float | None:
-    if isinstance(value, (int, float)) and value > 0:
-        return float(value)
-    return None
-
-
-def _jwt_payload(token: str) -> dict[str, Any]:
-    import base64
-
-    parts = token.split(".")
-    if len(parts) != 3:
-        return {}
-    payload = parts[1]
-    padding = "=" * (-len(payload) % 4)
-    try:
-        decoded = base64.urlsafe_b64decode((payload + padding).encode("ascii")).decode("utf-8")
-        parsed = json.loads(decoded)
-    except Exception:
-        return {}
-    return parsed if isinstance(parsed, dict) else {}
-
-
-def _jwt_expiry(token: str) -> float | None:
-    return _positive_number(_jwt_payload(token).get("exp"))
-
-
-def _extract_codex_account_id(id_token: str) -> str | None:
-    auth_claim = _jwt_payload(id_token).get("https://api.openai.com/auth")
-    if not isinstance(auth_claim, dict):
-        return None
-    return _nonempty_string(auth_claim.get("chatgpt_account_id"))
-
-
-def _sse_payloads(raw: str) -> list[str]:
-    payloads: list[str] = []
-    for frame in raw.replace("\r\n", "\n").split("\n\n"):
-        lines = []
-        for line in frame.split("\n"):
-            if line.startswith("data:"):
-                lines.append(line[5:].strip())
-        payload = "\n".join(lines).strip()
-        if payload and payload != "[DONE]":
-            payloads.append(payload)
-    return payloads
-
-
-def _read_codex_sse(response: Any, *, timeout_seconds: float = 180.0) -> str:
-    chunks: list[bytes] = []
-    deadline = time.monotonic() + timeout_seconds
-    while True:
-        if time.monotonic() >= deadline:
-            raise ProviderError(f"Codex stream timed out before response.completed after {timeout_seconds:g}s")
-        try:
-            chunk = _read_sse_chunk(response)
-        except IncompleteRead as exc:
-            if exc.partial:
-                chunks.append(exc.partial)
-            raw = b"".join(chunks).decode("utf-8", errors="replace")
-            if _codex_stream_completed(raw):
-                return raw
-            raise ProviderError("Codex stream ended with an incomplete HTTP read before response.completed") from exc
-        if not chunk:
-            raw = b"".join(chunks).decode("utf-8", errors="replace")
-            if raw:
-                return raw
-            raise ProviderError("Codex stream returned an empty response")
-        chunks.append(chunk)
-        raw = b"".join(chunks).decode("utf-8", errors="replace")
-        if _codex_stream_completed(raw):
-            return raw
-
-
-def _read_sse_chunk(response: Any) -> bytes:
-    readline = getattr(response, "readline", None)
-    if callable(readline):
-        return readline()
-    return response.read(65536)
-
-
-def _codex_stream_completed(raw: str) -> bool:
-    return any(
-        '"response.completed"' in payload and '"type"' in payload
-        for payload in _sse_payloads(raw)
-    )
-
-
-def _codex_response_text(response: dict[str, Any]) -> str:
-    output = response.get("output")
-    if not isinstance(output, list):
-        return ""
-    chunks: list[str] = []
-    for item in output:
-        if not isinstance(item, dict):
-            continue
-        content = item.get("content")
-        if not isinstance(content, list):
-            continue
-        for part in content:
-            if isinstance(part, dict):
-                text = part.get("text") or part.get("content")
-                if isinstance(text, str):
-                    chunks.append(text)
-    return "".join(chunks)
-
-
-def _local_embedding(text: str, *, dimensions: int = 128) -> list[float]:
-    buckets = [0.0] * dimensions
-    tokens = text.lower().split()
-    if not tokens:
-        return buckets
-    for token in tokens:
-        digest = hashlib.blake2b(token.encode("utf-8"), digest_size=16).digest()
-        index = int.from_bytes(digest[:4], "big") % dimensions
-        sign = 1.0 if digest[4] % 2 == 0 else -1.0
-        buckets[index] += sign
-    norm = sum(value * value for value in buckets) ** 0.5
-    if norm == 0:
-        return buckets
-    return [value / norm for value in buckets]
-
-
-def _message_text(response: Any) -> str:
-    content = getattr(response, "content", response)
-    if isinstance(content, str):
-        return content
-    if isinstance(content, list):
-        chunks: list[str] = []
-        for item in content:
-            if isinstance(item, str):
-                chunks.append(item)
-            elif isinstance(item, dict):
-                text = item.get("text")
-                if isinstance(text, str):
-                    chunks.append(text)
-        return "".join(chunks)
-    return str(content)
-
-
-def _usage_metadata(response: Any) -> dict[str, int]:
-    usage = getattr(response, "usage_metadata", None) or {}
-    response_metadata = getattr(response, "response_metadata", None) or {}
-    token_usage = response_metadata.get("token_usage") or response_metadata.get("usage") or {}
-    return {
-        "input_tokens": int(usage.get("input_tokens") or token_usage.get("prompt_tokens") or token_usage.get("input_tokens") or 0),
-        "output_tokens": int(
-            usage.get("output_tokens") or token_usage.get("completion_tokens") or token_usage.get("output_tokens") or 0
-        ),
-    }
-
-
-def _response_model_name(response: Any) -> str | None:
-    response_metadata = getattr(response, "response_metadata", None) or {}
-    value = response_metadata.get("model_name") or response_metadata.get("model")
-    return str(value) if value else None
 
 
 def _verdict(value: Any) -> Verdict:
@@ -1562,56 +1096,10 @@ def _route_code(value: Any, *, default: RouteCode) -> RouteCode:
         return default
 
 
-_REJECT_SIGNAL_CODES = {
-    "weak_proxy_validity",
-    "unreliable_score",
-    "weak_diagnostic_pressure",
-    "shortcut_leakage",
-    "vague_scoring_contract",
-    "fake_difficulty",
-    "irrelevant_environment",
-    "ambiguous_success_criteria",
-    "overbroad_proxy_claim",
-    "missing_known_limits",
-    "missing_negative_control",
-    "missing_oracle",
-    "schema_violation",
-    "near_duplicate",
-}
-
-
-_GENERATOR_RETRY_CODE_MAP = {
-    "missing_private_oracle": "weak_judge_confidence",
-    "missing_oracle": "weak_judge_confidence",
-    "private_oracle_integrity": "weak_judge_confidence",
-}
-
-
-_GENERATOR_RETRY_GUIDANCE = {
-    "workspace_tests_do_not_reproduce_failure": (
-        "The starter workspace pytest command passed. Regenerate complete files so the unmodified starter code has at least one deterministic failing pytest assertion that demonstrates the target failure. "
-        "Do not make every test fail; include enough passing tests to show the harness is otherwise healthy."
-    ),
-    "workspace_test_command_failed": (
-        "The workspace test command did not cleanly collect and run to pytest assertions. Fix syntax, imports, pytest config, and file completeness so pytest executes normally."
-    ),
-    "answer_leak_in_candidate_materials": (
-        "Candidate-facing material leaked the answer. Remove answer-key prose from prompt, setup, README, comments, test names, fixture names, and visible outputs. "
-        "Move root cause, intended fix, causal explanation, and shallow-fix analysis into judge_artifact only."
-    ),
-    "weak_diagnostic_pressure": (
-        "The artifact did not create enough diagnostic pressure. Strengthen the actual workspace behavior with interacting components, misleading symptoms, and tests that distinguish shallow patches from causal fixes."
-    ),
-    "weak_proxy_validity": (
-        "The artifact was not a strong proxy for the claimed ability. Make the visible workspace itself require the target ability; do not rely on judge-facing prose to create the difficulty."
-    ),
-}
-
-
 def _generator_safe_retry_subcodes(subcodes: list[str]) -> list[str]:
     safe: list[str] = []
     for code in subcodes:
-        mapped = _GENERATOR_RETRY_CODE_MAP.get(code, code)
+        mapped = GENERATOR_RETRY_CODE_MAP.get(code, code)
         if mapped not in safe:
             safe.append(mapped)
     return safe
@@ -1620,26 +1108,16 @@ def _generator_safe_retry_subcodes(subcodes: list[str]) -> list[str]:
 def _generator_retry_guidance(subcodes: list[str]) -> list[str]:
     guidance: list[str] = []
     for code in subcodes:
-        item = _GENERATOR_RETRY_GUIDANCE.get(code)
+        item = GENERATOR_RETRY_GUIDANCE.get(code)
         if item and item not in guidance:
             guidance.append(item)
     return guidance
 
 
-_DESIGN_RETRY_GUIDANCE = {
-    "missing_runtime_requirements": (
-        "Add runtime_requirements to every design. Executable filesystem tasks need kind=filesystem_task, execution, language, dependencies, commands.test, and network posture."
-    ),
-    "unsupported_runtime_requirements": (
-        "For executable filesystem tasks, set runtime_requirements.execution.mode to exactly 'task_image' or exactly 'container' and include execution.base_image. Do not return combined strings like 'task_image/container'."
-    ),
-}
-
-
 def _design_retry_guidance(subcodes: list[str]) -> list[str]:
     guidance: list[str] = []
     for code in subcodes:
-        item = _DESIGN_RETRY_GUIDANCE.get(code)
+        item = DESIGN_RETRY_GUIDANCE.get(code)
         if item and item not in guidance:
             guidance.append(item)
     return guidance
@@ -1652,10 +1130,14 @@ def _coerce_gate_verdict(
     subcodes: list[str],
 ) -> tuple[Verdict, RouteCode, list[str]]:
     labels = {str(code) for code in subcodes}
-    reject_labels = sorted(labels & _REJECT_SIGNAL_CODES)
+    reject_labels = sorted(labels & REJECT_SIGNAL_CODES)
     if verdict == Verdict.ACCEPT and reject_labels:
         merged_subcodes = _dedupe([*subcodes, *reject_labels])
-        route = RouteCode.REJECT_LEAKAGE if "shortcut_leakage" in reject_labels else RouteCode.REJECT_SEMANTIC_MISMATCH
+        route = (
+            RouteCode.REJECT_LEAKAGE
+            if "shortcut_leakage" in reject_labels or any(_is_answer_leak_subcode(code) for code in reject_labels)
+            else RouteCode.REJECT_SEMANTIC_MISMATCH
+        )
         return Verdict.REJECT, route, merged_subcodes
     return verdict, route_code, subcodes
 

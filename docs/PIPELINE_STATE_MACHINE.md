@@ -19,8 +19,11 @@ flowchart LR
     auditDesign["Design audit<br/>DesignAuditor LLM or local reject<br/><code>audit_design</code>"]
     generate["Generate benchmark case<br/>SampleGenerator LLM<br/><code>generate</code>"]
     validateDet["Deterministic validation<br/>Schema, contract, taxonomy<br/><code>validate_det</code>"]
+    adversary["Adversary<br/>Attack search LLM<br/><code>adversary</code>"]
+    reviseAdversary["Revise from adversary<br/>Revisor LLM<br/><code>revise_from_adversary</code>"]
     qualityGate["Quality gate<br/>Proxy validity LLM<br/><code>quality_gate</code>"]
     rubricGate["Rubric gate<br/>Scoring reliability LLM<br/><code>rubric_gate</code>"]
+    joinGates["Join gates<br/>Router-owned verdict merge<br/><code>join_gates</code>"]
     curate["Curate corpus<br/>Novelty + commit decision<br/><code>curate</code>"]
   end
 
@@ -49,17 +52,24 @@ flowchart LR
   generate -->|"retry_infra<br/>retry_parse<br/>retry_provider_empty<br/>retry before max_generation_retries"| generate
   generate -->|"drop_retry_exhausted"| dropDesign
 
-  validateDet -->|"accept"| qualityGate
+  validateDet -->|"accept<br/>adversary not done"| adversary
+  validateDet -->|"accept<br/>adversary done"| qualityGate
+  validateDet -->|"accept<br/>adversary done"| rubricGate
   validateDet -->|"reject_schema<br/>reject_leakage<br/>reject_coverage_mismatch<br/>retry before max_generation_retries"| generate
   validateDet -->|"drop_retry_exhausted"| dropDesign
 
-  qualityGate -->|"accept"| rubricGate
-  qualityGate -->|"reject_criteria_mismatch<br/>reject_semantic_mismatch<br/>retry before max_generation_retries"| generate
-  qualityGate -->|"drop_retry_exhausted"| dropDesign
+  adversary -->|"revision needed"| reviseAdversary
+  adversary -->|"accept"| qualityGate
+  adversary -->|"accept"| rubricGate
+  adversary -->|"retry / reject<br/>retry before max_generation_retries"| generate
+  adversary -->|"drop_retry_exhausted"| dropDesign
+  reviseAdversary --> validateDet
 
-  rubricGate -->|"accept"| curate
-  rubricGate -->|"reject_criteria_mismatch<br/>reject_semantic_mismatch<br/>retry before max_generation_retries"| generate
-  rubricGate -->|"drop_retry_exhausted"| dropDesign
+  qualityGate -->|"verdict recorded"| joinGates
+  rubricGate -->|"verdict recorded"| joinGates
+  joinGates -->|"accept"| curate
+  joinGates -->|"quality/rubric reject<br/>retry before max_generation_retries"| generate
+  joinGates -->|"drop_retry_exhausted"| dropDesign
 
   curate -->|"accept"| commit
   curate -->|"reject_duplicate"| dropDesign
@@ -83,9 +93,9 @@ flowchart LR
   classDef reject fill:#fff1f2,stroke:#e11d48,color:#0f172a,stroke-width:2px;
 
   class START,END startEnd;
-  class design,auditDesign,generate,qualityGate,rubricGate llm;
+  class design,auditDesign,generate,adversary,reviseAdversary,qualityGate,rubricGate llm;
   class designDet,validateDet,curate det;
-  class selectDesign router;
+  class selectDesign,joinGates router;
   class commit,stageLog artifact;
   class dropDesign,dropBatch reject;
 ```
@@ -98,9 +108,9 @@ flowchart LR
 | Batch design check to design loop | `accept` to `select_next_design` | `reject_coverage_mismatch` or `reject_duplicate` returns to `design` while retries remain | `drop_retry_exhausted` |
 | Design audit to generation | `accept` to `generate` | Rejected design is archived, then the run selects the next design or replans | End only if no route can continue |
 | Generation to validation | `accept` to `validate_det` | `retry_infra`, `retry_parse`, or `retry_provider_empty` loops on `generate` with `same_input_retry` while retries remain | `drop_retry_exhausted` |
-| Deterministic validation to quality gate | `accept` to `quality_gate` | Content failures route back to `generate` with `criteria_plus_route_code` while retries remain | `drop_retry_exhausted` |
-| Quality gate to rubric gate | `accept` to `rubric_gate` | Proxy-quality failures route back to `generate` with `criteria_plus_route_code` while retries remain | `drop_retry_exhausted` |
-| Rubric gate to curation | `accept` to `curate` | Scoring-reliability failures route back to `generate` with `criteria_plus_route_code` while retries remain | `drop_retry_exhausted` |
+| Deterministic validation to adversary or gates | `accept` to `adversary` when adversary has not run; otherwise fan out to `quality_gate` and `rubric_gate` | Content failures route back to `generate` with `criteria_plus_route_code` while retries remain | `drop_retry_exhausted` |
+| Adversary to revision or gates | Attack findings route through `revise_from_adversary` and then back to `validate_det`; clean candidates fan out to both gates | Retryable adversary failures return to `generate` while retries remain | `drop_retry_exhausted` |
+| Gate fan-out to curation | `quality_gate` and `rubric_gate` both report to `join_gates`; all-accept advances to `curate` | Proxy-quality or scoring-reliability failures route back to `generate` with `criteria_plus_route_code` while retries remain | `drop_retry_exhausted` |
 | Curation to corpus | `accept` commits the sample | `reject_duplicate` archives the sample and continues | Run ends when `target_n` is reached or no retry path remains |
 
 ## Visual Legend

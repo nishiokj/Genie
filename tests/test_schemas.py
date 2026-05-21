@@ -62,8 +62,8 @@ def test_environment_artifact_rejects_version_field() -> None:
             content_hash="abc",
             cell=cell,
             agent_artifact={
-                "benchmark_case": {"prompt": "Debug the provided virtual workspace and explain the fix."},
-                "environment_artifact": {"kind": "virtual_workspace", "version": "do-not-accept", "payload": {}},
+                "benchmark_case": {"prompt": "Debug the provided execution workspace and explain the fix."},
+                "environment_artifact": {"kind": "executioner_workspace", "version": "do-not-accept", "payload": {}},
             },
             judge_artifact={
                 "score_x": {"score_type": "rubric", "dimensions": [{"name": "quality", "weight": 1.0}]},

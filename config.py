@@ -9,6 +9,11 @@ import yaml
 from pydantic import BaseModel, Field, SecretStr
 
 
+GEMINI_OPENAI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+GEMINI_PROVIDER_ALIASES = {"gemini", "google", "google_ai", "google_genai"}
+XAI_PROVIDER_ALIASES = {"xai", "grok"}
+
+
 class ModelConfig(BaseModel):
     provider: str = "openai"
     model: str = "gpt-5.5"
@@ -17,7 +22,8 @@ class ModelConfig(BaseModel):
     base_url: Optional[str] = None
     api_key: Optional[SecretStr] = Field(default=None, repr=False)
     auth_file: Optional[Path] = None
-    reasoning_effort: Optional[str] = "medium"
+    reasoning_effort: Optional[str] = None
+    max_tokens: Optional[int] = None
     request_timeout_seconds: float = 180.0
 
 
@@ -57,10 +63,11 @@ class RuntimeConfig(BaseModel):
     data_dir: Path = Path("data")
     logs_dir: Path = Path("logs")
     models: ModelConfig = Field(default_factory=ModelConfig)
-    gate_ensemble_models: list[ModelConfig] = Field(default_factory=list)
-    generator_system_prompt_override: str = ""
-    generator_system_prompt_append: str = ""
-    workspace_validation_executor: str = "docker"
+    generator_model: Optional[ModelConfig] = None
+    adversary_model: Optional[ModelConfig] = None
+    revisor_model: Optional[ModelConfig] = None
+    quality_gate_model: Optional[ModelConfig] = None
+    rubric_gate_model: Optional[ModelConfig] = None
     console_progress: bool = True
 
 
@@ -111,27 +118,35 @@ def build_runtime_config(
     target_n: int,
     seed: int,
     run_id: str,
+    models: Optional[ModelConfig] = None,
+    generator_model: Optional[ModelConfig] = None,
+    adversary_model: Optional[ModelConfig] = None,
+    revisor_model: Optional[ModelConfig] = None,
+    quality_gate_model: Optional[ModelConfig] = None,
+    rubric_gate_model: Optional[ModelConfig] = None,
     model: Optional[str] = None,
     provider: Optional[str] = None,
+    base_url: Optional[str] = None,
+    api_key: Optional[str] = None,
     auth_file: Optional[str | Path] = None,
     embedding_model: Optional[str] = None,
-    generator_system_prompt_override: Optional[str] = None,
-    generator_system_prompt_append: Optional[str] = None,
-    workspace_validation_executor: Optional[str] = None,
+    reasoning_effort: Optional[str] = None,
+    max_tokens: Optional[int] = None,
+    request_timeout_seconds: Optional[float] = None,
     console_progress: bool = True,
 ) -> RuntimeConfig:
     load_env_file()
     domain = load_domain(domain_path)
-    models = ModelConfig(
-        provider=provider or os.getenv("MODEL_PROVIDER", "openai"),
-        model=model or os.getenv("MODEL_NAME", "gpt-5.5"),
-        embedding_provider=os.getenv("EMBEDDING_PROVIDER", "local"),
-        embedding_model=embedding_model or os.getenv("EMBEDDING_MODEL", "local-hash-embedding"),
-        base_url=os.getenv("MODEL_BASE_URL") or None,
-        api_key=_optional_secret(os.getenv("MODEL_API_KEY")),
-        auth_file=_resolve_optional_path(auth_file or os.getenv("MODEL_AUTH_FILE")),
-        reasoning_effort=os.getenv("MODEL_REASONING_EFFORT", "medium") or None,
-        request_timeout_seconds=float(os.getenv("MODEL_TIMEOUT_SECONDS", "180")),
+    runtime_models = models or build_model_config_from_env(
+        model=model,
+        provider=provider,
+        base_url=base_url,
+        api_key=api_key,
+        auth_file=auth_file,
+        embedding_model=embedding_model,
+        reasoning_effort=reasoning_effort,
+        max_tokens=max_tokens,
+        request_timeout_seconds=request_timeout_seconds,
     )
     return RuntimeConfig(
         domain=domain,
@@ -140,18 +155,50 @@ def build_runtime_config(
         target_n=target_n,
         seed=seed,
         run_id=run_id,
-        models=models,
-        gate_ensemble_models=_load_gate_ensemble_models(),
-        generator_system_prompt_override=generator_system_prompt_override
-        if generator_system_prompt_override is not None
-        else os.getenv("GENERATOR_SYSTEM_PROMPT_OVERRIDE", ""),
-        generator_system_prompt_append=generator_system_prompt_append
-        if generator_system_prompt_append is not None
-        else os.getenv("GENERATOR_SYSTEM_PROMPT_APPEND", ""),
-        workspace_validation_executor=workspace_validation_executor
-        if workspace_validation_executor is not None
-        else "docker",
+        models=runtime_models,
+        generator_model=generator_model,
+        adversary_model=adversary_model,
+        revisor_model=revisor_model,
+        quality_gate_model=quality_gate_model,
+        rubric_gate_model=rubric_gate_model,
         console_progress=console_progress,
+    )
+
+
+def build_model_config_from_env(
+    *,
+    model: Optional[str] = None,
+    provider: Optional[str] = None,
+    base_url: Optional[str] = None,
+    api_key: Optional[str] = None,
+    auth_file: Optional[str | Path] = None,
+    embedding_model: Optional[str] = None,
+    reasoning_effort: Optional[str] = None,
+    max_tokens: Optional[int] = None,
+    request_timeout_seconds: Optional[float] = None,
+    env_policy_defaults: bool = True,
+) -> ModelConfig:
+    model_provider = provider or os.getenv("MODEL_PROVIDER", "openai")
+    resolved_reasoning_effort = reasoning_effort
+    if resolved_reasoning_effort is None and env_policy_defaults:
+        resolved_reasoning_effort = os.getenv("MODEL_REASONING_EFFORT")
+    resolved_max_tokens = max_tokens
+    if resolved_max_tokens is None and env_policy_defaults:
+        resolved_max_tokens = _optional_positive_int(os.getenv("MODEL_MAX_TOKENS"))
+    resolved_timeout = request_timeout_seconds
+    if resolved_timeout is None and env_policy_defaults:
+        resolved_timeout = float(os.getenv("MODEL_TIMEOUT_SECONDS", "180"))
+    return ModelConfig(
+        provider=model_provider,
+        model=model or os.getenv("MODEL_NAME", "gpt-5.5"),
+        embedding_provider=os.getenv("EMBEDDING_PROVIDER", "local"),
+        embedding_model=embedding_model or os.getenv("EMBEDDING_MODEL", "local-hash-embedding"),
+        base_url=_default_model_base_url(model_provider, base_url or os.getenv("MODEL_BASE_URL")),
+        api_key=_optional_secret(_default_model_api_key(model_provider, api_key or os.getenv("MODEL_API_KEY"))),
+        auth_file=_resolve_optional_path(auth_file or os.getenv("MODEL_AUTH_FILE")),
+        reasoning_effort=resolved_reasoning_effort or None,
+        max_tokens=resolved_max_tokens,
+        request_timeout_seconds=resolved_timeout if resolved_timeout is not None else 180.0,
     )
 
 
@@ -170,25 +217,42 @@ def _optional_secret(value: str | None) -> SecretStr | None:
     return SecretStr(value.strip())
 
 
-def _load_gate_ensemble_models() -> list[ModelConfig]:
-    models: list[ModelConfig] = []
-    index = 1
-    while True:
-        prefix = f"GATE_ENSEMBLE_{index}_"
-        has_any = any(key.startswith(prefix) for key in os.environ)
-        if not has_any:
-            break
-        models.append(
-            ModelConfig(
-                provider=os.getenv(prefix + "PROVIDER", "openai"),
-                model=os.getenv(prefix + "MODEL", "moonshotai/Kimi-K2.6"),
-                base_url=os.getenv(prefix + "BASE_URL", "https://api.deepinfra.com/v1/openai"),
-                api_key=_optional_secret(os.getenv(prefix + "API_KEY")),
-                reasoning_effort=os.getenv(prefix + "REASONING_EFFORT") or None,
-                request_timeout_seconds=float(os.getenv(prefix + "TIMEOUT_SECONDS", os.getenv("MODEL_TIMEOUT_SECONDS", "180"))),
-                embedding_provider=os.getenv("EMBEDDING_PROVIDER", "local"),
-                embedding_model=os.getenv("EMBEDDING_MODEL", "local-hash-embedding"),
-            )
-        )
-        index += 1
-    return models
+def _optional_positive_int(value: str | None) -> int | None:
+    if value is None or not value.strip():
+        return None
+    parsed = int(value.strip())
+    if parsed <= 0:
+        raise ValueError("token limits must be positive integers")
+    return parsed
+
+
+def _normalized_provider(value: str | None) -> str:
+    return (value or "").strip().lower().replace("-", "_")
+
+
+def _is_gemini_provider(value: str | None) -> bool:
+    return _normalized_provider(value) in GEMINI_PROVIDER_ALIASES
+
+
+def _is_xai_provider(value: str | None) -> bool:
+    return _normalized_provider(value) in XAI_PROVIDER_ALIASES
+
+
+def _default_model_base_url(provider: str | None, explicit_base_url: str | None) -> str | None:
+    if explicit_base_url and explicit_base_url.strip():
+        return explicit_base_url.strip()
+    if _is_gemini_provider(provider):
+        return GEMINI_OPENAI_BASE_URL
+    return None
+
+
+def _default_model_api_key(provider: str | None, explicit_api_key: str | None) -> str | None:
+    if _is_gemini_provider(provider) and os.getenv("GEMINI_API_KEY"):
+        return os.getenv("GEMINI_API_KEY")
+    if _is_xai_provider(provider):
+        xai_key = os.getenv("XAI_API_KEY") or os.getenv("GROK_API_KEY")
+        if xai_key:
+            return xai_key
+    if explicit_api_key and explicit_api_key.strip():
+        return explicit_api_key
+    return None

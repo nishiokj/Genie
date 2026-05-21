@@ -15,7 +15,8 @@ from models import (
     Verdict,
 )
 from services.environment_validation import validate_environment_artifact
-from services.workspace_executor import validate_supported_container_runtime
+from services.execution_workspace import ExecutionWorkspace, ExecutionWorkspaceError
+from services.runtime_requirements import validate_supported_container_runtime
 from text_hygiene import find_disallowed_text
 
 
@@ -104,7 +105,7 @@ def deterministic_sample_verdict(
     candidate: CandidateSample,
     domain: DomainConfig,
     *,
-    workspace_validation_executor: str | None = None,
+    execution_workspace: ExecutionWorkspace | None = None,
 ) -> tuple[SampleVerdict, list[CheckResult]]:
     checks = [
         _text_hygiene_check(candidate),
@@ -121,10 +122,10 @@ def deterministic_sample_verdict(
             validate_environment_artifact(
                 candidate,
                 domain,
-                workspace_validation_executor=workspace_validation_executor,
+                execution_workspace=execution_workspace,
             ),
         )
-        checks.insert(5, _candidate_facing_answer_leak_check(candidate))
+        checks.insert(5, _candidate_facing_answer_leak_check(candidate, execution_workspace=execution_workspace))
     failed = [check for check in checks if not check.passed]
     if not failed:
         return (
@@ -223,7 +224,7 @@ def _runtime_requirements_check(candidate: CandidateSample, domain: DomainConfig
 
     artifact = candidate.agent_artifact.environment_artifact
     artifact_command = None
-    if artifact is not None and artifact.kind == "virtual_workspace":
+    if artifact is not None and artifact.kind == "executioner_workspace":
         payload_commands = artifact.payload.get("commands")
         if isinstance(payload_commands, dict):
             artifact_command = payload_commands.get("test")
@@ -285,37 +286,41 @@ def _text_hygiene_check(candidate: CandidateSample) -> CheckResult:
 
 
 _ANSWER_LEAK_PATTERNS = (
-    "bug:",
-    "bug note",
-    "bug intentionally",
-    "intentionally buggy",
-    "intentional bug",
-    "root cause:",
-    "source of the bug",
-    "source of this bug",
-    "intended fix",
-    "exact fix",
-    "faulty line",
-    "current code incorrectly",
-    "currently incorrectly",
-    "intended invariant",
-    "intended behavior",
-    "starter code",
-    "starter workspace",
-    "your fix should",
+    ("answer_leak_explicit_bug_label", "bug:"),
+    ("answer_leak_explicit_bug_label", "bug note"),
+    ("answer_leak_explicit_bug_label", "bug intentionally"),
+    ("answer_leak_explicit_bug_label", "intentionally buggy"),
+    ("answer_leak_explicit_bug_label", "intentional bug"),
+    ("answer_leak_root_cause_disclosure", "root cause:"),
+    ("answer_leak_root_cause_disclosure", "source of the bug"),
+    ("answer_leak_root_cause_disclosure", "source of this bug"),
+    ("answer_leak_fix_instruction", "intended fix"),
+    ("answer_leak_fix_instruction", "exact fix"),
+    ("answer_leak_fix_instruction", "your fix should"),
+    ("answer_leak_fault_location", "faulty line"),
+    ("answer_leak_fault_behavior_description", "current code incorrectly"),
+    ("answer_leak_fault_behavior_description", "currently incorrectly"),
+    ("answer_leak_intended_behavior", "intended invariant"),
+    ("answer_leak_intended_behavior", "intended behavior"),
+    ("answer_leak_scaffold_label", "starter code"),
+    ("answer_leak_scaffold_label", "starter workspace"),
 )
 
 
-def _candidate_facing_answer_leak_check(candidate: CandidateSample) -> CheckResult:
-    for path, value in _candidate_facing_texts(candidate):
+def _candidate_facing_answer_leak_check(
+    candidate: CandidateSample,
+    *,
+    execution_workspace: ExecutionWorkspace | None = None,
+) -> CheckResult:
+    for path, value in _candidate_facing_texts(candidate, execution_workspace=execution_workspace):
         lowered = value.lower()
-        for pattern in _ANSWER_LEAK_PATTERNS:
+        for subcode, pattern in _ANSWER_LEAK_PATTERNS:
             if pattern in lowered:
                 return CheckResult(
                     check_id="answer_leakage",
                     passed=False,
                     route_code=RouteCode.REJECT_LEAKAGE,
-                    subcode="answer_leak_in_candidate_materials",
+                    subcode=subcode,
                     evidence=[
                         EvidenceRef(
                             source="deterministic_rule",
@@ -327,26 +332,49 @@ def _candidate_facing_answer_leak_check(candidate: CandidateSample) -> CheckResu
     return CheckResult(check_id="answer_leakage", passed=True)
 
 
-def _candidate_facing_texts(candidate: CandidateSample) -> list[tuple[str, str]]:
+def _candidate_facing_texts(
+    candidate: CandidateSample,
+    *,
+    execution_workspace: ExecutionWorkspace | None = None,
+) -> list[tuple[str, str]]:
     texts: list[tuple[str, str]] = []
     benchmark_case = candidate.agent_artifact.benchmark_case
     for key in ("prompt", "setup", "inputs", "environment"):
         texts.extend(_string_values(f"benchmark_case.{key}", benchmark_case.get(key)))
 
     artifact = candidate.agent_artifact.environment_artifact
-    if artifact is not None and artifact.kind == "virtual_workspace":
-        files = artifact.payload.get("files", [])
-        if isinstance(files, list):
-            for index, file_entry in enumerate(files):
-                if not isinstance(file_entry, dict):
-                    continue
-                file_path = file_entry.get("path")
-                content = file_entry.get("content")
-                if isinstance(file_path, str):
-                    texts.append((f"environment_artifact.payload.files.{index}.path", file_path))
-                if isinstance(content, str):
-                    texts.append((f"environment_artifact.payload.files.{index}.content", content))
+    if artifact is not None and artifact.kind == "executioner_workspace":
+        workspace: ExecutionWorkspace | None = None
+        close_workspace = False
+        try:
+            if _workspace_matches_artifact(execution_workspace, artifact.payload):
+                workspace = execution_workspace
+            else:
+                workspace = ExecutionWorkspace.from_artifact(artifact.payload)
+                close_workspace = True
+            for index, path in enumerate(workspace.list_files()):
+                texts.append((f"environment_artifact.payload.files.{index}.path", path))
+                texts.append((f"environment_artifact.workspace.{path}", workspace.read_file(path)))
+        except ExecutionWorkspaceError:
+            pass
+        finally:
+            if close_workspace and workspace is not None:
+                workspace.close()
     return texts
+
+
+def _workspace_matches_artifact(workspace: ExecutionWorkspace | None, payload: dict[str, Any]) -> bool:
+    if workspace is None:
+        return False
+    root_value = payload.get("workspace_root")
+    if not isinstance(root_value, str) or not root_value.strip():
+        return False
+    try:
+        from pathlib import Path
+
+        return workspace.active_root.resolve() == Path(root_value).resolve()
+    except OSError:
+        return False
 
 
 def _string_values(path: str, value: Any) -> list[tuple[str, str]]:

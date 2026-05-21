@@ -6,10 +6,12 @@ jsonschema-specifications==2025.9.1
 langchain==1.2.15
 langchain-openai==1.2.1
 langchain-anthropic==1.4.3
+langchain-xai==1.2.2
 langgraph==1.1.5
 pydantic==2.12.5
 pydantic_core==2.41.5
 eval_type_backport==0.2.2
+-e ../substrate/packages/executioner-python
 
 # Repo packaging
 zstandard==0.25.0

@@ -1,10 +1,10 @@
 # Synthetic Data Pipeline Agents
 
-POC repo for a staged synthetic-data pipeline that creates benchmark cases with
-strong role separation, deterministic routing, structured run logs, and offline
+Staged synthetic-data pipeline for creating benchmark cases with strong role
+separation, router-owned transitions, structured run logs, and offline
 diversity/quality analysis.
 
-The first shippable target is narrow on purpose:
+The primary target is narrow on purpose:
 
 - Generate one committed JSONL dataset of benchmark cases.
 - Emit one structured Stage Run Log JSONL file per run.
@@ -15,7 +15,7 @@ The first shippable target is narrow on purpose:
 ## What This Is
 
 This is a LangGraph-style pipeline with domain-agnostic agent roles and
-domain-specific contracts. The current POC generates benchmark cases where:
+domain-specific contracts. The current benchmark contracts generate cases where:
 
 ```text
 score X on benchmark B should be a strong proxy for ability Z in environment Y
@@ -39,12 +39,18 @@ flowchart LR
   DesignAudit -->|"reject design"| Drop["Archive rejection"]
   Generate -->|"accept"| DetVal["Deterministic validation"]
   Generate -->|"retry_*"| Generate
-  DetVal -->|"accept"| QualityGate["Quality gate<br/>benchmark proxy"]
+  DetVal -->|"accept, adversary pending"| Adversary["Adversary<br/>attack search"]
+  DetVal -->|"accept, adversary done"| QualityGate["Quality gate<br/>benchmark proxy"]
+  DetVal -->|"accept, adversary done"| RubricGate["Rubric gate<br/>scoring reliability"]
   DetVal -->|"reject / retry"| Generate
-  QualityGate -->|"accept"| RubricGate["Rubric gate<br/>scoring reliability"]
-  QualityGate -->|"reject / retry"| Generate
-  RubricGate -->|"accept"| Curate["Curate corpus"]
-  RubricGate -->|"reject / retry"| Generate
+  Adversary -->|"revision needed"| Revise["Revise from adversary"]
+  Adversary -->|"accept"| QualityGate
+  Adversary -->|"accept"| RubricGate
+  Revise --> DetVal
+  QualityGate --> JoinGates["Join gates"]
+  RubricGate --> JoinGates
+  JoinGates -->|"accept"| Curate["Curate corpus"]
+  JoinGates -->|"reject / retry"| Generate
   Curate -->|"accept"| Commit["Commit sample"]
   Curate -->|"reject_duplicate"| Drop
   Commit -->|"target_n reached"| END((END))
@@ -59,17 +65,16 @@ flowchart LR
   classDef artifact fill:#f8fafc,stroke:#64748b,color:#0f172a,stroke-width:2px;
   classDef reject fill:#fff1f2,stroke:#e11d48,color:#0f172a,stroke-width:2px;
   class START,END startEnd;
-  class Design,DesignAudit,Generate,QualityGate,RubricGate llm;
+  class Design,DesignAudit,Generate,Adversary,Revise,QualityGate,RubricGate llm;
   class DesignCheck,DetVal,Curate det;
-  class SelectDesign router;
+  class SelectDesign,JoinGates router;
   class Commit artifact;
   class Drop reject;
 ```
 
-See [docs/BENCHMARK_PROXY_PATCH_PLAN.md](docs/BENCHMARK_PROXY_PATCH_PLAN.md)
-for the benchmark-proxy design notes and
-[docs/PIPELINE_STATE_MACHINE.md](docs/PIPELINE_STATE_MACHINE.md) for the full
-stage and route diagram.
+See [docs/PIPELINE_STATE_MACHINE.md](docs/PIPELINE_STATE_MACHINE.md) for the
+full stage and route diagram and [docs/PIPELINE_REFERENCE.md](docs/PIPELINE_REFERENCE.md)
+for the runtime artifact reference.
 
 ## Core Principles
 
@@ -78,29 +83,46 @@ stage and route diagram.
 - Judges never create, repair, or rewrite upstream artifacts.
 - Route codes are fixed, inspectable, and used for routing.
 - Stage Run Logs are first-class data, not incidental telemetry.
-- Demo output must come from the pipeline path that will ship.
+- Run output must come from the same pipeline path used for production runs.
 
-## Intended Repo Shape
+## Repo Map
 
 ```text
 main.py                  # CLI entrypoint
+cli_graph.py             # Optional live progress graph for terminal runs
 pipeline.py              # Pipeline nodes, edges, retry policy
+pipeline_transitions.py  # Pure graph transition functions
+pipeline_helpers.py      # Progress, error, and output helpers
 agents.py                # Agent role implementations
+agent_constants.py       # Static prompt, taxonomy, and retry guidance data
+model_client.py          # LangChain/OpenAI-compatible provider orchestration
+model_helpers.py         # Shared model config coercion helpers
+codex_client.py          # Codex subscription transport
+structured_output.py     # Structured-response parsing and schema normalization
+structured_schemas.py    # JSON-schema builders for agent outputs
+generation_artifacts.py  # Candidate shaping, workspace tools, revision patches
 router.py                # Route table and context policies
 rules.py                 # Deterministic benchmark schema and contract checks
 models.py                # Pydantic artifact and event schemas
 config.py                # CLI/env/domain config resolution
 observability.py         # StageRecord JSONL writer
+text_hygiene.py          # Provider text normalization and disallowed-char checks
 analyze.py               # Offline diversity and quality metrics
+run_report.py            # Human-readable run summaries
+sample_outputs.py        # Sample model outputs for committed benchmark prompts
 
 services/
+  execution_workspace.py # Executioner-backed durable workspace sessions
+  environment_validation.py # Workspace/runtime validation
+  runtime_requirements.py   # Portable runtime contract validation
   corpus_index.py        # Embeddings and nearest-neighbor novelty checks
   coverage_ledger.py     # Taxonomy-cell coverage counts
   validation_ledger.py   # Verdict trail
   rejection_archive.py   # Rejected artifacts and evidence
 
 domains/
-  benchmark_haiku.yaml   # POC benchmark domain contract
+  benchmark_haiku.yaml   # Haiku benchmark domain contract
+  benchmark_code_debug.yaml # Code-debug benchmark domain contract
 
 tests/
   test_router.py
@@ -109,76 +131,63 @@ tests/
   test_pipeline_smoke.py
 ```
 
-## Ship Gate
+## CLI
 
-Before sending this repo out, the POC is not considered real unless these all
-pass:
+Run the deterministic suite first, then run a small live smoke with a fresh
+`--run-id`:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 export OPENAI_API_KEY=...
-# optional: export MODEL_PROVIDER=openai
-# optional: export MODEL_NAME=gpt-5.5
-# optional: export MODEL_REASONING_EFFORT=medium
 pytest
-python3 main.py --domain domains/benchmark_haiku.yaml --target-stage benchmark --target-n 5 --seed 42 --run-id demo
-python3 analyze.py --run-id demo
-python3 run_report.py demo
-python3 sample_outputs.py demo --limit 1
+python3 main.py --domain domains/benchmark_haiku.yaml --target-stage benchmark --target-n 5 --seed 42 --run-id smoke-run
+python3 analyze.py --run-id smoke-run
+python3 run_report.py smoke-run
+python3 sample_outputs.py smoke-run --limit 1
 ```
 
-The demo must leave inspectable artifacts on disk:
+Useful runtime flags:
+
+```bash
+python3 main.py \
+  --domain domains/benchmark_code_debug.yaml \
+  --target-stage benchmark \
+  --target-n 3 \
+  --seed 42 \
+  --run-id code-smoke \
+  --provider openai \
+  --model gpt-5.5
+```
+
+- `--no-progress` disables the terminal graph.
+- `--overwrite` replaces existing artifacts for the run id.
+- `--auth-file` points Codex subscription auth at a non-default auth file.
+
+Each live run writes inspectable artifacts on disk:
 
 ```text
-data/corpus/benchmark/demo.jsonl
-logs/demo/stage_records.jsonl
-logs/demo/validation.jsonl
-logs/demo/rejections.jsonl
-logs/demo/metrics.json
-data/outputs/demo.jsonl
+data/corpus/benchmark/smoke-run.jsonl
+logs/smoke-run/stage_records.jsonl
+logs/smoke-run/validation.jsonl
+logs/smoke-run/rejections.jsonl
+logs/smoke-run/metrics.json
+data/outputs/smoke-run.jsonl
 ```
 
 `main.py` refuses to reuse a run id when matching logs or corpus files already
 exist. Use a new `--run-id`, or pass `--overwrite` when you intentionally want
 to replace that run's artifacts.
 
-No checked-in static demo output should be presented as a successful run. The
-demo requires actual API credentials and must make live provider calls for the
-LLM and embedding stages. Test doubles are allowed only inside tests.
-
-## Agent Bundle
-
-For benchmark runners that mount the pipeline into existing task images, build a
-PyInstaller bundle:
-
-```bash
-scripts/build_agent_bundle.sh
-```
-
-The script auto-selects `python3.12`, `python3.11`, or `python3.10` when
-available. You can override it with `PYTHON_BIN=/path/to/python3.10`.
-
-The script creates `dist/synth-pipeline-bundle/`, including a runnable entrypoint
-and the checked-in domain contracts:
-
-```bash
-dist/synth-pipeline-bundle/bin/synth-pipeline/synth-pipeline \
-  --domain dist/synth-pipeline-bundle/share/domains/benchmark_haiku.yaml \
-  --target-n 1 \
-  --run-id smoke
-```
-
-The bundle carries its own Python runtime and pinned dependencies, so the task
-image does not need `python3` installed just to launch the pipeline. It still
-must be compatible with the platform the bundle was built for, and any external
-tools or credentials the pipeline uses must be available at runtime.
+No checked-in static output should be presented as a successful run. The smoke
+run requires actual API credentials and must make live provider calls for the
+LLM stages. Test doubles are allowed only inside tests.
 
 ## Environment
 
-The live POC uses real provider calls for LLM stages. You can put credentials
-and model settings in `.env` at the repo root:
+Live runs use real provider calls for LLM stages. You can put credentials and
+model settings in `.env` at the repo root:
 
 ```text
 OPENAI_API_KEY=sk-...
@@ -187,6 +196,27 @@ MODEL_NAME=gpt-5.5
 MODEL_REASONING_EFFORT=medium
 EMBEDDING_PROVIDER=local
 EMBEDDING_MODEL=local-hash-embedding
+```
+
+Gemini models are supported through Google's OpenAI-compatible Gemini API
+endpoint. Put `GEMINI_API_KEY` in `.env` and select the Gemini provider:
+
+```text
+GEMINI_API_KEY=...
+MODEL_PROVIDER=gemini
+MODEL_NAME=gemini-3.1-flash-lite
+```
+
+When `MODEL_PROVIDER=gemini` and `MODEL_BASE_URL` is unset, the pipeline uses
+`https://generativelanguage.googleapis.com/v1beta/openai/`.
+
+xAI/Grok models are supported through LangChain's xAI integration. Use either
+`XAI_API_KEY` or `GROK_API_KEY`:
+
+```text
+GROK_API_KEY=...
+MODEL_PROVIDER=xai
+MODEL_NAME=grok-4.3
 ```
 
 By default, embeddings use a local deterministic hash vector for novelty checks.
@@ -200,13 +230,16 @@ default auth file at `~/.codex/auth.json` or pass an explicit path:
 MODEL_PROVIDER=codex MODEL_NAME=gpt-5.5 python3 main.py \
   --domain domains/benchmark_haiku.yaml \
   --target-n 1 \
-  --run-id codex-demo \
+  --run-id codex-smoke \
   --auth-file ~/.codex/auth.json
 ```
 
 See `.env.example` for optional model and base URL overrides. Values already
 exported in your shell take precedence over `.env`.
 
-The deterministic tests run without provider credentials. The smoke demo may
-use a tiny target count, but it exercises the same node, route, logging, and
-artifact paths as the full run.
+## Release Check
+
+The deterministic tests run without provider credentials. Before sending this
+repo out, run `pytest` and at least one live smoke. A smoke may use a tiny target
+count, but it must exercise the same node, route, logging, and artifact paths as
+a full run.

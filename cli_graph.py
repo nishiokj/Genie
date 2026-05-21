@@ -269,7 +269,6 @@ def _render_connectors(c: _Canvas, cx: dict[str, int], compact: bool, labels: di
     def _roff(node: str) -> int:
         return (len(labels[node]) + 4) // 2
 
-    # Design retry: deterministic design-batch reject routes back to design.
     design_l = center - _roff("design")
     c.put(left, 7, "┌")
     _vline(c, left, 2, 6)
@@ -279,7 +278,6 @@ def _render_connectors(c: _Canvas, cx: dict[str, int], compact: bool, labels: di
     c.put(design_l - 1, 1, "→")
     c.put(left, 6, "retry design", DIM)
 
-    # Generation retry: det/quality/rubric rejects can route back to generation.
     generate_l = center - _roff("generate")
     c.put(left, 42, "┌")
     _vline(c, left, _BY["generate"] + 2, 41)
@@ -289,7 +287,6 @@ def _render_connectors(c: _Canvas, cx: dict[str, int], compact: bool, labels: di
     c.put(generate_l - 1, _BY["generate"] + 1, "→")
     c.put(left, 41, "retry sample", DIM)
 
-    # Adversary revision is a validation side loop; revised samples re-enter deterministic validation.
     validate_r = center + _roff("validate_det")
     revise_r = center + _roff("revise_from_adversary")
     loop_right = 68 if not compact else 40
@@ -302,7 +299,6 @@ def _render_connectors(c: _Canvas, cx: dict[str, int], compact: bool, labels: di
     if not compact:
         c.put(loop_right - 7, 29, "recheck", DIM)
 
-    # Accepted deterministic validation fans out to parallel semantic gates, then joins.
     qx = cx["quality_gate"]
     rx = cx["rubric_gate"]
     jy = _BY["join_gates"]
@@ -322,7 +318,6 @@ def _render_connectors(c: _Canvas, cx: dict[str, int], compact: bool, labels: di
     _vline(c, center, jy + 3, _BY["curate"] - 1)
     c.put(center, _BY["curate"], "┴")
 
-    # Curation loops to the next design, or back to design when no designs remain.
     curate_r = center + _roff("curate")
     design_r = center + _roff("design")
     cursor_r = center + _roff("select_next_design")

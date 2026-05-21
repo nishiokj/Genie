@@ -33,10 +33,12 @@ class StageLogWriter:
         self._lock = threading.Lock()
 
     def append_event(self, event: str, value: dict[str, Any]) -> None:
+        ts = datetime.now(timezone.utc).isoformat()
         payload = {
             "run_id": value.get("run_id"),
             "event_type": event,
-            "wallclock_ts": datetime.now(timezone.utc).isoformat(),
+            "ts": ts,
+            "wallclock_ts": ts,
             **value,
         }
         self._append_jsonl(self.stage_events_path, _jsonable(payload))
@@ -87,7 +89,6 @@ class StageLogWriter:
         with self._lock:
             with path.open("a", encoding="utf-8") as handle:
                 handle.write(json.dumps(value, sort_keys=True) + "\n")
-
 
 def _jsonable(value: Any) -> dict[str, Any]:
     if hasattr(value, "model_dump"):

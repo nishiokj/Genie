@@ -3,10 +3,20 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, TypedDict
 
-from langgraph.graph import END, START, StateGraph
+from langgraph.graph import START, StateGraph
 
-from agents import Adversary, ModelClient, DesignAuditor, ProviderError, QualityGate, RubricGate, SampleGenerator, Designer
+from agents import (
+    Adversary,
+    DesignAuditor,
+    QualityGate,
+    RubricGate,
+    SampleGenerator,
+    Designer,
+    candidate_quality_prompt_view,
+    candidate_prompt_view,
+)
 from config import RuntimeConfig
+from model_client import ModelClient
 from models import (
     AgentRole,
     AdversaryReport,
@@ -14,7 +24,6 @@ from models import (
     CertifiedSample,
     CheckResult,
     ContextPolicy,
-    DesignVerdict,
     GenerationEnvelope,
     GenerationPipelineInput,
     GenerationPipelineResult,
@@ -28,13 +37,50 @@ from models import (
     stable_hash,
 )
 from observability import StageLogWriter, emit_event, trace_hash
+from pipeline_helpers import (
+    _candidate_progress,
+    _event_fields,
+    _format_progress_value,
+    _gate_caveat_subcodes,
+    _gate_provider_error_route,
+    _graph_recursion_limit,
+    _local_design_verdict,
+    _local_meta,
+    _producer_context_policy,
+    _provider_error_meta,
+    _provider_error_output,
+    _provider_error_route_code,
+    _provider_error_verdict,
+    _require,
+    _short_id,
+    _stage_label,
+    _write_generation_result,
+)
+from provider_errors import ProviderError
 from router import route_after
 from rules import deterministic_sample_verdict, validate_design_batch
 from services.corpus_index import CorpusIndex
 from services.coverage_ledger import CoverageLedger
+from services.execution_workspace import ExecutionWorkspace
 from services.rejection_archive import RejectionArchive
 from services.validation_ledger import ValidationLedger
-from services.workspace_export import WorkspaceExport
+from pipeline_transitions import (
+    after_adversary,
+    after_adversary_entrypoint,
+    after_audit_design,
+    after_curate,
+    after_curate_entrypoint,
+    after_gate_join,
+    after_gate_join_entrypoint,
+    after_generate,
+    after_generate_entrypoint,
+    after_select_next_design,
+    after_terminal_design as after_terminal_design,
+    after_validate_design_batch_det,
+    after_validate_det,
+    after_validate_det_entrypoint,
+    route_from_decision as route_from_decision,
+)
 
 
 class PipelineState(TypedDict, total=False):
@@ -62,156 +108,57 @@ class PipelineState(TypedDict, total=False):
     committed_count: int
     dropped_count: int
 
-
-def route_from_decision(state: PipelineState) -> str:
-    decision = state["last_decision"]
-    if decision is None or decision.terminal:
-        return END
-    return {
-        StageKind.DESIGN: "design",
-        StageKind.DESIGN_AUDIT: "audit_design",
-        StageKind.GENERATION: "generate",
-        StageKind.VALIDATION: "validate_det",
-        StageKind.CURATION: "curate",
-    }[decision.next_stage]
-
-
-def after_validate_design_batch_det(state: PipelineState) -> str:
-    decision = state["last_decision"]
-    if decision and decision.verdict == Verdict.ACCEPT:
-        return "select_next_design"
-    return route_from_decision(state)
-
-
-def after_curate(state: PipelineState) -> str:
-    if state["committed_count"] >= state["target_n"]:
-        return END
-    if state["designs_queue"]:
-        return "select_next_design"
-    if state["design_round"] > state["max_design_retries"]:
-        return END
-    return "design"
-
-
-def after_terminal_design(state: PipelineState) -> str:
-    if state["committed_count"] >= state["target_n"]:
-        return END
-    if state["designs_queue"]:
-        return "select_next_design"
-    if state["design_round"] > state["max_design_retries"]:
-        return END
-    return "design"
-
-
-def after_select_next_design(state: PipelineState) -> str:
-    return "audit_design" if state.get("design") else "design"
-
-
-def after_audit_design(state: PipelineState) -> str:
-    decision = state["last_decision"]
-    if decision and decision.verdict == Verdict.ACCEPT:
-        return "generate"
-    if state["designs_queue"]:
-        return "select_next_design"
-    if state["design_round"] > state["max_design_retries"]:
-        return END
-    return "design"
-
-
-def after_validate_det(state: PipelineState) -> str | list[str]:
-    if state["det_accepted"]:
-        if not state.get("adversary_done"):
-            return "adversary"
-        return "quality_gate"
-    decision = state["last_decision"]
-    if decision and decision.terminal:
-        return after_terminal_design(state)
-    return route_from_decision(state)
-
-
-def after_generate(state: PipelineState) -> str:
-    decision = state["last_decision"]
-    if decision and decision.terminal:
-        return after_terminal_design(state)
-    return route_from_decision(state)
-
-
-def after_adversary(state: PipelineState) -> str | list[str]:
-    decision = state.get("last_decision")
-    if decision:
-        if decision.terminal:
-            return after_terminal_design(state)
-        return route_from_decision(state)
-    if state.get("adversary_done"):
-        return "quality_gate"
-    return "revise_from_adversary"
-
-
-def after_gate_join(state: PipelineState) -> str:
-    decision = state["last_decision"]
-    if decision and decision.terminal:
-        return after_terminal_design(state)
-    return route_from_decision(state)
-
-
-def after_generate_entrypoint(state: PipelineState) -> str:
-    return route_from_decision(state)
-
-
-def after_validate_det_entrypoint(state: PipelineState) -> str | list[str]:
-    if state["det_accepted"]:
-        if not state.get("adversary_done"):
-            return "adversary"
-        return "quality_gate"
-    return route_from_decision(state)
-
-
-def after_adversary_entrypoint(state: PipelineState) -> str | list[str]:
-    decision = state.get("last_decision")
-    if decision:
-        return route_from_decision(state)
-    if state.get("adversary_done"):
-        return "quality_gate"
-    return "revise_from_adversary"
-
-
-def after_gate_join_entrypoint(state: PipelineState) -> str:
-    return route_from_decision(state)
-
-
-def after_curate_entrypoint(state: PipelineState) -> str:
-    return END
-
-
 class PipelineRunner:
     def __init__(self, config: RuntimeConfig) -> None:
         self.config = config
-        self.client = ModelClient(config.models)
         self.writer = StageLogWriter(config.logs_dir, config.run_id)
+        self.client = ModelClient(config.models, stream_event_callback=self._model_stream_progress)
+        self.generator_client = ModelClient(
+            config.generator_model or config.models,
+            stream_event_callback=self._model_stream_progress,
+        )
+        self.revisor_client = ModelClient(
+            config.revisor_model or config.generator_model or config.models,
+            stream_event_callback=self._model_stream_progress,
+        )
+        self.adversary_client = ModelClient(
+            config.adversary_model or config.models,
+            stream_event_callback=self._model_stream_progress,
+        )
+        self.quality_gate_client = ModelClient(
+            config.quality_gate_model or config.models,
+            stream_event_callback=self._model_stream_progress,
+        )
+        self.rubric_gate_client = ModelClient(
+            config.rubric_gate_model or config.models,
+            stream_event_callback=self._model_stream_progress,
+        )
         self.coverage = CoverageLedger(config.data_dir, config.domain)
         self.validation_ledger = ValidationLedger(self.writer)
         self.rejections = RejectionArchive(self.writer)
         self.corpus = CorpusIndex(config.data_dir, config.domain, self.client, config.run_id)
-        self.workspace_export = WorkspaceExport(logs_dir=config.logs_dir, data_dir=config.data_dir, run_id=config.run_id)
+        self.execution_workspace = ExecutionWorkspace(
+            root=config.logs_dir / config.run_id / "executioner",
+            allow_exec=True,
+        )
         self.designer = Designer(self.client, config.domain)
         self.design_auditor = DesignAuditor(self.client, config.domain)
         self.generator = SampleGenerator(
-            self.client,
+            self.generator_client,
             config.domain,
-            system_prompt_override=config.generator_system_prompt_override,
-            system_prompt_append=config.generator_system_prompt_append,
+            execution_workspace=self.execution_workspace,
         )
-        self.adversary = Adversary(self.client, config.domain)
-        self.quality_gate = QualityGate(self.client, config.domain)
-        self.rubric_gate = RubricGate(self.client, config.domain)
-        self.quality_gate_ensemble = [
-            (f"gate_ensemble_{index}", QualityGate(ModelClient(model_config), config.domain))
-            for index, model_config in enumerate(config.gate_ensemble_models, start=1)
-        ]
-        self.rubric_gate_ensemble = [
-            (f"gate_ensemble_{index}", RubricGate(ModelClient(model_config), config.domain))
-            for index, model_config in enumerate(config.gate_ensemble_models, start=1)
-        ]
+        self.revisor = SampleGenerator(
+            self.revisor_client,
+            config.domain,
+            execution_workspace=self.execution_workspace,
+        )
+        self.adversary = Adversary(
+            self.adversary_client,
+            config.domain,
+        )
+        self.quality_gate = QualityGate(self.quality_gate_client, config.domain)
+        self.rubric_gate = RubricGate(self.rubric_gate_client, config.domain)
         self.graph = self._build_graph().compile()
         self.generation_graph = self._build_generation_graph().compile()
 
@@ -238,7 +185,7 @@ class PipelineRunner:
         graph.add_conditional_edges("validate_det", after_validate_det)
         graph.add_conditional_edges("adversary", after_adversary)
         graph.add_edge("revise_from_adversary", "validate_det")
-        graph.add_edge("quality_gate", "rubric_gate")
+        graph.add_edge("quality_gate", "join_gates")
         graph.add_edge("rubric_gate", "join_gates")
         graph.add_conditional_edges("join_gates", after_gate_join)
         graph.add_conditional_edges("curate", after_curate)
@@ -259,7 +206,7 @@ class PipelineRunner:
         graph.add_conditional_edges("validate_det", after_validate_det_entrypoint)
         graph.add_conditional_edges("adversary", after_adversary_entrypoint)
         graph.add_edge("revise_from_adversary", "validate_det")
-        graph.add_edge("quality_gate", "rubric_gate")
+        graph.add_edge("quality_gate", "join_gates")
         graph.add_edge("rubric_gate", "join_gates")
         graph.add_conditional_edges("join_gates", after_gate_join_entrypoint)
         graph.add_conditional_edges("curate", after_curate_entrypoint)
@@ -271,7 +218,7 @@ class PipelineRunner:
             "start",
             target=self.config.target_n,
             domain=self.config.domain.domain_id,
-            model=self.config.models.model,
+            model=self.generator_client.config.model,
             graph_limit=_graph_recursion_limit(self.config),
         )
         initial: PipelineState = {
@@ -289,7 +236,10 @@ class PipelineRunner:
             "committed_count": 0,
             "dropped_count": 0,
         }
-        final = self.graph.invoke(initial, config={"recursion_limit": _graph_recursion_limit(self.config)})
+        try:
+            final = self.graph.invoke(initial, config={"recursion_limit": _graph_recursion_limit(self.config)})
+        finally:
+            self.execution_workspace.close()
         return {
             "run_id": self.config.run_id,
             "committed": final["committed_count"],
@@ -303,7 +253,7 @@ class PipelineRunner:
             "start_from_generation",
             envelope=envelope.id,
             design=envelope.design.id,
-            model=self.config.models.model,
+            model=self.generator_client.config.model,
             graph_limit=_graph_recursion_limit(self.config),
         )
         initial: PipelineState = {
@@ -324,11 +274,14 @@ class PipelineRunner:
             "dropped_count": 0,
             "last_candidate_id": None,
         }
-        final = self.generation_graph.invoke(initial, config={"recursion_limit": _graph_recursion_limit(self.config)})
-        result = self._generation_result(envelope, final, request.output_dir)
-        if request.output_dir is not None:
-            _write_generation_result(result)
-        return result
+        try:
+            final = self.generation_graph.invoke(initial, config={"recursion_limit": _graph_recursion_limit(self.config)})
+            result = self._generation_result(envelope, final, request.output_dir)
+            if request.output_dir is not None:
+                _write_generation_result(result)
+            return result
+        finally:
+            self.execution_workspace.close()
 
     def node_design(self, state: PipelineState) -> PipelineState:
         design_round = state["design_round"] + 1
@@ -551,15 +504,23 @@ class PipelineRunner:
                 retry_route_code=state.get("gen_retry_route_code"),
                 retry_subcodes=state.get("gen_retry_subcodes"),
             )
-            candidate, gen_meta = self.generator.generate_from_envelope(
-                run_id=self.config.run_id,
-                envelope=envelope,
-                attempt=retry_index + 1,
-                retry_route_code=state.get("gen_retry_route_code"),
-                retry_subcodes=state.get("gen_retry_subcodes"),
-            )
+            with self.generator_client.stream_context(
+                {
+                    "stage": "generation",
+                    "role": "generate_candidate_sample",
+                    "attempt": retry_index + 1,
+                    "design": design.id,
+                }
+            ):
+                candidate, gen_meta = self.generator.generate_from_envelope(
+                    run_id=self.config.run_id,
+                    envelope=envelope,
+                    attempt=retry_index + 1,
+                    retry_route_code=state.get("gen_retry_route_code"),
+                    retry_subcodes=state.get("gen_retry_subcodes"),
+                )
         except ProviderError as exc:
-            route_code = RouteCode.RETRY_PARSE if "invalid JSON" in str(exc) else RouteCode.RETRY_INFRA
+            route_code = _provider_error_route_code(exc)
             decision = route_after(
                 run_id=self.config.run_id,
                 from_stage=StageKind.GENERATION,
@@ -579,7 +540,7 @@ class PipelineRunner:
                 route_code=decision.route_code,
                 subcodes=["provider_error"],
                 context_policy=_producer_context_policy(state.get("gen_retry_route_code")),
-                meta=_local_meta(error=str(exc)),
+                meta=_provider_error_meta(exc, self.generator_client.config),
                 retry_index=retry_index,
                 stage_input={
                     "envelope": envelope,
@@ -587,7 +548,7 @@ class PipelineRunner:
                     "retry_route_code": state.get("gen_retry_route_code"),
                     "retry_subcodes": state.get("gen_retry_subcodes"),
                 },
-                stage_output={"error": str(exc), "decision": decision},
+                stage_output={**_provider_error_output(exc), "decision": decision},
             )
             update: PipelineState = {"last_decision": decision}
             if decision.terminal:
@@ -651,7 +612,7 @@ class PipelineRunner:
         det_verdict, checks = deterministic_sample_verdict(
             candidate,
             self.config.domain,
-            workspace_validation_executor=self.config.workspace_validation_executor,
+            execution_workspace=self.execution_workspace,
         )
         self.validation_ledger.append(det_verdict)
         self._record(
@@ -670,7 +631,8 @@ class PipelineRunner:
             stage_output={"deterministic_verdict": det_verdict, "checks": checks},
         )
         if det_verdict.verdict == Verdict.ACCEPT:
-            return {"det_checks": checks, "det_accepted": True, "last_decision": None}
+            update: PipelineState = {"det_checks": checks, "det_accepted": True, "last_decision": None}
+            return update
 
         decision = route_after(
             run_id=self.config.run_id,
@@ -682,7 +644,6 @@ class PipelineRunner:
             subcodes=det_verdict.subcodes,
         )
         self.rejections.append(candidate, decision)
-        self.workspace_export.export_rejection(candidate, decision)
         self._progress(
             "candidate",
             "rejected",
@@ -703,7 +664,49 @@ class PipelineRunner:
         design = _require(state.get("design"), "design")
         candidate = _require(state.get("candidate"), "candidate")
         self._progress("adversary", "start", candidate=candidate.id)
-        report, meta = self.adversary.attack(candidate, design)
+        try:
+            with self.adversary_client.stream_context(
+                {
+                    "stage": "adversary",
+                    "role": "adversary_attack_report",
+                    "candidate": candidate.id,
+                }
+            ):
+                report, meta = self.adversary.attack(candidate, design)
+        except ProviderError as exc:
+            decision = route_after(
+                run_id=self.config.run_id,
+                from_stage=StageKind.VALIDATION,
+                verdict=Verdict.REJECT,
+                route_code=_provider_error_route_code(exc),
+                retry_index=state["gen_attempt"],
+                max_generation_retries=self.config.domain.max_generation_retries,
+                subcodes=["provider_error"],
+            )
+            self._record(
+                stage_kind=StageKind.VALIDATION,
+                role="adversary_attack_report",
+                agent_role=AgentRole.ADVERSARY,
+                artifact_id=f"{candidate.id}-adversary-error",
+                parent_artifact_id=candidate.id,
+                verdict=Verdict.REJECT,
+                route_code=decision.route_code,
+                subcodes=["provider_error"],
+                context_policy=ContextPolicy.CRITERIA_ONLY,
+                meta=_provider_error_meta(exc, self.adversary_client.config),
+                retry_index=state["gen_attempt"],
+                stage_input={"design": design, "candidate": candidate},
+                stage_output={**_provider_error_output(exc), "decision": decision},
+            )
+            update: PipelineState = {"last_decision": decision, "adversary_done": True}
+            if decision.terminal:
+                update["dropped_count"] = state["dropped_count"] + 1
+            else:
+                update["gen_attempt"] = state["gen_attempt"] + 1
+                update["gen_retry_route_code"] = decision.route_code
+                update["gen_retry_subcodes"] = decision.subcodes
+                update["det_accepted"] = False
+            return update
         self.writer.append_adversary_report(report)
         self._record(
             stage_kind=StageKind.VALIDATION,
@@ -737,7 +740,6 @@ class PipelineRunner:
                 subcodes=["adversary_nuke"],
             )
             self.rejections.append(candidate, decision)
-            self.workspace_export.export_rejection(candidate, decision)
             self._progress(
                 "candidate",
                 "rejected",
@@ -775,19 +777,21 @@ class PipelineRunner:
             attacks=len(report.attacks),
         )
         try:
-            revised, meta = self.generator.revise_from_attack(
+            revised, meta = self.revisor.revise_from_attack(
                 run_id=self.config.run_id,
                 design=design,
                 candidate=candidate,
                 report=report,
                 attempt=attempt,
+                execution_workspace=self.execution_workspace,
             )
         except ProviderError as exc:
+            route_code = _provider_error_route_code(exc)
             decision = route_after(
                 run_id=self.config.run_id,
                 from_stage=StageKind.GENERATION,
                 verdict=Verdict.REJECT,
-                route_code=RouteCode.RETRY_INFRA,
+                route_code=route_code,
                 retry_index=state["gen_attempt"],
                 max_generation_retries=self.config.domain.max_generation_retries,
                 subcodes=["provider_error"],
@@ -802,10 +806,10 @@ class PipelineRunner:
                 route_code=decision.route_code,
                 subcodes=["provider_error"],
                 context_policy=ContextPolicy.CRITERIA_PLUS_ROUTE_CODE,
-                meta=_local_meta(error=str(exc)),
+                meta=_provider_error_meta(exc, self.revisor_client.config),
                 retry_index=state["gen_attempt"],
                 stage_input={"design": design, "candidate": candidate, "adversary_report": report, "attempt": attempt},
-                stage_output={"error": str(exc), "decision": decision},
+                stage_output={**_provider_error_output(exc), "decision": decision},
             )
             update: PipelineState = {"last_decision": decision, "adversary_done": True}
             if decision.terminal:
@@ -872,14 +876,6 @@ class PipelineRunner:
                 "candidate": candidate.model_dump(mode="json"),
             }
         )
-        self.workspace_export.export_snapshot(
-            candidate,
-            phase=phase,
-            role=role,
-            retry_index=retry_index,
-            parent_candidate_id=parent_candidate_id,
-            adversary_report_id=adversary_report_id,
-        )
 
     def _append_generation_envelope(
         self,
@@ -905,118 +901,111 @@ class PipelineRunner:
 
     def node_quality_gate(self, state: PipelineState) -> PipelineState:
         candidate = _require(state.get("candidate"), "candidate")
-        self._progress("quality_gate", "start", candidate=candidate.id)
-        self._progress(
-            "quality_gate",
-            "provider_start",
-            candidate=candidate.id,
-            model=self.config.models.model,
-            provider=self.config.models.provider,
-        )
-        quality_verdict, quality_meta = self.quality_gate.validate(candidate)
-        self._progress(
-            "quality_gate",
-            "provider_end",
-            candidate=candidate.id,
-            model=quality_meta.get("model"),
-            provider=quality_meta.get("provider"),
-            latency=f"{quality_meta.get('latency_ms', 0)}ms",
-        )
-        self.validation_ledger.append(quality_verdict)
-        self._record(
-            stage_kind=StageKind.VALIDATION,
-            role="quality_gate_candidate",
-            agent_role=AgentRole.QUALITY_GATE,
-            artifact_id=f"{candidate.id}-quality-verdict",
-            parent_artifact_id=candidate.id,
-            verdict=quality_verdict.verdict,
-            route_code=quality_verdict.route_code,
-            subcodes=quality_verdict.subcodes,
-            context_policy=ContextPolicy.CRITERIA_ONLY,
-            meta=quality_meta,
-            retry_index=state["gen_attempt"],
-            stage_input={"candidate": candidate},
-            stage_output={"quality_verdict": quality_verdict},
-        )
-        self._run_gate_ensemble(
+        quality_verdict = self._run_gate_validators(
             gate_kind="quality",
-            gates=self.quality_gate_ensemble,
+            primary_gate=self.quality_gate,
             candidate=candidate,
             retry_index=state["gen_attempt"],
         )
+        self.validation_ledger.append(quality_verdict)
         return {"quality_verdict": quality_verdict}
 
     def node_rubric_gate(self, state: PipelineState) -> PipelineState:
         candidate = _require(state.get("candidate"), "candidate")
-        self._progress("rubric_gate", "start", candidate=candidate.id)
-        self._progress(
-            "rubric_gate",
-            "provider_start",
-            candidate=candidate.id,
-            model=self.config.models.model,
-            provider=self.config.models.provider,
-        )
-        rubric_verdict, rubric_meta = self.rubric_gate.validate(candidate)
-        self._progress(
-            "rubric_gate",
-            "provider_end",
-            candidate=candidate.id,
-            model=rubric_meta.get("model"),
-            provider=rubric_meta.get("provider"),
-            latency=f"{rubric_meta.get('latency_ms', 0)}ms",
-        )
-        self.validation_ledger.append(rubric_verdict)
-        self._record(
-            stage_kind=StageKind.VALIDATION,
-            role="rubric_gate_candidate",
-            agent_role=AgentRole.RUBRIC_GATE,
-            artifact_id=f"{candidate.id}-rubric-verdict",
-            parent_artifact_id=candidate.id,
-            verdict=rubric_verdict.verdict,
-            route_code=rubric_verdict.route_code,
-            subcodes=rubric_verdict.subcodes,
-            context_policy=ContextPolicy.CRITERIA_ONLY,
-            meta=rubric_meta,
-            retry_index=state["gen_attempt"],
-            stage_input={"candidate": candidate},
-            stage_output={"rubric_verdict": rubric_verdict},
-        )
-        self._run_gate_ensemble(
+        rubric_verdict = self._run_gate_validators(
             gate_kind="rubric",
-            gates=self.rubric_gate_ensemble,
+            primary_gate=self.rubric_gate,
             candidate=candidate,
             retry_index=state["gen_attempt"],
         )
+        self.validation_ledger.append(rubric_verdict)
         return {"rubric_verdict": rubric_verdict}
 
-    def _run_gate_ensemble(
+    def _run_gate_validators(
         self,
         *,
         gate_kind: str,
-        gates: list[tuple[str, QualityGate | RubricGate]],
+        primary_gate: QualityGate | RubricGate,
         candidate: CandidateSample,
         retry_index: int,
-    ) -> None:
-        for gate_id, gate in gates:
-            self._progress(f"{gate_kind}_gate:{gate_id}", "start", candidate=candidate.id)
-            verdict, meta = gate.validate(candidate)
-            role = f"{gate_kind}_gate_candidate_ensemble"
-            agent_role = AgentRole.QUALITY_GATE if gate_kind == "quality" else AgentRole.RUBRIC_GATE
-            self._record(
-                stage_kind=StageKind.VALIDATION,
-                role=role,
-                agent_role=agent_role,
-                artifact_id=f"{candidate.id}-{gate_kind}-verdict-{gate_id}",
-                parent_artifact_id=candidate.id,
-                verdict=verdict.verdict,
-                route_code=verdict.route_code,
-                subcodes=verdict.subcodes,
-                context_policy=ContextPolicy.CRITERIA_ONLY,
-                meta={**meta, "gate_ensemble_id": gate_id},
-                retry_index=retry_index,
-                stage_input={"candidate": candidate, "gate_ensemble_id": gate_id},
-                stage_output={f"{gate_kind}_verdict": verdict, "gate_ensemble_id": gate_id},
-            )
+        role_suffix: str = "",
+    ) -> SampleVerdict:
+        primary_label = f"{gate_kind}_gate{role_suffix}"
+        primary_role = f"{gate_kind}_gate_candidate{role_suffix}"
+        agent_role = AgentRole.QUALITY_GATE if gate_kind == "quality" else AgentRole.RUBRIC_GATE
+        gate_candidate_view = candidate_quality_prompt_view(candidate) if gate_kind == "quality" else candidate_prompt_view(candidate)
+        gate_stage_input = {"candidate": gate_candidate_view}
+        self._progress(primary_label, "start", candidate=candidate.id)
+        client = getattr(primary_gate, "client", None)
+        if client is not None:
+            model_config = client.config
+        elif gate_kind == "quality":
+            model_config = self.quality_gate_client.config
+        else:
+            model_config = self.rubric_gate_client.config
+        self._progress(
+            primary_label,
+            "provider_start",
+            candidate=candidate.id,
+            model=model_config.model,
+            provider=model_config.provider,
+        )
+        try:
+            verdict, meta = self._run_gate_validation_job(primary_gate, primary_role, candidate, primary_label)
+            error_output: dict[str, Any] = {}
+        except ProviderError as exc:
+            verdict = _provider_error_verdict(candidate, gate_kind, _provider_error_route_code(exc))
+            meta = _provider_error_meta(exc, model_config)
+            error_output = _provider_error_output(exc)
+
+        self._progress(
+            primary_label,
+            "provider_end",
+            candidate=candidate.id,
+            model=meta.get("model"),
+            provider=meta.get("provider"),
+            latency=f"{meta.get('latency_ms', 0)}ms",
+        )
+        artifact_suffix = (
+            f"{gate_kind}{role_suffix.replace('_', '-')}-error"
+            if error_output
+            else f"{gate_kind}{role_suffix.replace('_', '-')}-verdict"
+        )
+        self._record(
+            stage_kind=StageKind.VALIDATION,
+            role=primary_role,
+            agent_role=agent_role,
+            artifact_id=f"{candidate.id}-{artifact_suffix}",
+            parent_artifact_id=candidate.id,
+            verdict=verdict.verdict,
+            route_code=verdict.route_code,
+            subcodes=verdict.subcodes,
+            context_policy=ContextPolicy.CRITERIA_ONLY,
+            meta=meta,
+            retry_index=retry_index,
+            stage_input=gate_stage_input,
+            stage_output={f"{gate_kind}_verdict": verdict, **error_output},
+        )
+        return verdict
+
+    def _run_gate_validation_job(
+        self,
+        gate: QualityGate | RubricGate,
+        role: str,
+        candidate: CandidateSample,
+        primary_label: str,
+    ) -> tuple[SampleVerdict, dict[str, Any]]:
+        client = getattr(gate, "client", None)
+        context = {
+            "stage": primary_label,
+            "role": role,
+            "candidate": candidate.id,
+        }
+        stream_context = getattr(client, "stream_context", None) if client is not None else None
+        if callable(stream_context):
+            with stream_context(context):
+                return gate.validate(candidate)
+        return gate.validate(candidate)
 
     def node_join_gates(self, state: PipelineState) -> PipelineState:
         candidate = _require(state.get("candidate"), "candidate")
@@ -1029,11 +1018,12 @@ class PipelineRunner:
             quality=quality_verdict.verdict,
             rubric=rubric_verdict.verdict,
         )
+        provider_error_route = _gate_provider_error_route(quality_verdict, rubric_verdict)
         decision = route_after(
             run_id=self.config.run_id,
             from_stage=StageKind.VALIDATION,
-            verdict=Verdict.ACCEPT,
-            route_code=RouteCode.ACCEPT,
+            verdict=Verdict.REJECT if provider_error_route is not None else Verdict.ACCEPT,
+            route_code=provider_error_route or RouteCode.ACCEPT,
             retry_index=state["gen_attempt"],
             max_generation_retries=self.config.domain.max_generation_retries,
             subcodes=_gate_caveat_subcodes(quality_verdict, rubric_verdict),
@@ -1061,8 +1051,8 @@ class PipelineRunner:
 
     def node_curate(self, state: PipelineState) -> PipelineState:
         candidate = _require(state.get("candidate"), "candidate")
-        quality_verdict = state.get("quality_verdict") or _bypass_gate_verdict(candidate, "quality")
-        rubric_verdict = state.get("rubric_verdict") or _bypass_gate_verdict(candidate, "rubric")
+        quality_verdict = _require(state.get("quality_verdict"), "quality_verdict")
+        rubric_verdict = _require(state.get("rubric_verdict"), "rubric_verdict")
         self._progress("curation", "start", candidate=candidate.id)
         certified = CertifiedSample(
             id=f"{candidate.id}-certified",
@@ -1108,7 +1098,6 @@ class PipelineRunner:
             stage_output={"committed": committed, "curation_verdict": cur_verdict, "decision": decision},
         )
         if committed:
-            self.workspace_export.export_committed(committed)
             self.coverage.increment(candidate.cell)
             self._progress(
                 "candidate",
@@ -1128,7 +1117,6 @@ class PipelineRunner:
             }
 
         self.rejections.append(candidate, decision)
-        self.workspace_export.export_rejection(candidate, decision)
         self._progress(
             "candidate",
             "rejected",
@@ -1178,7 +1166,6 @@ class PipelineRunner:
             subcodes=[] if last_decision is None else list(last_decision.subcodes),
             logs_dir=self.config.logs_dir / self.config.run_id,
             corpus_path=self.config.data_dir / "corpus" / "benchmark" / f"{self.config.run_id}.jsonl",
-            materialized_dir=self.config.data_dir / "materialized" / "benchmark" / self.config.run_id,
             result_path=result_path,
         )
 
@@ -1218,6 +1205,16 @@ class PipelineRunner:
             reasoning_effort=None if meta.get("reasoning_effort") is None else str(meta.get("reasoning_effort")),
             text_normalization_replacements=int(meta.get("text_normalization_replacements", 0)),
             error=None if meta.get("error") is None else str(meta.get("error")),
+            revision_op_count=int(meta.get("revision_op_count", 0)),
+            revision_edit_file_count=int(meta.get("revision_edit_file_count", 0)),
+            revision_files_touched=int(meta.get("revision_files_touched", 0)),
+            revision_bytes_added=int(meta.get("revision_bytes_added", 0)),
+            revision_bytes_removed=int(meta.get("revision_bytes_removed", 0)),
+            revision_bytes_changed=int(meta.get("revision_bytes_changed", 0)),
+            revision_full_rewrite_count=int(meta.get("revision_full_rewrite_count", 0)),
+            revision_create_file_count=int(meta.get("revision_create_file_count", 0)),
+            revision_replace_all_count=int(meta.get("revision_replace_all_count", 0)),
+            revision_full_rewrite_ratio=float(meta.get("revision_full_rewrite_ratio", 0.0)),
             verdict=verdict,
             route_code=route_code,
             subcodes=subcodes or [],
@@ -1266,146 +1263,15 @@ class PipelineRunner:
                 parts.append(f"{key}={formatted}")
         print(" ".join(parts), flush=True)
 
-
-def _producer_context_policy(retry_route_code: RouteCode | None) -> ContextPolicy:
-    if retry_route_code is None:
-        return ContextPolicy.FRESH
-    if retry_route_code in {RouteCode.RETRY_INFRA, RouteCode.RETRY_PARSE, RouteCode.RETRY_PROVIDER_EMPTY}:
-        return ContextPolicy.SAME_INPUT_RETRY
-    return ContextPolicy.CRITERIA_PLUS_ROUTE_CODE
-
-
-def _write_generation_result(result: GenerationPipelineResult) -> None:
-    if result.result_path is None:
-        return
-    result.result_path.parent.mkdir(parents=True, exist_ok=True)
-    result.result_path.write_text(result.model_dump_json(indent=2) + "\n", encoding="utf-8")
-
-
-def _bypass_gate_verdict(candidate: CandidateSample, check_kind: str) -> SampleVerdict:
-    return SampleVerdict(
-        candidate_id=candidate.id,
-        check_kind=check_kind,  # type: ignore[arg-type]
-        verdict=Verdict.ACCEPT,
-        route_code=RouteCode.ACCEPT,
-        subcodes=["adversary_only_test_bypass"],
-        rationale="Quality and rubric gates bypassed for the temporary adversary-only test run.",
-    )
-
-
-def _gate_caveat_subcodes(*verdicts: SampleVerdict) -> list[str]:
-    subcodes: list[str] = []
-    for verdict in verdicts:
-        if verdict.verdict != Verdict.REJECT:
-            continue
-        label = f"{verdict.check_kind}_gate_rejected"
-        if label not in subcodes:
-            subcodes.append(label)
-        for subcode in verdict.subcodes:
-            if subcode not in subcodes:
-                subcodes.append(subcode)
-    return subcodes
-
-
-def _graph_recursion_limit(config: RuntimeConfig) -> int:
-    design_rounds = config.domain.max_design_retries + 1
-    designs_per_round = max(1, config.target_n * 2)
-    generation_attempts = config.domain.max_generation_retries + 1
-    per_design_steps = 2 + (generation_attempts * 4) + 1
-    design_steps = 2
-    return 10 + design_rounds * (design_steps + designs_per_round * per_design_steps)
-
-
-def _stage_label(record: StageRecord) -> str:
-    if record.role == "validate_design_batch_deterministically":
-        return "design_det"
-    if record.role == "audit_design":
-        return "design_audit"
-    if record.role == "generate_candidate_sample":
-        return "generation"
-    if record.role == "validate_candidate_deterministically":
-        return "validation_det"
-    if record.role == "quality_gate_candidate":
-        return "quality_gate"
-    if record.role == "rubric_gate_candidate":
-        return "rubric_gate"
-    if record.role == "curate_committed_sample":
-        return "curation"
-    return record.stage_kind.value
-
-
-def _format_progress_value(value: Any) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, list):
-        return ",".join(_format_progress_value(item) for item in value if item is not None) or "-"
-    if hasattr(value, "value"):
-        return str(value.value)
-    text = str(value)
-    if not text:
-        return ""
-    return text.replace(" ", "_")
-
-
-def _event_fields(fields: dict[str, Any]) -> dict[str, Any]:
-    safe: dict[str, Any] = {}
-    for key, value in fields.items():
-        if key in {"prompt", "proxy", "candidate", "design", "stage_input", "stage_output"}:
-            continue
-        if hasattr(value, "value"):
-            safe[key] = value.value
-        elif isinstance(value, (str, int, float, bool)) or value is None:
-            safe[key] = value
-        elif isinstance(value, list):
-            safe[key] = [item.value if hasattr(item, "value") else item for item in value if isinstance(item, (str, int, float, bool)) or hasattr(item, "value")]
-        else:
-            safe[key] = str(value)
-    return safe
-
-
-def _short_id(value: str) -> str:
-    if len(value) <= 48:
-        return value
-    return f"{value[:22]}...{value[-22:]}"
-
-
-def _candidate_progress(candidate: CandidateSample) -> dict[str, Any]:
-    ability = candidate.ability_z.get("name") if isinstance(candidate.ability_z, dict) else None
-    prompt = candidate.agent_artifact.benchmark_case.get("prompt")
-    return {
-        "id": candidate.id,
-        "case_type": candidate.case_type,
-        "ability": ability,
-        "prompt": prompt,
-        "proxy": candidate.judge_artifact.proxy_claim,
-    }
-
-
-def _local_design_verdict(design: DesignBrief, route_code: RouteCode, subcodes: list[str]) -> DesignVerdict:
-    return DesignVerdict(
-        design_id=design.id,
-        verdict=Verdict.REJECT,
-        route_code=route_code,
-        subcodes=subcodes,
-    )
-
-
-def _require(value: Any | None, name: str) -> Any:
-    if value is None:
-        raise RuntimeError(f"pipeline state missing {name}")
-    return value
-
-
-def _local_meta(error: str | None = None) -> dict[str, Any]:
-    meta: dict[str, Any] = {
-        "provider": "local",
-        "model": "deterministic",
-        "input_tokens": 0,
-        "output_tokens": 0,
-        "latency_ms": 0,
-        "cost_usd": 0.0,
-        "prompt_hash": stable_hash({"local": True}),
-    }
-    if error:
-        meta["error"] = error
-    return meta
+    def _model_stream_progress(self, event: dict[str, Any]) -> None:
+        stream_event = str(event.get("stream_event") or "stream")
+        stage = str(event.get("stage") or "model")
+        self.writer.append_event(
+            "stage_progress",
+            {
+                "run_id": self.config.run_id,
+                "stage": stage,
+                "stage_event": f"model_{stream_event}",
+                **_event_fields({key: value for key, value in event.items() if key not in {"stage", "stream_event"}}),
+            },
+        )

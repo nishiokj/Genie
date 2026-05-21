@@ -6,10 +6,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from agents import ModelClient, ProviderError
 from config import ModelConfig, load_env_file
+from model_client import ModelClient
 from models import stable_hash, utc_now_iso
-from services.virtual_workspace import VirtualWorkspace
+from provider_errors import ProviderError
+from services.execution_workspace import ExecutionWorkspace
 
 
 def main() -> int:
@@ -114,7 +115,7 @@ def _prompt(candidate: dict[str, Any]) -> str:
     if artifact is None:
         artifact = candidate.get("environment_artifact")
     workspace_payload = None
-    if isinstance(artifact, dict) and artifact.get("kind") == "virtual_workspace":
+    if isinstance(artifact, dict) and artifact.get("kind") == "executioner_workspace":
         workspace_payload = artifact.get("payload")
     if not isinstance(workspace_payload, dict):
         return prompt
@@ -124,13 +125,14 @@ def _prompt(candidate: dict[str, Any]) -> str:
     if isinstance(setup, str) and setup.strip():
         sections.append("SETUP\n" + setup.strip())
 
-    workspace = VirtualWorkspace.from_payload(workspace_payload)
+    workspace = ExecutionWorkspace.from_artifact(workspace_payload)
     if workspace.commands:
         sections.append("COMMANDS\n" + json.dumps(workspace.commands, indent=2, sort_keys=True))
     file_sections = ["REPOSITORY FILES"]
     for path in workspace.list_files():
         content = workspace.read_file(path)
         file_sections.append(f"--- {path} ---\n```{_language_for_path(path)}\n{content.rstrip()}\n```")
+    workspace.close()
     sections.append("\n\n".join(file_sections))
 
     if prompt:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from config import build_runtime_config, load_domain, load_env_file
+from config import ModelConfig, build_runtime_config, load_domain, load_env_file
 
 
 def test_load_env_file_sets_missing_values(tmp_path, monkeypatch) -> None:
@@ -35,7 +35,7 @@ def test_load_env_file_does_not_override_existing_env(tmp_path, monkeypatch) -> 
     assert os.environ["MODEL_API_KEY"] == "from-shell"
 
 
-def test_reasoning_effort_defaults_to_medium(monkeypatch) -> None:
+def test_reasoning_effort_is_not_invented_when_unset(monkeypatch) -> None:
     monkeypatch.delenv("MODEL_REASONING_EFFORT", raising=False)
 
     config = build_runtime_config(
@@ -47,7 +47,7 @@ def test_reasoning_effort_defaults_to_medium(monkeypatch) -> None:
         console_progress=False,
     )
 
-    assert config.models.reasoning_effort == "medium"
+    assert config.models.reasoning_effort is None
 
 
 def test_model_defaults_to_gpt_5_5(monkeypatch) -> None:
@@ -82,9 +82,9 @@ def test_embedding_defaults_to_local_hash(monkeypatch) -> None:
     assert config.models.embedding_model == "local-hash-embedding"
 
 
-def test_openai_model_env_is_not_used_after_langchain_cutover(monkeypatch) -> None:
+def test_openai_model_env_is_ignored(monkeypatch) -> None:
     monkeypatch.delenv("MODEL_NAME", raising=False)
-    monkeypatch.setenv("OPENAI_MODEL", "legacy-model")
+    monkeypatch.setenv("OPENAI_MODEL", "ignored-model")
 
     config = build_runtime_config(
         domain_path="domains/benchmark_haiku.yaml",
@@ -129,11 +129,12 @@ def test_model_auth_file_can_be_set_with_env(tmp_path, monkeypatch) -> None:
     assert config.models.auth_file == auth_file
 
 
-def test_gate_ensemble_defaults_to_deepinfra_kimi_when_key_is_present(monkeypatch) -> None:
-    monkeypatch.setenv("GATE_ENSEMBLE_1_API_KEY", "deepinfra-test-key")
-    monkeypatch.delenv("GATE_ENSEMBLE_1_MODEL", raising=False)
-    monkeypatch.delenv("GATE_ENSEMBLE_1_PROVIDER", raising=False)
-    monkeypatch.delenv("GATE_ENSEMBLE_1_BASE_URL", raising=False)
+def test_gemini_provider_uses_gemini_key_and_openai_compatible_base_url(monkeypatch) -> None:
+    monkeypatch.setenv("MODEL_PROVIDER", "gemini")
+    monkeypatch.setenv("MODEL_NAME", "gemini-3.1-flash-lite")
+    monkeypatch.delenv("MODEL_API_KEY", raising=False)
+    monkeypatch.delenv("MODEL_BASE_URL", raising=False)
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-test-key")
 
     config = build_runtime_config(
         domain_path="domains/benchmark_haiku.yaml",
@@ -144,26 +145,90 @@ def test_gate_ensemble_defaults_to_deepinfra_kimi_when_key_is_present(monkeypatc
         console_progress=False,
     )
 
-    assert len(config.gate_ensemble_models) == 1
-    gate_model = config.gate_ensemble_models[0]
-    assert gate_model.provider == "openai"
-    assert gate_model.model == "moonshotai/Kimi-K2.6"
-    assert gate_model.base_url == "https://api.deepinfra.com/v1/openai"
-    assert gate_model.api_key is not None
-    assert gate_model.api_key.get_secret_value() == "deepinfra-test-key"
+    assert config.models.provider == "gemini"
+    assert config.models.model == "gemini-3.1-flash-lite"
+    assert config.models.base_url == "https://generativelanguage.googleapis.com/v1beta/openai/"
+    assert config.models.api_key is not None
+    assert config.models.api_key.get_secret_value() == "gemini-test-key"
+    assert config.models.max_tokens is None
 
 
-def test_runtime_config_accepts_workspace_validation_executor_argument(monkeypatch) -> None:
+def test_xai_provider_uses_xai_key_and_native_langchain_base_url(monkeypatch) -> None:
+    monkeypatch.setenv("MODEL_PROVIDER", "xai")
+    monkeypatch.setenv("MODEL_NAME", "grok-4.3")
+    monkeypatch.delenv("MODEL_API_KEY", raising=False)
+    monkeypatch.delenv("MODEL_BASE_URL", raising=False)
+    monkeypatch.setenv("XAI_API_KEY", "xai-test-key")
+
+    config = build_runtime_config(
+        domain_path="domains/benchmark_haiku.yaml",
+        target_stage="benchmark",
+        target_n=1,
+        seed=42,
+        run_id="test",
+        console_progress=False,
+    )
+
+    assert config.models.provider == "xai"
+    assert config.models.model == "grok-4.3"
+    assert config.models.base_url is None
+    assert config.models.api_key is not None
+    assert config.models.api_key.get_secret_value() == "xai-test-key"
+
+
+def test_xai_provider_accepts_grok_key_alias(monkeypatch) -> None:
+    monkeypatch.setenv("MODEL_PROVIDER", "grok")
+    monkeypatch.setenv("MODEL_NAME", "grok-4.3")
+    monkeypatch.delenv("MODEL_API_KEY", raising=False)
+    monkeypatch.delenv("MODEL_BASE_URL", raising=False)
+    monkeypatch.delenv("XAI_API_KEY", raising=False)
+    monkeypatch.setenv("GROK_API_KEY", "grok-test-key")
+
+    config = build_runtime_config(
+        domain_path="domains/benchmark_haiku.yaml",
+        target_stage="benchmark",
+        target_n=1,
+        seed=42,
+        run_id="test",
+        console_progress=False,
+    )
+
+    assert config.models.provider == "grok"
+    assert config.models.base_url is None
+    assert config.models.api_key is not None
+    assert config.models.api_key.get_secret_value() == "grok-test-key"
+
+
+def test_model_max_tokens_can_be_set_with_env(monkeypatch) -> None:
+    monkeypatch.setenv("MODEL_MAX_TOKENS", "8192")
+
+    config = build_runtime_config(
+        domain_path="domains/benchmark_haiku.yaml",
+        target_stage="benchmark",
+        target_n=1,
+        seed=42,
+        run_id="test",
+        console_progress=False,
+    )
+
+    assert config.models.max_tokens == 8192
+
+
+def test_runtime_config_accepts_explicit_models_without_env_transport(monkeypatch) -> None:
+    monkeypatch.setenv("MODEL_NAME", "env-model")
+
+    primary = ModelConfig(provider="gemini", model="explicit-primary", reasoning_effort="medium")
+
     config = build_runtime_config(
         domain_path="domains/benchmark_code_debug.yaml",
         target_stage="benchmark",
         target_n=1,
         seed=1,
-        run_id="workspace-executor-test",
-        workspace_validation_executor="local",
+        run_id="explicit-model-test",
+        models=primary,
     )
 
-    assert config.workspace_validation_executor == "local"
+    assert config.models.model == "explicit-primary"
 
 
 def test_domain_loads_output_schema_from_json_file() -> None:
@@ -172,3 +237,14 @@ def test_domain_loads_output_schema_from_json_file() -> None:
     assert domain.output_schema["type"] == "object"
     assert "agent_artifact" in domain.output_schema["required"]
     assert "judge_artifact" in domain.output_schema["required"]
+
+
+def test_benchmark_output_schema_requires_private_judge_outlets() -> None:
+    domain = load_domain("domains/benchmark_code_debug.yaml")
+    judge_required = domain.output_schema["properties"]["judge_artifact"]["required"]
+
+    assert "private_root_cause" in judge_required
+    assert "expected_fix_properties" in judge_required
+    assert "hidden_failure_modes" in judge_required
+    assert "shallow_solution_traps" in judge_required
+    assert "candidate_visibility_boundaries" in judge_required

@@ -1,16 +1,21 @@
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
 
 from config import build_runtime_config
 from pipeline import PipelineRunner
 
 
 class FakeModelClient:
-    def __init__(self, config) -> None:
+    def __init__(self, config, **kwargs) -> None:
         self.config = config
 
-    def complete_json(self, *, system: str, user: str, temperature: float = 0.4):
+    @contextmanager
+    def stream_context(self, context):
+        yield
+
+    def complete_json(self, *, system: str, user: str, schema: dict, temperature: float = 0.4):
         meta = {
             "provider": "test",
             "model": "fake",
@@ -50,7 +55,7 @@ class FakeModelClient:
                 "evidence": [],
                 "rationale": "The design matches the allowed taxonomy and describes a concrete benchmark pressure.",
             }, meta
-        if "REVISION MODE" in system:
+        if "REVISION MODE" in system or "RevisionGenerator" in system:
             return {
                 "benchmark_case_updates": {
                     "prompt": "Write a haiku that evokes a layoff as late autumn without saying work, loss, leaves, cold, endings, empty, office, or silence."
@@ -77,6 +82,11 @@ class FakeModelClient:
                         "range": [0, 1],
                         "dimensions": [{"name": "constraint_adherence", "weight": 0.4, "high_score_criterion": "Output contains none of the forbidden terms and uses indirect imagery.", "low_score_criterion": "Output uses one or more forbidden terms directly."}],
                     },
+                    "private_root_cause": "The hidden target is preserving layoff-related emotional transfer while avoiding direct workplace and seasonal-template vocabulary.",
+                    "expected_fix_properties": ["Indirectly evoke the source emotion while respecting all visible lexical constraints."],
+                    "hidden_failure_modes": ["Format-valid haiku that uses obvious autumn or workplace vocabulary."],
+                    "shallow_solution_traps": ["Generic late-autumn template with no emotional transfer."],
+                    "candidate_visibility_boundaries": ["Do not show the source-domain answer or judge-only forbidden template analysis to the evaluated agent."],
                     "proxy_claim": "A model that succeeds here is showing more than haiku formatting because it must preserve emotional intent while avoiding obvious lexical shortcuts and template seasonal imagery.",
                     "diagnostic_pressure": ["forbids obvious imagery", "requires emotional transfer"],
                     "scoring_contract": {

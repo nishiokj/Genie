@@ -23,6 +23,11 @@
       "type": "object",
       "required": [
         "score_x",
+        "private_root_cause",
+        "expected_fix_properties",
+        "hidden_failure_modes",
+        "shallow_solution_traps",
+        "candidate_visibility_boundaries",
         "proxy_claim",
         "diagnostic_pressure",
         "scoring_contract",
@@ -34,6 +39,27 @@
       "additionalProperties": false,
       "properties": {
         "score_x": {"$ref": "#/$defs/score_x"},
+        "private_root_cause": {"type": "string", "minLength": 20},
+        "expected_fix_properties": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
+        "hidden_failure_modes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
+        "shallow_solution_traps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
+        "candidate_visibility_boundaries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
         "proxy_claim": {"type": "string", "minLength": 80},
         "diagnostic_pressure": {
           "type": "array",

@@ -1,26 +1,40 @@
 from __future__ import annotations
 
+import tempfile
+from pathlib import Path
+
 from sample_outputs import _prompt
+from services.execution_workspace import ExecutionWorkspace
+
+_TEMP_DIRS: list[tempfile.TemporaryDirectory[str]] = []
 
 
-def test_prompt_includes_materialized_workspace_files() -> None:
+def _executioner_artifact(files: list[dict[str, str]], commands: dict[str, str]) -> dict:
+    temp_dir = tempfile.TemporaryDirectory(prefix="test-executioner-workspace-")
+    _TEMP_DIRS.append(temp_dir)
+    workspace = ExecutionWorkspace(root=Path(temp_dir.name), commands=commands)
+    for item in files:
+        workspace.write_file(item["path"], item["content"])
+    payload = workspace.artifact_payload()
+    workspace.close()
+    return {"kind": "executioner_workspace", "payload": payload}
+
+
+def test_prompt_includes_executioner_workspace_files() -> None:
     candidate = {
         "agent_artifact": {
             "benchmark_case": {
                 "setup": "Run the focused test before answering.",
                 "prompt": "Patch the bug and explain the causal invariant.",
             },
-            "environment_artifact": {
-                "kind": "virtual_workspace",
-                "payload": {
-                    "files": [
-                        {"path": "service/reconcile.py", "content": "def summarize(rows):\n    return {}\n"},
-                        {"path": "tests/test_reconcile.py", "content": "def test_refund_boundary():\n    assert False\n"},
-                        {"path": "README.md", "content": "Run the tests."},
-                    ],
-                    "commands": {"test": "pytest -q"},
-                },
-            },
+            "environment_artifact": _executioner_artifact(
+                [
+                    {"path": "service/reconcile.py", "content": "def summarize(rows):\n    return {}\n"},
+                    {"path": "tests/test_reconcile.py", "content": "def test_refund_boundary():\n    assert False\n"},
+                    {"path": "README.md", "content": "Run the tests."},
+                ],
+                {"test": "pytest -q"},
+            ),
         },
         "judge_artifact": {
             "proxy_claim": "Hidden judge-facing causal answer must not be rendered to the evaluated agent.",

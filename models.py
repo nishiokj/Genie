@@ -101,6 +101,11 @@ class AgentArtifact(BaseModel):
 
 class JudgeArtifact(BaseModel):
     score_x: dict[str, Any]
+    private_root_cause: str = ""
+    expected_fix_properties: list[str] = Field(default_factory=list)
+    hidden_failure_modes: list[str] = Field(default_factory=list)
+    shallow_solution_traps: list[str] = Field(default_factory=list)
+    candidate_visibility_boundaries: list[str] = Field(default_factory=list)
     proxy_claim: str
     diagnostic_pressure: list[str] = Field(default_factory=list)
     scoring_contract: dict[str, Any]
@@ -242,7 +247,6 @@ class GenerationPipelineResult(BaseModel):
     subcodes: list[str] = Field(default_factory=list)
     logs_dir: Path
     corpus_path: Path
-    materialized_dir: Path
     result_path: Optional[Path] = None
 
 
@@ -361,6 +365,16 @@ class StageRecord(BaseModel):
     reasoning_effort: Optional[str] = None
     text_normalization_replacements: int = 0
     error: Optional[str] = None
+    revision_op_count: int = 0
+    revision_edit_file_count: int = 0
+    revision_files_touched: int = 0
+    revision_bytes_added: int = 0
+    revision_bytes_removed: int = 0
+    revision_bytes_changed: int = 0
+    revision_full_rewrite_count: int = 0
+    revision_create_file_count: int = 0
+    revision_replace_all_count: int = 0
+    revision_full_rewrite_ratio: float = 0.0
     verdict: Verdict
     route_code: RouteCode
     subcodes: list[str] = Field(default_factory=list)

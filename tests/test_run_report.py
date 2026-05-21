@@ -6,10 +6,10 @@ from run_report import _case_type, _prompt, _semantic_check_lines
 def test_report_reads_current_benchmark_shape_only() -> None:
     candidate = {
         "case_type": "proxy_strong",
-        "benchmark_case": {"prompt": "Debug the virtual workspace."},
+        "benchmark_case": {"prompt": "Debug the execution workspace."},
     }
 
-    assert _prompt(candidate) == "Debug the virtual workspace."
+    assert _prompt(candidate) == "Debug the execution workspace."
     assert _case_type(candidate) == "proxy_strong"
 
 

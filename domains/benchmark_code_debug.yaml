@@ -73,7 +73,13 @@ subcodes:
   - workspace_test_timeout
   - workspace_tests_do_not_reproduce_failure
   - unsupported_runtime_requirements
-  - answer_leak_in_candidate_materials
+  - answer_leak_explicit_bug_label
+  - answer_leak_root_cause_disclosure
+  - answer_leak_fix_instruction
+  - answer_leak_fault_location
+  - answer_leak_fault_behavior_description
+  - answer_leak_intended_behavior
+  - answer_leak_scaffold_label
   - schema_violation
   - unknown_case_type
   - unknown_difficulty
@@ -246,15 +252,15 @@ rubric_gate_rules:
 generator_guidance:
   goal: >
     Produce a realistic, self-contained coding benchmark scenario for single-turn debug or
-    explain-and-fix interactions. Prioritize the candidate-facing artifact: the
-    project context, files, symptoms, constraints, and task prompt. The scenario
+    explain-and-fix interactions. The candidate-facing artifact must be a normal
+    project workspace plus a normal task prompt. The scenario
     should feel like a real internal tool, service, library, data workflow, or
     product bug rather than a Python kata. Do not settle for a toy unit-test repair
     when the design asks for a hard benchmark; make the case self-contained enough
     to run locally but rich enough that success requires real engineering judgment.
-    The candidate must include environment_artifact.kind = virtual_workspace with
-    concrete file paths, complete file contents, and a runnable test command that
-    matches the seed's runtime_requirements.
+    The candidate must include environment_artifact.kind = executioner_workspace
+    with concrete file paths in a durable Executioner workspace and a runnable
+    test command that matches the seed's runtime_requirements.
     The design seed must also define runtime_requirements: the runtime class,
     language/runtime, dependency policy, executable commands, network posture, and
     OS/architecture assumptions needed for the generated environment to run. Treat
@@ -271,24 +277,28 @@ generator_guidance:
     hypothetical repo layout in prose when the evaluated agent needs actual files
     to inspect.
     Candidate-facing files must look like ordinary production/test artifacts, not
-    benchmark scaffolding. Do not write comments, README text, tests, logs, or
-    prompt prose that explain the hidden causal chain, identify the intended fix,
-    say why the starter implementation is wrong, or narrate the benchmark design.
-    Code comments may explain normal local intent, interfaces, and domain behavior.
-    Tests should assert product behavior and invariants; they should not teach the
-    solver the diagnosis.
-    Focus this generation step on the candidate-facing scenario. Later pipeline
-    stages will handle evaluation details. If the schema requires scoring fields,
-    keep them lightweight and provisional; they should describe the intended
-    evaluation direction without becoming more elaborate than the benchmark itself.
+    benchmark scaffolding, exercises, answer keys, postmortems, grader notes, or
+    intentionally-buggy examples. The task prompt may describe an ordinary public
+    symptom and tell the evaluated agent how to run tests. Source files, tests,
+    fixtures, README text, assertion messages, logs, and comments must remain
+    unassuming; they must not explain the hidden causal chain, identify the
+    intended fix, say why the starter implementation is wrong, point at the
+    faulty region, or narrate the benchmark design. Code comments may explain
+    normal local intent, interfaces, and domain behavior. Tests should look like
+    normal regression tests for product behavior; they should not teach the
+    solver the diagnosis through names, comments, or assertion messages.
+    Put the benchmark-author explanation in judge_artifact: what the case is
+    attempting to proxy, the rough expected diagnosis/repair, why the visible
+    tests are useful, and which shallow paths should fail.
 
   scoring_contract_bar: >
-    Keep scoring dimensions lightweight. State the broad behaviors a later evaluator
-    would care about: tests pass for the right reason, the patch is bounded, the
-    explanation identifies the relevant causal region, and shallow/gaming fixes are
-    penalized. Do not invent exhaustive scoring policy, hidden oracle theater, or
-    long boundary-example checklists. Never make candidate-facing materials more
-    explicit just to make the rubric easier to apply.
+    Keep scoring dimensions lightweight and private. State the broad behaviors a
+    later evaluator would care about: tests pass for the right reason, the patch
+    is bounded, the explanation identifies the relevant causal region, and
+    shallow/gaming fixes are penalized. Do not invent exhaustive scoring policy,
+    hidden oracle theater, or long boundary-example checklists. Never make
+    candidate-facing materials more explicit just to make the rubric easier to
+    apply.
 
   proxy_claim_bar: >
     proxy_claim should be short and provisional. Explain what ability the scenario is
@@ -297,7 +307,7 @@ generator_guidance:
     model classes.
 
   diagnostic_pressure_notes: >
-    Real pressure for debugging benchmarks should come from the situation itself:
+    Real pressure for debugging benchmarks should come from the ordinary code and tests:
     product constraints, state, data contracts, edge cases, misleading symptoms,
     multi-step causality, or interactions between small components. A single obvious
     syntax error, wrong variable, missing import, or direct one-line loop/slice fix
@@ -312,12 +322,13 @@ generator_guidance:
     through the causal mechanism, explain the exact bad interleaving, or describe the
     intended invariant repair are still leaks when shown to the evaluated agent. Put
     that information in judge-facing metadata, not in the workspace.
-    Candidate-facing prompts may refer to files only if those files are present in
-    environment_artifact.payload.files with complete contents. The advertised test
-    command must collect and run in a fresh materialized workspace, and the starter
-    code should have at least one failing test that demonstrates the benchmark's
-    target failure. Do not use ellipses, omitted sections, placeholders, or "assume
-    this file exists" language.
+    The visible test suite is the primary observable signal. It should fail on the
+    starter workspace for product-behavior reasons without explaining the private
+    diagnosis or repair. Candidate-facing prompts may refer to files only if those files are present in
+    the Executioner workspace. The advertised test command must collect and run in
+    a fresh session over that workspace, and the starter
+    code should have at least one failing test. Do not use ellipses, omitted
+    sections, placeholders, or "assume this file exists" language.
 
   common_rejection_patterns:
     - name: wrapper_story_over_artifact_quality
@@ -352,13 +363,44 @@ generator_guidance:
         or that fails to distinguish the intended fix from a named shallow fix. This is
         fake pressure: it makes the benchmark look rigorous without adding evidence.
 
-    - name: answer_leak_in_candidate_materials
+    - name: answer_leak_explicit_bug_label
       description: >
-        Any source comment, test name, fixture label, prompt phrase, or visible output
-        shown to the evaluated agent reveals the root cause or intended fix. Example:
-        code asking for fault localization while the source says "# BUG: off-by-one:
-        first slice starts at 1 instead of 0". This is an automatic benchmark-quality
-        failure because success no longer requires diagnosis.
+        Candidate-facing source, comments, README, prompt, tests, fixtures, or visible
+        output label the defect as a bug or intentionally-buggy exercise. Example:
+        "# BUG:" or "intentionally buggy" in the workspace.
+
+    - name: answer_leak_root_cause_disclosure
+      description: >
+        Candidate-facing material names the root cause, causal region, bad transition,
+        broken invariant, or source of the bug directly enough that diagnosis is no
+        longer required.
+
+    - name: answer_leak_fix_instruction
+      description: >
+        Candidate-facing material tells the evaluated agent what fix to make, what the
+        exact fix is, or what its patch should change.
+
+    - name: answer_leak_fault_location
+      description: >
+        Candidate-facing material points at the defective line, expression, function,
+        branch, fixture, or file so specifically that localization is mostly given away.
+
+    - name: answer_leak_fault_behavior_description
+      description: >
+        Candidate-facing material describes how the current implementation is wrong,
+        such as "current code incorrectly treats refunds as positive revenue", even
+        without spelling out a patch.
+
+    - name: answer_leak_intended_behavior
+      description: >
+        Candidate-facing material states the intended invariant or behavior in a way
+        that exposes the hidden answer rather than describing normal product semantics.
+
+    - name: answer_leak_scaffold_label
+      description: >
+        Candidate-facing material frames the artifact as starter code/workspace or an
+        exercise scaffold rather than a realistic task, leaking that the supplied code
+        is intentionally defective.
 
     - name: traceback_patch_as_proxy
       description: >

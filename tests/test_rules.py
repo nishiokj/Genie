@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import tempfile
+from pathlib import Path
+
 from config import load_domain
 from models import CandidateSample, DesignBrief, TaxonomyCell, Verdict
 from rules import deterministic_sample_verdict as _deterministic_sample_verdict, validate_design_batch
 
+_TEMP_DIRS: list[tempfile.TemporaryDirectory[str]] = []
 
 def deterministic_sample_verdict(candidate: CandidateSample, domain):
-    return _deterministic_sample_verdict(candidate, domain, workspace_validation_executor="local")
+    return _deterministic_sample_verdict(candidate, domain)
 
 
 def _code_runtime_requirements(**overrides) -> dict:
@@ -39,6 +43,14 @@ def _candidate(**overrides) -> CandidateSample:
     )
     judge_artifact = {
         "score_x": score_x,
+        "private_root_cause": overrides.pop("private_root_cause", "The hidden cause belongs in private judge context, not candidate-facing text."),
+        "expected_fix_properties": overrides.pop("expected_fix_properties", ["preserves the intended invariant"]),
+        "hidden_failure_modes": overrides.pop("hidden_failure_modes", ["a shallow patch fails a hidden edge case"]),
+        "shallow_solution_traps": overrides.pop("shallow_solution_traps", ["patching the visible symptom only"]),
+        "candidate_visibility_boundaries": overrides.pop(
+            "candidate_visibility_boundaries",
+            ["candidate-facing material must show symptoms without naming the root cause or fix"],
+        ),
         "proxy_claim": overrides.pop("proxy_claim", "A model that succeeds here is showing more than line-count compliance because it must preserve emotional intent while avoiding the obvious vocabulary and imagery that would make a template answer pass superficially."),
         "diagnostic_pressure": overrides.pop("diagnostic_pressure", ["forbids obvious imagery", "requires emotional transfer"]),
         "scoring_contract": overrides.pop(
@@ -139,7 +151,23 @@ def _code_environment_artifact(**payload_overrides) -> dict:
         "commands": {"test": "python -m pytest -q"},
     }
     payload.update(payload_overrides)
-    return {"kind": "virtual_workspace", "payload": payload}
+    root = tempfile.TemporaryDirectory(prefix="test-executioner-workspace-")
+    workspace_root = Path(root.name)
+    for item in payload.get("files", []):
+        if isinstance(item, dict) and isinstance(item.get("path"), str) and isinstance(item.get("content"), str):
+            target = workspace_root / item["path"]
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(item["content"], encoding="utf-8")
+    commands = {str(k): str(v) for k, v in payload.get("commands", {}).items()} if isinstance(payload.get("commands"), dict) else {}
+    artifact_payload = {
+        "session_id": "test-session",
+        "logical_root": "/workspace",
+        "workspace_root": str(workspace_root),
+        "commands": commands,
+        "files": [{"path": item["path"]} for item in payload.get("files", []) if isinstance(item, dict) and isinstance(item.get("path"), str)],
+    }
+    _TEMP_DIRS.append(root)
+    return {"kind": "executioner_workspace", "payload": artifact_payload}
 
 
 def test_benchmark_candidate_passes_deterministic_rules() -> None:
@@ -213,11 +241,11 @@ def test_output_schema_rejects_versioned_environment_artifact() -> None:
     assert checks[1].check_id == "output_schema"
 
 
-def test_output_schema_rejects_mixed_legacy_top_level_fields() -> None:
+def test_output_schema_rejects_unknown_top_level_fields() -> None:
     domain = load_domain("domains/benchmark_haiku.yaml")
     candidate = _candidate()
     output = dict(candidate.output)
-    output["score_x"] = {"score_type": "legacy_top_level"}
+    output["score_x"] = {"score_type": "unknown_top_level"}
 
     verdict, checks = deterministic_sample_verdict(_candidate(output=output), domain)
 
@@ -248,7 +276,7 @@ def test_malformed_control_text_rejected_before_quality_gate() -> None:
     assert checks[0].check_id == "text_hygiene"
 
 
-def test_code_domain_does_not_require_oracle_during_generation_experiment() -> None:
+def test_code_domain_does_not_require_oracle_during_generation() -> None:
     domain = load_domain("domains/benchmark_code_debug.yaml")
 
     verdict, checks = deterministic_sample_verdict(
@@ -285,7 +313,7 @@ def test_code_domain_accepts_candidate_with_oracle() -> None:
     assert checks[-1].check_id == "benchmark_oracle"
 
 
-def test_code_domain_requires_materialized_workspace() -> None:
+def test_code_domain_requires_executioner_workspace() -> None:
     domain = load_domain("domains/benchmark_code_debug.yaml")
 
     verdict, checks = deterministic_sample_verdict(_candidate(), domain)
@@ -448,7 +476,36 @@ def test_code_domain_rejects_candidate_facing_answer_leaks() -> None:
 
     assert verdict.verdict == Verdict.REJECT
     assert verdict.route_code.value == "reject_leakage"
-    assert verdict.subcodes == ["answer_leak_in_candidate_materials"]
+    assert verdict.subcodes == ["answer_leak_explicit_bug_label"]
+    assert checks[5].check_id == "answer_leakage"
+
+
+def test_code_domain_classifies_candidate_facing_answer_leak_type() -> None:
+    domain = load_domain("domains/benchmark_code_debug.yaml")
+    benchmark_case = _code_benchmark_case()
+    environment_artifact = _code_environment_artifact(
+        files=[
+            {
+                "path": "billing/reconcile.py",
+                "content": "def summarize(rows):\n    # current code incorrectly treats refunds as positive revenue.\n    return {}\n",
+            },
+            {"path": "billing/parser.py", "content": "def parse_row(row):\n    return dict(row)\n"},
+            {
+                "path": "tests/test_reconcile.py",
+                "content": "from billing.reconcile import summarize\n\n\ndef test_refund_total():\n    assert summarize([]) == {'total': 0}\n",
+            },
+        ],
+        commands={"test": "python -m pytest -q"},
+    )
+
+    verdict, checks = deterministic_sample_verdict(
+        _candidate(benchmark_case=benchmark_case, environment_artifact=environment_artifact),
+        domain,
+    )
+
+    assert verdict.verdict == Verdict.REJECT
+    assert verdict.route_code.value == "reject_leakage"
+    assert verdict.subcodes == ["answer_leak_fault_behavior_description"]
     assert checks[5].check_id == "answer_leakage"
 
 
