@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, Optional
 
@@ -69,6 +70,7 @@ class RuntimeConfig(BaseModel):
     quality_gate_model: Optional[ModelConfig] = None
     rubric_gate_model: Optional[ModelConfig] = None
     console_progress: bool = True
+    instruction: Optional[str] = None
 
 
 def load_env_file(path: str | Path = ".env") -> None:
@@ -108,7 +110,22 @@ def load_domain(path: str | Path) -> DomainConfig:
             resolved = domain_path.parent / resolved
         with resolved.open("r", encoding="utf-8") as schema_handle:
             raw["output_schema"] = json.load(schema_handle)
+    _bind_benchmark_case_schema(raw)
     return DomainConfig.model_validate(raw)
+
+
+def _bind_benchmark_case_schema(raw: dict[str, Any]) -> None:
+    """Keep the top-level output schema and domain benchmark-case schema in sync."""
+    output_schema = raw.get("output_schema")
+    benchmark_case_schema = raw.get("benchmark_case_schema")
+    if not isinstance(output_schema, dict) or not isinstance(benchmark_case_schema, dict):
+        return
+    defs = output_schema.setdefault("$defs", {})
+    if not isinstance(defs, dict):
+        return
+    bound = deepcopy(benchmark_case_schema)
+    bound.pop("$schema", None)
+    defs["benchmark_case"] = bound
 
 
 def build_runtime_config(
@@ -134,6 +151,7 @@ def build_runtime_config(
     max_tokens: Optional[int] = None,
     request_timeout_seconds: Optional[float] = None,
     console_progress: bool = True,
+    instruction: Optional[str] = None,
 ) -> RuntimeConfig:
     load_env_file()
     domain = load_domain(domain_path)
@@ -162,6 +180,7 @@ def build_runtime_config(
         quality_gate_model=quality_gate_model,
         rubric_gate_model=rubric_gate_model,
         console_progress=console_progress,
+        instruction=instruction,
     )
 
 

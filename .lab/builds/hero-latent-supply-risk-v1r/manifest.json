@@ -1,0 +1,237 @@
+{
+  "checksums_ref": "checksums.json",
+  "created_at": "2026-05-27T17:45:29.008361+00:00",
+  "package_checks_ref": "package_checks.json",
+  "package_digest": "sha256:e57634fd6f351c18f5aaf1a3a2872e5d857f852894b5bf2e7382bd8adf246605",
+  "resolved_experiment": {
+    "experiment": {
+      "description": "Bucephalus runs Nova over a small, curated Genie-seeded latent supply-risk corpus. The paired variants test whether an evidence-first configuration improves detection of world-event-to-enterprise-exposure chains while preserving no-alert restraint.",
+      "id": "hero_latent_supply_risk_v1_nova",
+      "name": "Hero Latent Supply Risk v1: Nova Variant Experiment",
+      "tags": [
+        "hero-demo",
+        "latent-supply-risk",
+        "nova",
+        "genie",
+        "substrate",
+        "paired-variants"
+      ]
+    },
+    "matrix": {
+      "repeats": 1,
+      "seeds": [
+        20260527
+      ],
+      "tasks": {
+        "path": "tasks/tasks.jsonl",
+        "source": "file"
+      },
+      "variants": [
+        {
+          "baseline": true,
+          "config": {
+            "mode": "baseline",
+            "model": "gpt-5.4",
+            "model_provider": "codex",
+            "reasoning": "medium"
+          },
+          "id": "baseline"
+        },
+        {
+          "config": {
+            "mode": "evidence_first",
+            "model": "gpt-5.4",
+            "model_provider": "codex",
+            "reasoning": "medium"
+          },
+          "id": "evidence_first"
+        }
+      ]
+    },
+    "metrics": [
+      {
+        "direction": "maximize",
+        "id": "pass_rate",
+        "label": "Pass Rate",
+        "primary": true,
+        "source": {
+          "output": "grade",
+          "pointer": "/passed",
+          "type": "grader_output"
+        }
+      },
+      {
+        "direction": "maximize",
+        "id": "score",
+        "label": "Evidence-Weighted Score",
+        "source": {
+          "output": "grade",
+          "pointer": "/score",
+          "type": "grader_output"
+        }
+      },
+      {
+        "direction": "minimize",
+        "id": "false_positive_count",
+        "label": "False Positive Count",
+        "source": {
+          "output": "grade",
+          "pointer": "/false_positive_count",
+          "type": "grader_output"
+        }
+      }
+    ],
+    "policy": {
+      "sanitization_profile": "perf_benchmark",
+      "task_sandbox": {},
+      "timeout_ms": 960000
+    },
+    "runtime": {
+      "compute": {
+        "backend": "local-docker"
+      },
+      "network": {
+        "agent": "full",
+        "task_sandbox": "none"
+      },
+      "secrets": [
+        {
+          "credential_cache": {
+            "env": "CODEX_AUTH_CACHE_FILE",
+            "kind": "run_scoped",
+            "target": "/bucephalus/credentials/codex_oauth/auth.json"
+          },
+          "from": "file",
+          "mount": {
+            "required_for_variants": [
+              "baseline",
+              "evidence_first"
+            ],
+            "target": "/root/.codex/auth.json"
+          },
+          "name": "CODEX_OAUTH"
+        }
+      ],
+      "storage": {
+        "backend": "local-fs",
+        "config": {
+          "root": ".lab/runs/"
+        }
+      },
+      "traces": {
+        "backend": "local-stdout"
+      }
+    },
+    "scheduling": {
+      "comparison": "paired",
+      "max_concurrency": 2,
+      "random_seed": 20260527,
+      "shuffle_tasks": false
+    },
+    "trial_runtime": {
+      "agent": {
+        "command": [
+          "python3",
+          "__BUCEPHALUS_TASK_WORKDIR__/.bucephalus/support/run_nova_latent_supply_risk.py",
+          "--mode",
+          "$mode",
+          "--provider",
+          "$model_provider",
+          "--model",
+          "$model",
+          "--reasoning",
+          "$reasoning"
+        ],
+        "events": [
+          {
+            "format": "jsonl",
+            "id": "nova_events",
+            "ingest": true,
+            "mode": "jsonl",
+            "retain_raw": true
+          }
+        ],
+        "image": "latent-supply-risk-workspaces:local",
+        "integration_level": "cli_events",
+        "outputs": {
+          "result": {
+            "capture": {
+              "format": "json",
+              "path": "/bucephalus/out/result.json",
+              "required": true,
+              "type": "file"
+            }
+          },
+          "trajectory": {
+            "capture": {
+              "format": "text",
+              "path": "/bucephalus/out/nova-events.jsonl",
+              "required": false,
+              "type": "file"
+            }
+          }
+        }
+      },
+      "execution": {
+        "agent_site": "agent_container"
+      },
+      "grader": {
+        "command": [
+          "python3",
+          "-c",
+          "# $\nimport json, pathlib\nsep = chr(47)\npath = lambda *parts: sep + sep.join(parts)\noracles = {\n  \"LSR-001\": {\"zero_alert_run\": False, \"true_alerts\": [{\"source_headlines\": [\"H03\"], \"latent_edge\": {\"required_concepts\": [\"gujarat\", \"castor\", \"polyol\", \"coating\"]}, \"hidden_dependency_path\": [\"castor_derived_polyol\", \"CR-88\", \"CMC-410\", \"SO-7731\"], \"business_exposure\": {\"revenue_at_risk\": 4200000, \"affected_orders\": [\"SO-7731\"], \"affected_customers\": [\"Atlantic Energy\"], \"constrained_inventory\": True}}]},\n  \"LSR-014\": {\"zero_alert_run\": False, \"true_alerts\": [{\"source_headlines\": [\"H01\"], \"latent_edge\": {\"required_concepts\": [\"rosin\", \"pine resin\", \"flux\", \"electronics assembly\"]}, \"hidden_dependency_path\": [\"rosin_ester_flux\", \"ASM-44\", \"MTG-220\", \"SO-7844\"], \"business_exposure\": {\"revenue_at_risk\": 3692000, \"affected_orders\": [\"SO-7844\"], \"affected_customers\": [\"Mercy North Hospitals\"], \"constrained_inventory\": True}}]},\n  \"LSR-027\": {\"zero_alert_run\": True, \"true_alerts\": []},\n  \"LSR-033\": {\"zero_alert_run\": False, \"true_alerts\": [{\"source_headlines\": [\"H01\"], \"latent_edge\": {\"required_concepts\": [\"silicon metal\", \"silicone\", \"elastomer\", \"potting\"]}, \"hidden_dependency_path\": [\"silicone_elastomer\", \"POT-72\", \"RSG-700\", \"SO-7991\"], \"business_exposure\": {\"revenue_at_risk\": 3330000, \"affected_orders\": [\"SO-7991\"], \"affected_customers\": [\"Canal Rail\"], \"constrained_inventory\": True}}]},\n}\ncase_path = pathlib.Path(path(\"grader\", \"in\", \"case_id.txt\"))\ncase_id = case_path.read_text().strip() if case_path.exists() else \"\"\nif case_id in (\"\", \"null\", \"None\"):\n  pathlib.Path(path(\"grader\", \"out\")).mkdir(parents=True, exist_ok=True)\n  pathlib.Path(path(\"grader\", \"out\", \"latent-supply-risk-grade.json\")).write_text(json.dumps({\"case_id\":\"preflight-contract-probe\",\"passed\":True,\"score\":1.0,\"checks\":{\"contract_probe\":True},\"false_positive_count\":0}, indent=2, sort_keys=True) + \"\\n\")\n  raise SystemExit(0)\nresult = json.loads(pathlib.Path(path(\"grader\", \"in\", \"result.json\")).read_text())\noracle = oracles[case_id]\nscan = result.get(\"scan\", {}) if isinstance(result, dict) else {}\nalerts = scan.get(\"alerts\") if isinstance(scan.get(\"alerts\"), list) else []\nexpected_result = \"no_alert\" if oracle[\"zero_alert_run\"] else \"alerts_found\"\nchecks = {\"result_correct\": scan.get(\"result\") == expected_result}\nfalse_positive_count = 0\nif oracle[\"zero_alert_run\"]:\n  checks.update({\"source_headline\": len(alerts) == 0, \"latent_edge\": len(alerts) == 0, \"enterprise_path\": len(alerts) == 0, \"business_exposure\": len(alerts) == 0, \"citations\": bool(scan.get(\"no_alert_rationale\")), \"calibrated_uncertainty\": bool(scan.get(\"no_alert_rationale\"))})\n  false_positive_count = len(alerts)\nelse:\n  expected = oracle[\"true_alerts\"][0]\n  alert = alerts[0] if alerts else {}\n  text = \" \".join(str(alert.get(k, \"\")) for k in [\"latent_edge_hypothesis\", \"real_world_prior\", \"reasoning\"]).lower()\n  enterprise_path = [str(x) for x in alert.get(\"enterprise_path\", [])]\n  exposure = alert.get(\"business_exposure\", {}) if isinstance(alert.get(\"business_exposure\"), dict) else {}\n  citations = alert.get(\"citations\", {}) if isinstance(alert.get(\"citations\"), dict) else {}\n  concepts = expected[\"latent_edge\"][\"required_concepts\"]\n  exp = expected[\"business_exposure\"]\n  checks.update({\n    \"source_headline\": bool(set(alert.get(\"source_headlines\", [])).intersection(expected[\"source_headlines\"])),\n    \"latent_edge\": sum(1 for c in concepts if c.lower() in text) >= max(2, len(concepts) - 1),\n    \"enterprise_path\": all(x in enterprise_path for x in expected[\"hidden_dependency_path\"]),\n    \"business_exposure\": int(exposure.get(\"revenue_at_risk\", -1)) == int(exp[\"revenue_at_risk\"]) and set(exp[\"affected_orders\"]).issubset(set(exposure.get(\"affected_orders\", []))) and set(exp[\"affected_customers\"]).issubset(set(exposure.get(\"affected_customers\", []))) and bool(exposure.get(\"constrained_inventory\")) == bool(exp[\"constrained_inventory\"]),\n    \"citations\": bool(citations.get(\"headlines\")) and bool(citations.get(\"records\")),\n    \"calibrated_uncertainty\": bool(alert.get(\"uncertainty\")),\n  })\n  false_positive_count = max(0, len(alerts) - 1)\nweights = {\"result_correct\":20,\"source_headline\":10,\"latent_edge\":20,\"enterprise_path\":20,\"business_exposure\":15,\"citations\":10,\"calibrated_uncertainty\":5}\npoints = sum(weights[k] for k, v in checks.items() if v)\nscore = max(0.0, (points - 20 * false_positive_count) * pow(float(sum(weights.values())), -1))\nreport = {\"case_id\": case_id, \"passed\": score >= 0.85 and false_positive_count == 0, \"score\": round(score, 4), \"checks\": checks, \"false_positive_count\": false_positive_count}\npathlib.Path(path(\"grader\", \"out\")).mkdir(parents=True, exist_ok=True)\npathlib.Path(path(\"grader\", \"out\", \"latent-supply-risk-grade.json\")).write_text(json.dumps(report, indent=2, sort_keys=True) + \"\\n\")\n"
+        ],
+        "inputs": {
+          "case_id": {
+            "materialize": {
+              "as": "file",
+              "path": "/grader/in/case_id.txt"
+            },
+            "required": false,
+            "source": {
+              "case": "id"
+            }
+          },
+          "result": {
+            "materialize": {
+              "as": "file",
+              "path": "/grader/in/result.json"
+            },
+            "required": true,
+            "source": {
+              "output": "agent.result"
+            }
+          }
+        },
+        "outputs": {
+          "grade": {
+            "capture": {
+              "format": "json",
+              "path": "/grader/out/latent-supply-risk-grade.json",
+              "required": true,
+              "type": "file"
+            }
+          }
+        },
+        "separate": {
+          "image": "python:3.11-slim",
+          "workdir": "/grader"
+        },
+        "strategy": "separate"
+      },
+      "task": {
+        "interface": "writable_workspace",
+        "workspace": {
+          "image": {
+            "from": "case_row"
+          },
+          "source": "container_image",
+          "workdir": {
+            "from": "case_row"
+          }
+        }
+      }
+    }
+  },
+  "schema_version": "sealed_run_package_v2"
+}

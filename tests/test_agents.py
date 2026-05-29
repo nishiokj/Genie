@@ -22,7 +22,12 @@ from agents import (
 )
 from config import ModelConfig, load_domain
 from codex_client import CodexClient, CodexResponse, _codex_stream_idle_timeout_seconds, _read_codex_sse
-from generation_artifacts import _example_output_for_domain, _judge_artifact_from_payload
+from generation_artifacts import (
+    _candidate_from_generation_payload,
+    _example_output_for_domain,
+    _judge_artifact_from_payload,
+    validate_generation_contract,
+)
 from model_client import ModelClient
 from models import AdversaryReport, CandidateSample, DesignBrief, GenerationEnvelope, RouteCode, TaxonomyCell, Verdict
 from provider_errors import ProviderError, ProviderStructuredOutputError
@@ -1397,6 +1402,22 @@ def test_design_retry_payload_explains_runtime_image_mode() -> None:
     assert any("task_image/container" in item for item in rejection["retry_guidance"])
 
 
+def test_design_payload_includes_user_instruction() -> None:
+    domain = load_domain("domains/benchmark_haiku.yaml")
+    client = _DesignClient()
+    designer = Designer(client, domain)
+
+    designer.design(
+        run_id="run",
+        target_n=1,
+        coverage_snapshot={},
+        instruction="Make the case about late-autumn layoffs without direct job-loss language.",
+    )
+
+    assert client.user_payload["user_instruction"] == "Make the case about late-autumn layoffs without direct job-loss language."
+    assert "instruction_policy" in client.user_payload
+
+
 def test_generation_retry_payload_includes_actionable_code_debug_guidance() -> None:
     design = _code_design()
     domain = load_domain("domains/benchmark_code_debug.yaml")
@@ -1660,10 +1681,15 @@ def test_adversary_prompt_candidate_view_omits_pipeline_bookkeeping() -> None:
     assert "revision_of" not in json.dumps(prompt_candidate)
     assert prompt_candidate["agent_visible_artifact"]["environment_artifact"]["payload"]["files"]
     assert prompt_candidate["evaluator_private_context"]["judge_artifact"]["negative_controls"]
+    assert "expected_fix_properties" not in prompt_candidate["evaluator_private_context"]["judge_artifact"]
     assert client.user_payload["design_brief"]["target_ability"] == design.target_ability
+    assert "environment_premise" not in client.user_payload["design_brief"]
     assert "id" not in client.user_payload["design_brief"]
     assert "content_hash" not in client.user_payload["design_brief"]
     assert "parent_design_batch_id" not in client.user_payload["design_brief"]
+    assert "required_json_shape" not in client.user_payload
+    assert "general_probe_principles" not in client.user_payload["attack_surface"]
+    assert "attack_types" in client.user_payload["attack_surface"]
 
 
 def test_adversary_binary_disposition_mode_removes_nuke_state() -> None:
@@ -1697,9 +1723,22 @@ def test_adversary_binary_disposition_mode_removes_nuke_state() -> None:
     assert client.schema is not None
     assert client.schema["properties"]["revision_disposition"]["enum"] == ["pass", "revise"]
     assert client.user_payload is not None
-    assert client.user_payload["required_json_shape"]["revision_disposition"] == "pass or revise"
+    assert client.user_payload["attack_surface"]["output_contract"]["revision_disposition"] == "pass or revise"
+    assert client.user_payload["decision_policy"]["revision_disposition"] == "pass or revise"
+    assert "nuke" not in json.dumps(client.user_payload)
     assert client.system is not None
     assert "be nuked" not in client.system
+    assert "nuke" not in client.system
+
+
+def test_adversary_schema_caps_report_size() -> None:
+    domain = load_domain("domains/benchmark_code_debug.yaml")
+    adversary = Adversary(_CaptureJsonClient({}), domain)
+
+    attacks_schema = adversary._schema["properties"]["attacks"]
+    assert attacks_schema["maxItems"] == 3
+    assert attacks_schema["items"]["properties"]["exploit_path"]["maxLength"] == 450
+    assert adversary._schema["properties"]["survival_requirements"]["maxItems"] == 3
 
 
 def test_quality_gate_does_not_count_private_judge_artifact_as_answer_leak() -> None:
@@ -1918,6 +1957,25 @@ def test_generator_example_output_has_private_judge_outlets() -> None:
     assert "candidate_visibility_boundaries" in judge
 
 
+def test_generation_contract_preflight_accepts_current_domains() -> None:
+    for path in Path("domains").glob("*.yaml"):
+        domain = load_domain(path)
+        assert validate_generation_contract(domain) == []
+
+
+def test_generator_example_matches_legacy_benchmark_case_schema() -> None:
+    domain = load_domain("domains/flaky_concurrency_bug_triage_python.yaml")
+    example = _example_output_for_domain(domain)
+
+    assert set(example["agent_artifact"]["benchmark_case"]) >= {
+        "case_id",
+        "repo_files",
+        "failing_test",
+        "pytest_trace",
+        "task_instructions",
+    }
+
+
 def test_generator_payload_defaults_private_judge_outlets() -> None:
     payload = {
         "judge_artifact": {
@@ -1939,6 +1997,23 @@ def test_generator_payload_defaults_private_judge_outlets() -> None:
     assert judge["hidden_failure_modes"] == []
     assert judge["shallow_solution_traps"] == []
     assert judge["candidate_visibility_boundaries"] == []
+
+
+def test_generator_payload_drops_optional_null_benchmark_case_fields() -> None:
+    design = _code_design()
+    payload, _ = _GenerateClient().complete_json(system="DESIGN IMPLEMENTATION CONTRACT", user="{}", schema={})
+    payload["agent_artifact"]["benchmark_case"]["setup"] = None
+
+    candidate = _candidate_from_generation_payload(
+        run_id="run",
+        envelope=GenerationEnvelope.from_design(design),
+        design=design,
+        attempt=1,
+        role_name="test",
+        payload=payload,
+    )
+
+    assert "setup" not in candidate.agent_artifact.benchmark_case
 
 
 def test_revision_applies_patch_to_prior_candidate_and_execution_workspace() -> None:

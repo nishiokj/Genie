@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-041",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779909930861_ildmkv",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"Reviewed the provided headlines and company records. The only plausible company-specific latent edge was H01 drought conditions in Gujarat potentially affecting castor-derived feedstocks for input_id castor_derived_polyol, which maps to component_id CR-88 and product_id CMC-410. However, the required business-exposure check returned revenue_at_risk 0, open_orders [], affected_customers [], and constrained_inventory false for castor_derived_polyol, so there is no current measurable open-order exposure. Other headlines did not connect to an active company dependency with a complete event-to-exposure chain.\",\"result\":\"no_alert\",\"run_id\":\"LSR-041\"}}",
+  "usage": {
+    "latency_ms": 18609,
+    "model_calls": 3,
+    "tokens_in": 11726,
+    "tokens_out": 756,
+    "tool_calls": 9
+  }
+}

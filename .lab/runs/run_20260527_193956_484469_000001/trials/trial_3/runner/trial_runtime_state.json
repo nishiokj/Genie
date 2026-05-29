@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T19:42:45.752047+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:42:30.125629+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_3/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_3/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-001",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779910950275_rqnfrv",
+        "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"Only H04 explicitly matches a company record entity: Beta Components appears in suppliers.yaml as the inactive legacy display module source for LTH-90 only. However, LTH-90 is discontinued, the only listed LTH-90 order is cancelled rather than open, and no current inventory or active demand exposure is shown. Other headlines do not explicitly name a supplier, material, component, product, region, or logistics lane that also appears in the company records without requiring unstated bridges.\",\"result\":\"no_alert\",\"run_id\":\"LSR-001\"}}",
+        "usage": {
+          "latency_ms": 13068,
+          "model_calls": 2,
+          "tokens_in": 6664,
+          "tokens_out": 584,
+          "tool_calls": 8
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "3ef9e71f34d962902c72afd4459eeef9a87784458029e6a2a7522416b789067b",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "c40f30c56b52f96bee2c34b2edc8f232e90c6d9c2c8de58dafe0f3767928f7be",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_3",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/.scratch/trial_3_60867_7/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_3/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/.scratch/trial_3_60867_7/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T19:42:46.030997+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:42:45.976955+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_3/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_3/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "3ef9e71f34d962902c72afd4459eeef9a87784458029e6a2a7522416b789067b",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 2
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 2,
+      "task_id": "LSR-001",
+      "variant_id": "baseline"
+    },
+    "task_sandbox": {
+      "container_id": "c40f30c56b52f96bee2c34b2edc8f232e90c6d9c2c8de58dafe0f3767928f7be",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-001"
+    }
+  },
+  "updated_at": "2026-05-27T19:42:46.330609+00:00"
+}

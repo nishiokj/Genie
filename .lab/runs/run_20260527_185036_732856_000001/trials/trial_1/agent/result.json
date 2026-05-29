@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779907841550_btxwtn",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a supplier, material, component, product, region, or logistics lane that directly matches the company records without requiring latent bridges. The closest candidate is H01 mentioning antimony smelters, but the records reference antimony_trioxide_synergist; connecting antimony ore/smelting to that specific input would require an unstated upstream chemistry bridge, which is disallowed under RULES_ONLY.\",\"result\":\"no_alert\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 20208,
+    "model_calls": 2,
+    "tokens_in": 6426,
+    "tokens_out": 934,
+    "tool_calls": 8
+  }
+}

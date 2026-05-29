@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-027",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908887893_p0ao55",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"Checked the strongest company-specific candidate: H06 ('Beta Components raises list prices for legacy display modules'). Company records link Beta Components (SUP-BETA) only to LCD-12 for discontinued product LTH-90, but there is no open-order chain to current business exposure. Exposure helper run for entity LTH-90 returned revenue_at_risk 0, open_orders [], affected_customers [], and constrained_inventory false, so there is no measurable current exposure and no alert should be raised.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+  "usage": {
+    "latency_ms": 19870,
+    "model_calls": 3,
+    "tokens_in": 11456,
+    "tokens_out": 916,
+    "tool_calls": 9
+  }
+}

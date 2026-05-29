@@ -1,0 +1,15 @@
+{
+  "case_id": "LSR-001",
+  "checks": {
+    "business_exposure": false,
+    "calibrated_uncertainty": false,
+    "citations": false,
+    "enterprise_path": false,
+    "latent_edge": false,
+    "result_correct": false,
+    "source_headline": false
+  },
+  "false_positive_count": 0,
+  "passed": false,
+  "score": 0.0
+}

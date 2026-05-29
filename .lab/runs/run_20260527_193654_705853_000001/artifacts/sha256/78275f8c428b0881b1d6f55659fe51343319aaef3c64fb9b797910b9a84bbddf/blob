@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779910619047_ifms7e",
+  "response": "{\"scan\":{\"run_id\":\"LSR-052\",\"result\":\"no_alert\",\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a supplier, material, component, product, region, or logistics lane that also appears in the company records. Potentially related items would require disallowed latent bridges: H01 mentions antimony smelters, not the recorded material antimony_trioxide_synergist; H06 mentions low-smoke building materials, not the recorded low_smoke_jacket_compound or SafeLine Interconnect; H04 mentions tunnel ventilation inspections, but does not name Aster Vale, EVB-330, Metro Tunnel Authority, or any recorded region/lane. Under RULES_ONLY, these do not qualify for an alert.\"}",
+  "usage": {
+    "latency_ms": 14043,
+    "model_calls": 2,
+    "tokens_in": 6786,
+    "tokens_out": 657,
+    "tool_calls": 8
+  }
+}

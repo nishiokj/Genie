@@ -1,0 +1,25 @@
+[INFO] [config] Loaded from /opt/agent/config/defaults.json
+[INFO] [config] Resolved paths relative to /opt/agent:
+[INFO] [config]   graphd.dbPath: ~/.graphd/graphd.db -> /root/.graphd/graphd.db
+[INFO] [config]   skills.directory: .agent/skills -> /opt/agent/.agent/skills
+[INFO] [config]   hooks.directory: config/hooks -> /opt/agent/config/hooks
+[INFO] [auth-service] Auth service not enabled in config
+[harness-daemon] Client connected: conn_1
+[harness-daemon] Client disconnected: conn_1, remaining: 0
+[nova] Fatal error: 544 |       }
+545 | 
+546 |       if (event.type === 'error') {
+547 |         const message = asNonEmptyString(event.data?.message) ?? 'bridge error';
+548 |         cleanup();
+549 |         rejectPromise(new Error(`Bridge error: ${message}`));
+                                ^
+error: Bridge error: LLM error (codex/gpt-5.4): Codex request timed out after 120000ms
+      at onEvent (/opt/agent/packages/infra/harness-daemon/src/cli/run.ts:549:27)
+      at emit (node:events:98:22)
+      at handleBusEvent (/opt/agent/packages/infra/harness-client/src/index.ts:282:10)
+      at <anonymous> (/opt/agent/packages/infra/harness-client/src/index.ts:110:12)
+      at emit (node:events:98:22)
+      at handleMessage (/opt/agent/packages/infra/comms-bus/dist/bus_client.js:78:22)
+      at emit (node:events:98:22)
+      at <anonymous> (ws:145:22)
+

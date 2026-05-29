@@ -1,0 +1,15 @@
+{
+  "case_id": "LSR-041",
+  "error": {
+    "message": "Bridge error: LLM error (codex/gpt-5.4): Codex request timed out after 120000ms",
+    "type": "run_error"
+  },
+  "request_id": "run_1779909087366_fa7i3h",
+  "usage": {
+    "latency_ms": 120112,
+    "model_calls": 0,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "tool_calls": 0
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T20:41:40.078262+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:40:00.434839+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_203438_915695_000001/trials/trial_10/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_203438_915695_000001/trials/trial_10/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-033",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779914400611_i7wmag",
+        "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Canal Rail\"],\"affected_orders\":[\"SO-7991\"],\"constrained_inventory\":true,\"revenue_at_risk\":3330000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"silicone_elastomer\",\"POT-72\",\"RSG-700\",\"SO-7991\"],\"id\":\"alert-H01-silicone_elastomer-RSG-700-SO-7991\",\"latent_edge_hypothesis\":\"Quebec silicon metal outages may tighten upstream siloxane availability for silicone elastomer.\",\"real_world_prior\":\"Silicon metal disruptions can constrain silicone intermediates with a lag.\",\"reasoning\":\"A live BOM input for RSG-700 plausibly links the silicon headline to an open strategic order.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The record shows a tier-2 siloxane dependency but not direct Quebec sourcing.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-033\"}}",
+        "usage": {
+          "latency_ms": 97301,
+          "model_calls": 8,
+          "tokens_in": 44499,
+          "tokens_out": 1869,
+          "tool_calls": 14
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "d9c10600163c7a0111b5a57019f6702139f327ea4a2162a69efbfc935651a2df",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "b2280b5d258b4c6855ac8c2c7ddddea55f164fd45d8293f11458410061347f2d",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_203438_915695_000001/trials/trial_10",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_203438_915695_000001/.scratch/trial_10_45563_14/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_203438_915695_000001/trials/trial_10/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_203438_915695_000001/.scratch/trial_10_45563_14/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T20:41:40.316674+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:41:40.249755+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_203438_915695_000001/trials/trial_10/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_203438_915695_000001/trials/trial_10/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "d9c10600163c7a0111b5a57019f6702139f327ea4a2162a69efbfc935651a2df",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 9
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 9,
+      "task_id": "LSR-033",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "b2280b5d258b4c6855ac8c2c7ddddea55f164fd45d8293f11458410061347f2d",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-033"
+    }
+  },
+  "updated_at": "2026-05-27T20:41:40.617483+00:00"
+}

@@ -1,0 +1,100 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T18:14:15.644378+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T18:13:41.884141+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_181111_577570_000001/trials/trial_2/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_181111_577570_000001/trials/trial_2/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779905622068_n45w4x",
+        "response": "{\"scan\":{\"run_id\":\"LSR-001-2026-06-12\",\"result\":\"alerts_found\",\"alerts\":[{\"id\":\"ALERT-H03-CMC410\",\"confidence\":\"medium\",\"source_headlines\":[\"H03\"],\"latent_edge_hypothesis\":\"Drought in Gujarat may tighten availability of castor-derived feedstocks that flow into ArborChem's castor-derived polyol input for CR-88 conformal barrier resin, creating a material constraint for CMC-410 production.\",\"real_world_prior\":\"Gujarat is a major castor-growing region and India is a significant source of castor-oil-derived industrial inputs; drought there can reduce agricultural output and disrupt export availability for downstream chemical derivatives.\",\"enterprise_path\":[\"H03 reports drought conditions deepening across parts of Gujarat and pressure on agricultural export markets.\",\"Aster Vale's supplier ArborChem Materials supplies input_id castor_derived_polyol and component CR-88.\",\"CR-88 conformal barrier resin is in the BOM for product CMC-410 and supports its coastal_corrosion_rating role.\",\"Open order SO-7731 for CMC-410 is 420 units due 2026-06-20.\",\"Available CMC-410 inventory is only 80 units, so fulfillment beyond inventory depends on ongoing material/component availability.\"],\"business_exposure\":{\"revenue_at_risk\":3400000,\"affected_orders\":[\"SO-7731\"],\"affected_customers\":[\"Atlantic Energy\"],\"constrained_inventory\":true},\"reasoning\":\"Observed facts: Gujarat drought was reported in today's headline pack. Company records show ArborChem supplies castor_derived_polyol and CR-88; CR-88 is used in CMC-410; CMC-410 has 80 units available in inventory; and open strategic order SO-7731 requires 420 units. Hypothesis: if Gujarat drought reduces castor export availability, ArborChem's castor-derived polyol input could tighten, slowing CR-88 replenishment and limiting Aster Vale's ability to build the 340 units not covered by finished-goods inventory before the near-term due date.\",\"citations\":{\"headlines\":[\"/workspace/task/LSR-001/events/headline-pack.md#H03\"],\"records\":[\"/workspace/task/LSR-001/records/suppliers.yaml\",\"/workspace/task/LSR-001/records/bom.yaml\",\"/workspace/task/LSR-001/records/inventory.yaml\",\"/workspace/task/LSR-001/records/orders.yaml\"]},\"uncertainty\":[\"Records do not explicitly state ArborChem sources castor feedstock from Gujarat or India.\",\"No current PO, WIP, or raw-material inventory position for CR-88 or castor_derived_polyol is provided.\",\"The headline indicates pressure on agricultural export markets, not a confirmed export halt or supplier outage.\"]}],\"no_alert_rationale\":null}}",
+        "usage": {
+          "latency_ms": 31114,
+          "model_calls": 3,
+          "tokens_in": 8612,
+          "tokens_out": 1551,
+          "tool_calls": 10
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "6ac2c2ffc3e4a737f489383ac7cbdd5a868221c8857cf3eb7079ad2dba9c5459",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "cf88d8b4b529af65a44e71a4be60253da990b8b4b75a1c697e4e2af334c1d181",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_181111_577570_000001/trials/trial_2",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_181111_577570_000001/.scratch/trial_2_22661_6/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_181111_577570_000001/trials/trial_2/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_181111_577570_000001/.scratch/trial_2_22661_6/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T18:14:15.938577+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T18:14:15.882401+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_181111_577570_000001/trials/trial_2/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_181111_577570_000001/trials/trial_2/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "6ac2c2ffc3e4a737f489383ac7cbdd5a868221c8857cf3eb7079ad2dba9c5459",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 1
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 1,
+      "task_id": "LSR-001",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "cf88d8b4b529af65a44e71a4be60253da990b8b4b75a1c697e4e2af334c1d181",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-001"
+    }
+  },
+  "updated_at": "2026-05-27T18:14:16.267212+00:00"
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-027",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911158745_5bwpeb",
+  "response": "{\"scan\":{\"result\":\"no_alert\",\"alerts\":[],\"no_alert_rationale\":\"Strongest candidate latent edge is H06: Beta Components raising prices for legacy display modules, but company records show supplier SUP-BETA is inactive and only linked to discontinued product LTH-90; exposure helper for entity LTH-90 returned revenue_at_risk 0, open_orders [], affected_customers [], constrained_inventory false, so there is no current open-order exposure. Other headlines lack a complete company-specific chain from event to material/component/product/order.\",\"citations\":{\"headlines\":[\"H06\",\"H01\",\"H02\",\"H03\",\"H04\",\"H05\",\"H07\",\"H08\"],\"records\":[\"records/suppliers.yaml:SUP-BETA\",\"records/products.yaml:LTH-90\",\"records/orders.yaml:SO-9102\",\"records/inventory.yaml\"]}}",
+  "usage": {
+    "latency_ms": 18445,
+    "model_calls": 3,
+    "tokens_in": 10748,
+    "tokens_out": 799,
+    "tool_calls": 8
+  }
+}

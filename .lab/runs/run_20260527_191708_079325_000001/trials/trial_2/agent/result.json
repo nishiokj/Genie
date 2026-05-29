@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779909454201_6zz50d",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"open_orders\":[\"SO-8207\"],\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"events/headline-pack.md#H01\"],\"records\":[\"records/bom.yaml#EVB-330/FJ-31\",\"records/suppliers.yaml#SUP-SAFELINE\",\"records/orders.yaml#SO-8207\",\"records/inventory.yaml#EVB-330\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"antimony_trioxide_synergist\",\"FJ-31\",\"EVB-330\",\"SO-8207\"],\"id\":\"LSR-052-A1\",\"latent_edge_hypothesis\":\"New inspections at Hunan antimony smelters could tighten availability of antimony compounds. EVB-330 depends on plenum-rated cable harness FJ-31, whose inputs include antimony_trioxide_synergist, creating a plausible supply risk to current shipments.\",\"real_world_prior\":\"Antimony trioxide is a common flame-retardant synergist, and smelter inspections can disrupt oxide output or delay shipments through distributor channels.\",\"reasoning\":\"Headline H01 points to potential disruption in antimony smelting. In company records, EVB-330 requires component FJ-31, whose BOM inputs explicitly include antimony_trioxide_synergist. Supplier notes for SafeLine Interconnect say the fire-safety jacket package includes an oxide synergist sourced through Asian compound distributors, which matches the external event path. The exposure helper confirms current business impact through open order SO-8207 with constrained inventory and helper-calculated revenue at risk of 3360000.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The headline does not name specific smelters or confirm direct impact to SafeLine's distributor network.\",\"The supplier record indicates Asian distributor exposure at tier 2, but does not identify a contracted antimony source in Hunan specifically.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 24427,
+    "model_calls": 3,
+    "tokens_in": 12491,
+    "tokens_out": 1131,
+    "tool_calls": 9
+  }
+}

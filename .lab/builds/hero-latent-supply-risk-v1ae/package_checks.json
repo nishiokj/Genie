@@ -1,0 +1,141 @@
+{
+  "checks": [
+    {
+      "evidence": {
+        "package_digest": "sha256:c390cfba67771a5751d3171d6d7a3164fb072a7bccc710807ffa5415a9ae76eb"
+      },
+      "id": "provenance.package_digest_present",
+      "reason": "package digest is recorded for immutable package checks",
+      "scope": "package",
+      "status": "pass"
+    },
+    {
+      "evidence": {
+        "duplicates": [],
+        "variant_ids": [
+          "baseline",
+          "evidence_first"
+        ]
+      },
+      "id": "variants.unique_ids",
+      "reason": "2 resolved variants have unique ids",
+      "scope": "package",
+      "status": "pass"
+    },
+    {
+      "evidence": {
+        "comparison": "paired",
+        "scheduling": "paired_interleaved",
+        "variant_count": 2
+      },
+      "id": "design.schedule_matches_comparison",
+      "reason": "comparison=paired scheduling=paired_interleaved variant_count=2",
+      "scope": "package",
+      "status": "pass"
+    },
+    {
+      "evidence": {
+        "duplicates": [],
+        "malformed": [],
+        "task_count": 6
+      },
+      "id": "tasks.unique_valid_rows",
+      "reason": "6 packaged cases/tasks are valid with unique ids",
+      "scope": "package",
+      "status": "pass"
+    },
+    {
+      "evidence": {
+        "malformed_task_rows": 0,
+        "mutable_images": [
+          "latent-supply-risk-workspaces:local"
+        ],
+        "pinned_images": [],
+        "unique_image_count": 1
+      },
+      "id": "images.task_refs_digest_pinned",
+      "reason": "1 of 1 unique task image refs are mutable tag refs; use digest refs or an image lock for reproducible runs",
+      "scope": "package",
+      "status": "warn"
+    },
+    {
+      "evidence": {},
+      "id": "trial_runtime.schema",
+      "reason": "trial runtime parsed from resolved package",
+      "scope": "package",
+      "status": "pass"
+    },
+    {
+      "evidence": {
+        "metric_count": 3,
+        "primary_count": 1
+      },
+      "id": "metrics.primary_declared",
+      "reason": "exactly one primary metric is declared",
+      "scope": "package",
+      "status": "pass"
+    },
+    {
+      "evidence": {
+        "grader_output_metric_ids": [
+          "pass_rate",
+          "score",
+          "false_positive_count"
+        ],
+        "grader_strategy": "Separate"
+      },
+      "id": "grader.conditional_integrity",
+      "reason": "grader is declared; grader-specific package checks apply",
+      "scope": "package",
+      "status": "pass"
+    },
+    {
+      "evidence": {
+        "path": "/bucephalus/out/result.json"
+      },
+      "id": "outputs.result_capture_declared",
+      "reason": "agent result output capture has a path",
+      "scope": "package",
+      "status": "pass"
+    },
+    {
+      "evidence": {
+        "event_count": 1
+      },
+      "id": "events.declaration_present",
+      "reason": "1 agent event stream(s) declared",
+      "scope": "package",
+      "status": "pass"
+    },
+    {
+      "evidence": {
+        "hidden_paths": [],
+        "output_mount_paths": [],
+        "overlaps": []
+      },
+      "id": "contamination.hidden_path_mount_overlap",
+      "reason": "skipped because no hidden grader paths are declared",
+      "scope": "package",
+      "status": "skip"
+    },
+    {
+      "evidence": {
+        "declared": false
+      },
+      "id": "epistemic_hygiene.qa_engineer",
+      "reason": "no epistemic_hygiene declaration; dynamic QA engineer scans are optional future work",
+      "scope": "package",
+      "status": "skip"
+    }
+  ],
+  "generated_at": "2026-05-27T18:47:35.723595+00:00",
+  "package_digest": "sha256:c390cfba67771a5751d3171d6d7a3164fb072a7bccc710807ffa5415a9ae76eb",
+  "passed": true,
+  "schema_version": "package_checks_v1",
+  "summary": {
+    "checks": 12,
+    "failed": 0,
+    "skipped": 2,
+    "warnings": 1
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T20:01:37.637996+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:01:01.410856+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200057_587011_000001/trials/trial_1/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200057_587011_000001/trials/trial_1/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-052",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779912061597_8despo",
+        "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":\"Metro Tunnel Authority is exposed through EVB-330 demand.\",\"affected_orders\":[{\"customer\":\"Metro Tunnel Authority\",\"due_date\":\"2026-07-09\",\"id\":\"SO-8207\",\"priority\":\"strategic\",\"product_id\":\"EVB-330\",\"quantity\":150,\"status\":\"open\",\"unit_revenue\":22400}],\"constrained_inventory\":\"Only 18 EVB-330 units are available against 150 open units.\",\"revenue_at_risk\":\"$3,360,000 open EVB-330 revenue.\"},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":\"H01 antimony smelters -> antimony_trioxide_synergist in FJ-31 -> EVB-330.\",\"id\":\"alert-H01-EVB-330\",\"latent_edge_hypothesis\":\"Antimony smelter checks could constrain the antimony-based synergist in EVB-330 cable harnesses.\",\"real_world_prior\":\"Inspection rounds at smelters can disrupt near-term material output.\",\"reasoning\":\"The headline explicitly names antimony and the BOM explicitly names antimony_trioxide_synergist for EVB-330.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The records do not name Hunan or a direct supplier site for this input.\",\"The headline does not quantify the duration or output impact of the checks.\"]}],\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+        "usage": {
+          "latency_ms": 33646,
+          "model_calls": 3,
+          "tokens_in": 11576,
+          "tokens_out": 1699,
+          "tool_calls": 8
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "c909ebba781ada356d3db7b655c17906be99aeb652d7284a96f9b9dc92cad49a",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "878f61698e5dc50db93ac2ede2ce90118c33d2b9d545e2659f2d347e7cdd1dea",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200057_587011_000001/trials/trial_1",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200057_587011_000001/.scratch/trial_1_92659_5/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200057_587011_000001/trials/trial_1/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200057_587011_000001/.scratch/trial_1_92659_5/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T20:01:37.861408+00:00",
+      "exit_code": 1,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:01:37.793659+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200057_587011_000001/trials/trial_1/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200057_587011_000001/trials/trial_1/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "c909ebba781ada356d3db7b655c17906be99aeb652d7284a96f9b9dc92cad49a",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 0
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "abandoned",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 0,
+      "task_id": "LSR-052",
+      "variant_id": "baseline"
+    },
+    "task_sandbox": {
+      "container_id": "878f61698e5dc50db93ac2ede2ce90118c33d2b9d545e2659f2d347e7cdd1dea",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-052"
+    }
+  },
+  "updated_at": "2026-05-27T20:01:38.048146+00:00"
+}

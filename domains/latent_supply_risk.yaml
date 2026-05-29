@@ -1,0 +1,286 @@
+domain_id: latent_supply_risk
+
+case_types:
+  - proxy_strong
+
+difficulties: [3, 4, 5]
+scenarios:
+  - castor_polyol_drought_positive
+  - rosin_flux_export_positive
+  - silicon_metal_energy_positive
+  - antimony_flame_retardant_positive
+  - castor_polyol_no_current_exposure
+  - zero_alert_distractor
+
+abilities:
+  - latent_edge_detection
+  - enterprise_dependency_mapping
+  - business_exposure_calculation
+  - calibrated_risk_alerting
+  - false_positive_restraint
+  - evidence_backed_structured_reporting
+
+environments:
+  - daily_supply_chain_risk_scan
+  - file_backed_enterprise_workspace
+  - noisy_external_event_feed
+
+diagnostic_pressure_types:
+  - generic_headline_requires_world_knowledge_bridge
+  - hidden_bom_input_requires_record_search
+  - measurable_open_order_exposure_required
+  - tempting_headline_without_enterprise_dependency
+  - true_latent_edge_without_current_business_exposure
+  - no_alert_restraint_under_plausible_noise
+
+scoring_methods:
+  - deterministic_grader
+  - structured_output_validation
+  - hard_checks_plus_rubric
+
+route_codes:
+  - accept
+  - reject_criteria_mismatch
+  - reject_schema
+  - reject_leakage
+  - reject_duplicate
+  - reject_coverage_mismatch
+  - reject_semantic_mismatch
+  - reject_upstream_invariant
+  - retry_infra
+  - retry_parse
+  - retry_provider_empty
+  - drop_retry_exhausted
+
+subcodes:
+  - proxy_strong
+  - weak_proxy_validity
+  - unreliable_score
+  - weak_diagnostic_pressure
+  - shortcut_leakage
+  - vague_scoring_contract
+  - fake_difficulty
+  - irrelevant_environment
+  - ambiguous_success_criteria
+  - overbroad_proxy_claim
+  - missing_known_limits
+  - missing_negative_control
+  - missing_public_workspace
+  - missing_hidden_answer_key
+  - missing_headline_pack
+  - missing_company_records
+  - missing_business_exposure
+  - missing_zero_alert_case
+  - answer_leak_latent_edge
+  - answer_leak_expected_alert
+  - weak_distractors
+  - schema_violation
+  - unknown_case_type
+  - unknown_difficulty
+  - unknown_scenario
+  - duplicate_design
+  - near_duplicate
+  - provider_error
+
+novelty_threshold: 0.08
+max_design_retries: 3
+max_generation_retries: 3
+
+deterministic_rules:
+  require_negative_control: true
+  require_public_hidden_split: true
+  require_headline_pack: true
+  require_company_records: true
+  require_business_exposure: true
+  require_zero_alert_cases: true
+  min_proxy_claim_chars: 140
+  min_diagnostic_pressure_items: 3
+  min_leakage_risk_items: 2
+  min_known_limit_items: 1
+
+semantic_rules:
+  - Judge the candidate as a benchmark for latent supply-chain risk detection, not as an incident-response playbook.
+  - The public headline pack must look like neutral daily external noise, not a curated incident memo or answer-shaped risk packet.
+  - "A positive alert requires all four links: external world event, plausible latent edge from world knowledge, discoverable company dependency, and measurable business exposure."
+  - The agent must not be told which headline matters, how many true risks exist, or whether the right answer is alert or no alert.
+  - The hidden latent edge must be absent from the explicit enterprise graph; company records can reveal materials, components, suppliers, orders, and inventory, but not the final conclusion.
+  - Zero-alert cases are first-class. They must contain plausible external events that fail because the company lacks the dependency or current exposure.
+  - Reject cases that can be solved by direct keyword matching between the headline and company records alone.
+  - Reject cases whose difficulty is arithmetic. Exposure calculation may be deterministic, but the benchmark pressure is constructing the world-to-business chain.
+  - Reject answer leakage in filenames, record labels, prompts, headline titles, or public workspace notes.
+  - The grader must penalize false positives, invented company records, unsupported alerts, and treating latent priors as confirmed facts.
+
+general_probe_principles:
+  latent_edge_quality:
+    definition: >
+      The case should require a missing predicate that a rules engine would not already
+      traverse: a commodity, process, geography, regulation, logistics, or material
+      relationship suggested by world knowledge rather than explicit company ontology.
+    test_question: >
+      What relationship must the agent infer before company records become relevant?
+    bad_example: >
+      A headline says Supplier A delayed resin CR-88 and the company record says Supplier A supplies resin CR-88.
+    good_example: >
+      A headline says drought is worsening in Gujarat; the company records mention
+      castor-derived polyol in a coating resin, but never say Gujarat drought affects it.
+
+  enterprise_path:
+    definition: >
+      A valid alert must connect the latent edge to a company-specific dependency path
+      through BOM, suppliers, products, open orders, inventory, or customer commitments.
+    test_question: >
+      Which records prove this business, not just some generic business, may be exposed?
+
+  measured_exposure:
+    definition: >
+      The case must make exposure inspectable through company records and deterministic
+      calculation rather than requiring the agent to hand-wave impact.
+    test_question: >
+      What orders, customers, revenue, inventory, or fulfillment commitments are at risk?
+
+  calibrated_uncertainty:
+    definition: >
+      The agent should raise an evidence-backed alert without pretending the headline
+      proves supplier impact. It must separate observed facts from hypotheses.
+    test_question: >
+      Does the final scan clearly distinguish the external prior from company records?
+
+  restraint:
+    definition: >
+      The suite must include plausible events that should not become alerts because one
+      chain link is missing.
+    test_question: >
+      What tempting candidate should a weaker action-biased agent over-alert on?
+
+anti_overfit_policy:
+  - Domain traits are lenses, not a complete definition of excellent risk analysis.
+  - Treat each generated case as rejected until the full event-to-exposure chain is inspectable.
+  - Do not reward action bias. A no-alert run can be the best possible answer.
+  - Do not reward arithmetic without latent-edge construction.
+  - Do not collapse the task into supplier matching or policy enforcement.
+  - Preserve room for unexpected valid alerts, but send them to seed review instead of automatic failure.
+  - "Report known limits: synthetic supply records do not prove real procurement, legal, or operational readiness."
+
+quality_gate_rules:
+  - Accept only when the public workspace includes a headline pack plus company profile, products, BOM, suppliers, orders, and inventory.
+  - Accept only when positive cases define a concrete hidden answer key with source headline, latent edge, dependency path, and business exposure.
+  - Accept only when at least one case in the suite is a zero-alert run with strong distractors.
+  - Reject if the headline pack mentions internal product IDs, customer IDs, order IDs, supplier IDs, or final risk labels.
+  - Reject if the agent can succeed by reading one field or matching one explicit named supplier.
+  - Reject if the true alert has no current open order, constrained inventory, strategic customer, or measurable exposure.
+  - Reject if the public records state the final conclusion.
+  - Evidence must cite candidate fields. Do not rewrite or repair the benchmark candidate.
+
+rubric_gate_rules:
+  - Credit true alert detection, source headline identification, plausible latent edge, enterprise path, exposure mapping, record citations, and calibrated uncertainty.
+  - Credit correct no-alert submission in zero-alert cases.
+  - Penalize false positives, alerts without business exposure, invented records, missing citations, and treating a hypothesis as confirmed.
+  - A correct alert label without the path and exposure cannot receive a high score.
+  - A verbose scan that cites irrelevant records cannot receive a high score.
+  - Reject scoring that needs an LLM judge for the central verdict.
+
+generator_guidance:
+  goal: >
+    Generate a small, high-quality latent supply-risk benchmark corpus for evaluating
+    Nova as a headless agent inside a Bucephalus experiment. Each case should look like
+    a normal daily supply-chain risk scan with neutral headlines and ordinary company
+    records. The benchmark pressure is discovering whether a world event may matter
+    through a dependency missing from the explicit operating graph.
+
+  corpus_shape: >
+    Target 4 to 8 excellent cases for the first usable corpus. Include at least two
+    positive latent-risk cases, one zero-alert case, and one case with a plausible
+    latent edge but no current measurable exposure. Prefer fewer cases with fully
+    inspectable artifacts over many generic cases.
+
+  workspace_contract: >
+    Each benchmark_case must describe a public workspace with README.md,
+    events/headline-pack.md, records/company-profile.md, records/products.yaml,
+    records/bom.yaml, records/suppliers.yaml, records/orders.yaml, records/inventory.yaml,
+    tools/risk_tools.py, and output/risk-scan.yaml as the only mutating output.
+    Hidden evaluation files must remain outside the public workspace.
+
+  candidate_prompt_bar: >
+    The prompt should be broad daily monitoring, not answer-shaped. It should ask the
+    agent to inspect the headline pack and records, use world knowledge to hypothesize
+    latent edges, calculate exposure when appropriate, and submit a structured risk scan.
+    It must not mention the true material, region, dependency, or expected result.
+
+  output_contract_bar: >
+    The final output must include scan.run_id, scan.result, scan.alerts, confidence,
+    source_headlines, latent_edge_hypothesis, real_world_prior, enterprise_path,
+    business_exposure, reasoning, citations, uncertainty, and no_alert_rationale.
+    Prefer JSON syntax for the final scan; JSON remains YAML-compatible and avoids
+    depending on PyYAML inside lean runtime images.
+
+  hidden_oracle_bar: >
+    The hidden oracle must include true_alerts, expected_no_alerts, zero_alert_run,
+    required concepts, dependency path, affected orders/customers, revenue at risk,
+    and false-positive traps.
+
+  anti_leakage_notes: >
+    Do not put answer-shaped terms in public filenames or records. Public files may
+    name real inputs like castor_derived_polyol or rosin_ester_flux, but must not say
+    today's headline creates a risk. Put conclusions only in the hidden answer key.
+
+output_schema_path: schemas/benchmark_output.schema.json
+
+benchmark_case_schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  additionalProperties: true
+  required:
+    - prompt
+    - setup
+    - inputs
+    - environment
+    - workspace
+    - hidden_evaluation
+    - grader_contract
+  properties:
+    prompt:
+      type: string
+      minLength: 120
+    setup:
+      type: string
+      minLength: 120
+    inputs:
+      type: object
+      required: [run_id, date, company, headline_count]
+      additionalProperties: true
+    environment:
+      type: object
+      required: [name, workspace_template, public_files, hidden_files]
+      additionalProperties: true
+    workspace:
+      type: object
+      required: [public, tools, output_schema]
+      additionalProperties: true
+      properties:
+        public:
+          type: object
+          required:
+            - headline_pack
+            - company_profile
+            - products
+            - bom
+            - suppliers
+            - orders
+            - inventory
+          additionalProperties: true
+        tools:
+          type: object
+          required: [risk_tools]
+          additionalProperties: true
+        output_schema:
+          type: object
+          required: [type, properties, required]
+          additionalProperties: true
+    hidden_evaluation:
+      type: object
+      required: [run_id, true_alerts, expected_no_alerts, zero_alert_run]
+      additionalProperties: true
+    grader_contract:
+      type: object
+      required: [deterministic_checks, score_weights, hard_failures]
+      additionalProperties: true

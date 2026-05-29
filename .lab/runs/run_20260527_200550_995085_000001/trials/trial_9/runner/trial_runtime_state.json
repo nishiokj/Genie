@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T20:12:50.262921+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:11:54.460526+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_9/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_9/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-033",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779912714631_2g3vcx",
+        "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly matches a named supplier, material, component, product, region, or lane in the records without adding latent bridges.\",\"result\":\"no_alert\",\"run_id\":\"LSR-033\"}}",
+        "usage": {
+          "latency_ms": 53519,
+          "model_calls": 3,
+          "tokens_in": 10140,
+          "tokens_out": 1135,
+          "tool_calls": 8
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "c40485205f387bef4ed4bb1a6aab1389c20d66c03dbc1f3050bf359c6f8fb901",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "78e0a5e5565683f187288cc127ecc4031b002f1d658b597b13d3e62fde29c83c",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_9",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/.scratch/trial_9_348_13/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_9/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/.scratch/trial_9_348_13/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T20:12:50.535954+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:12:50.467290+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_9/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_9/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "c40485205f387bef4ed4bb1a6aab1389c20d66c03dbc1f3050bf359c6f8fb901",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 8
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 8,
+      "task_id": "LSR-033",
+      "variant_id": "baseline"
+    },
+    "task_sandbox": {
+      "container_id": "78e0a5e5565683f187288cc127ecc4031b002f1d658b597b13d3e62fde29c83c",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-033"
+    }
+  },
+  "updated_at": "2026-05-27T20:12:50.820803+00:00"
+}

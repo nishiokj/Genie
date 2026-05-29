@@ -1,0 +1,153 @@
+{
+  "ext": {
+    "agent_runtime_identity": {
+      "invocation_source": "runtime_agent"
+    }
+  },
+  "harness_identity": {
+    "entry_command": [
+      "python3",
+      "__BUCEPHALUS_TASK_WORKDIR__/.bucephalus/support/run_nova_latent_supply_risk.py",
+      "--mode",
+      "evidence_first",
+      "--provider",
+      "codex",
+      "--model",
+      "gpt-5.4",
+      "--reasoning",
+      "medium"
+    ],
+    "exec_digest": "sha256:b85a172668f74db1751cff7bc44510002e4d40933a89a970275a6ed877f94ed8",
+    "name": "python3"
+  },
+  "integration_level": "cli_events",
+  "mounts": [
+    {
+      "name": "in",
+      "path": "/bucephalus/in",
+      "writable": false
+    },
+    {
+      "name": "workdir",
+      "path": "/workspace/task/LSR-001",
+      "writable": true
+    },
+    {
+      "name": "out",
+      "path": "/bucephalus/out",
+      "writable": true
+    },
+    {
+      "name": "tmp",
+      "path": "/tmp",
+      "writable": true
+    }
+  ],
+  "network": {
+    "allowed_hosts": [],
+    "egress_self_test": {
+      "cases": [],
+      "performed": false
+    },
+    "enforcement_effective": "docker_none",
+    "mode_effective": "none",
+    "mode_requested": "none"
+  },
+  "planes": {
+    "agent_runtime": {
+      "event_sinks": [
+        {
+          "format": "jsonl",
+          "id": "nova_events",
+          "ingest": true,
+          "mode": "jsonl",
+          "path": "/bucephalus-events/trajectory.jsonl",
+          "retain_raw": true
+        }
+      ],
+      "executor": "local_docker",
+      "image": "latent-supply-risk-workspaces:local",
+      "image_digest": "sha256:5c3c4d5333bb1f6b9d8fcc361a5f2dca045ab5a8cb109789293ecf09259c9d4c",
+      "mounts": [
+        {
+          "name": "in",
+          "path": "/bucephalus/in",
+          "writable": false
+        },
+        {
+          "name": "workdir",
+          "path": "/workspace/task/LSR-001",
+          "writable": true
+        },
+        {
+          "name": "out",
+          "path": "/bucephalus/out",
+          "writable": true
+        },
+        {
+          "name": "tmp",
+          "path": "/tmp",
+          "writable": true
+        },
+        {
+          "name": "events",
+          "path": "/bucephalus-events",
+          "writable": true
+        },
+        {
+          "name": "secret:CODEX_OAUTH",
+          "path": "/root/.codex/auth.json",
+          "secret": true,
+          "writable": false
+        },
+        {
+          "env": "CODEX_AUTH_CACHE_FILE",
+          "file_path": "/bucephalus/credentials/codex_oauth/auth.json",
+          "name": "credential_cache:CODEX_OAUTH",
+          "path": "/bucephalus/credentials/codex_oauth",
+          "secret": true,
+          "writable": true
+        }
+      ],
+      "network_mode": "full",
+      "output_mounts": [],
+      "workdir": "/workspace/task/LSR-001"
+    },
+    "task_sandbox": {
+      "executor": "local_docker",
+      "image": "latent-supply-risk-workspaces:local",
+      "image_digest": "sha256:5c3c4d5333bb1f6b9d8fcc361a5f2dca045ab5a8cb109789293ecf09259c9d4c",
+      "mounts": [
+        {
+          "name": "in",
+          "path": "/bucephalus/in",
+          "writable": false
+        },
+        {
+          "name": "workdir",
+          "path": "/workspace/task/LSR-001",
+          "writable": true
+        },
+        {
+          "name": "out",
+          "path": "/bucephalus/out",
+          "writable": true
+        },
+        {
+          "name": "tmp",
+          "path": "/tmp",
+          "writable": true
+        }
+      ],
+      "network_mode": "none",
+      "workdir": "/workspace/task/LSR-001"
+    }
+  },
+  "sanitization_profile": "perf_benchmark",
+  "schema_version": "state_inventory_v1",
+  "violations": {
+    "notes": [],
+    "profile_invariant_violation": false,
+    "state_leak": false
+  }
+}

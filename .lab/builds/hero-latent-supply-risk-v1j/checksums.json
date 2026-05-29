@@ -1,0 +1,10 @@
+{
+  "files": {
+    "resolved_experiment.json": "sha256:f02370b93e271e0c4ed1fd170bca1221d4e99da5f9a29eaa692a4b219c5a23ca",
+    "runtime_assets/grade_latent_supply_risk_inline.py": "sha256:edad87d5276f3a5b98f5765a88e66bc3ad97ddceda90e705b3f9061a8425c648",
+    "runtime_assets/run_nova_latent_supply_risk.py": "sha256:0bda5c5d9b3f545c845d5cd9ee5117a09b8306b54855f05bb08e1beea8da30c8",
+    "staging_manifest.json": "sha256:a70828efafa7e01257a4067c0c2cbb87e4705e58a4b12768cbc1bdd736a02a8f",
+    "tasks/tasks.jsonl": "sha256:e59db4896beebd306db5391d9ac72e0a0973c0651fb687e41aeca11766e1fd92"
+  },
+  "schema_version": "sealed_package_checksums_v2"
+}

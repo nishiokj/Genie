@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 
 from config import ModelConfig, build_runtime_config, load_domain, load_env_file
+from main import _design_from_instruction
 
 
 def test_load_env_file_sets_missing_values(tmp_path, monkeypatch) -> None:
@@ -231,12 +232,51 @@ def test_runtime_config_accepts_explicit_models_without_env_transport(monkeypatc
     assert config.models.model == "explicit-primary"
 
 
+def test_runtime_config_keeps_instruction() -> None:
+    config = build_runtime_config(
+        domain_path="domains/benchmark_haiku.yaml",
+        target_stage="benchmark",
+        target_n=1,
+        seed=1,
+        run_id="instruction-test",
+        instruction="Make a haiku benchmark about restrained grief.",
+    )
+
+    assert config.instruction == "Make a haiku benchmark about restrained grief."
+
+
 def test_domain_loads_output_schema_from_json_file() -> None:
     domain = load_domain("domains/benchmark_haiku.yaml")
 
     assert domain.output_schema["type"] == "object"
     assert "agent_artifact" in domain.output_schema["required"]
     assert "judge_artifact" in domain.output_schema["required"]
+
+
+def test_domain_output_schema_uses_domain_benchmark_case_schema() -> None:
+    domain = load_domain("domains/flaky_concurrency_bug_triage_python.yaml")
+
+    assert domain.output_schema["$defs"]["benchmark_case"]["required"] == [
+        "case_id",
+        "repo_files",
+        "failing_test",
+        "pytest_trace",
+        "task_instructions",
+    ]
+
+
+def test_instruction_design_uses_domain_taxonomy() -> None:
+    domain = load_domain("domains/benchmark_haiku.yaml")
+
+    design = _design_from_instruction("Create a late-autumn layoffs haiku benchmark.", domain, run_id="one-shot")
+
+    assert design.id == "one-shot-instruction-design"
+    assert design.design_intent == "Create a late-autumn layoffs haiku benchmark."
+    assert design.cell.case_type in domain.case_types
+    assert design.cell.difficulty in domain.difficulties
+    assert design.cell.scenario in domain.scenarios
+    assert design.target_ability in domain.abilities
+    assert design.target_environment in domain.environments
 
 
 def test_benchmark_output_schema_requires_private_judge_outlets() -> None:

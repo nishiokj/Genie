@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-001",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779912530905_o4bswh",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Atlantic Energy\"],\"affected_orders\":[\"SO-7731\"],\"constrained_inventory\":true,\"revenue_at_risk\":4200000},\"citations\":{\"headlines\":[\"H03\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"castor_derived_polyol -> CR-88 -> CMC-410 -> SO-7731\"],\"id\":\"alert-H03-castor_derived_polyol\",\"latent_edge_hypothesis\":\"Gujarat drought could tighten castor-derived polyol supply used in corrosion-rated resin.\",\"real_world_prior\":\"Gujarat is a key castor-growing region and drought can disrupt castor feedstocks.\",\"reasoning\":\"The drought links to a named BOM input that feeds an active product with an open strategic order.\",\"source_headlines\":[\"H03\"],\"uncertainty\":[\"The record set does not name the tier-2 country source for ArborChem's castor feedstock.\"]}],\"result\":\"alerts_found\",\"run_id\":\"LSR-001\"}}",
+  "usage": {
+    "latency_ms": 30048,
+    "model_calls": 4,
+    "tokens_in": 15519,
+    "tokens_out": 1291,
+    "tool_calls": 9
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-027",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911141832_0u534w",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No external headline explicitly names a supplier, material, component, product, region, or logistics lane that both appears in company records and creates current measurable exposure under the rules-only standard. The only direct name overlap is H06 with supplier Beta Components, but that supplier is inactive, supports legacy display modules for discontinued product LTH-90 only, and there are no corresponding open orders or inventory exposure records.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+  "usage": {
+    "latency_ms": 13767,
+    "model_calls": 2,
+    "tokens_in": 6577,
+    "tokens_out": 646,
+    "tool_calls": 8
+  }
+}

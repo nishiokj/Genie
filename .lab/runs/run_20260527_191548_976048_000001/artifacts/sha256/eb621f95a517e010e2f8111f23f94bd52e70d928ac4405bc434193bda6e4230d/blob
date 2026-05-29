@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779909374064_xltyqq",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml: EVB-330 -> FJ-31 -> antimony_trioxide_synergist\",\"records/suppliers.yaml: SUP-SAFELINE tier2_notes on oxide synergist sourced through Asian compound distributors\",\"records/orders.yaml: SO-8207 open order for EVB-330\",\"records/inventory.yaml: EVB-330 quantity_available 18\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"antimony_trioxide_synergist\",\"FJ-31\",\"EVB-330\",\"SO-8207\"],\"id\":\"ALT-LSR-052-01\",\"latent_edge_hypothesis\":\"New inspections at antimony smelters in Hunan could tighten availability of antimony trioxide used as the oxide synergist in plenum fire-safety compounds, creating a supply risk for Aster Vale's plenum-rated cable harness and the EVB-330 product that depends on it.\",\"real_world_prior\":\"Antimony supply disruptions can affect flame-retardant systems because antimony trioxide is a common synergist used in fire-safety compounds and cable materials.\",\"reasoning\":\"Headline H01 identifies inspections at antimony smelters in Hunan. Aster Vale's EVB-330 includes component FJ-31, a plenum-rated cable harness whose BOM explicitly includes antimony_trioxide_synergist. Supplier records for SafeLine Interconnect show the fire-safety jacket package includes an oxide synergist sourced through Asian compound distributors, which provides the company-specific dependency bridge from the external event to the input. The exposure helper confirms current business exposure through open order SO-8207 for EVB-330, with constrained inventory and quantified revenue at risk.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The headline cites inspections at several smelters but does not quantify production curtailment or duration.\",\"Supplier records indicate Asian distributor sourcing for the oxide synergist but do not name the exact smelter or province in the current chain.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 30771,
+    "model_calls": 3,
+    "tokens_in": 12491,
+    "tokens_out": 1384,
+    "tool_calls": 9
+  }
+}

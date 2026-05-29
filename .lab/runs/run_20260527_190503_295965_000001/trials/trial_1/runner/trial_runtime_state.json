@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T19:05:25.678654+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:05:07.531693+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_1/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_1/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-052",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779908707692_7du759",
+        "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a supplier, material, component, product, region, or logistics lane that also appears in the company records. Potentially suggestive items require disallowed latent bridges: H01 names antimony smelters, while records name antimony_trioxide_synergist; H06 mentions low-smoke building materials, while records name low_smoke_jacket_compound; other headlines are generic and do not explicitly match recorded suppliers, products, regions, or lanes.\",\"result\":\"no_alert\",\"run_id\":\"LSR-052\"}}",
+        "usage": {
+          "latency_ms": 15761,
+          "model_calls": 2,
+          "tokens_in": 6426,
+          "tokens_out": 730,
+          "tool_calls": 8
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "c83cabb342f6010be312e25d1d18dcae15ba4029e4e8a217725fed721330f712",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "5786e87850199b5642958d4f0e6f1ab22b124468cf83f4ad3710addd7b422419",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_1",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/.scratch/trial_1_8246_5/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_1/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/.scratch/trial_1_8246_5/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T19:05:25.955619+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:05:25.900703+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_1/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_1/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "c83cabb342f6010be312e25d1d18dcae15ba4029e4e8a217725fed721330f712",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 0
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 0,
+      "task_id": "LSR-052",
+      "variant_id": "baseline"
+    },
+    "task_sandbox": {
+      "container_id": "5786e87850199b5642958d4f0e6f1ab22b124468cf83f4ad3710addd7b422419",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-052"
+    }
+  },
+  "updated_at": "2026-05-27T19:05:26.266288+00:00"
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-041",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779909902398_09wkj0",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No qualifying alert under RULES_ONLY. None of the headlines explicitly name a supplier, material, component, product, region, or logistics lane in a way that creates a direct company-specific adverse path supported by the records. Potential lexical overlaps are either non-disruptive or too generic: H02 reports normal replenishment, H03 names an Asia-Europe lane not present in records, H04 names copper wire rod which does not appear in records, H05 mentions packaging resin rather than any recorded company material/component and is operating normally, H06 mentions Oregon but only as generic road work near an industrial park without an explicit tie to Aster Vale facilities or measurable exposure, and H08 refers to excess stock for discontinued industrial panels rather than a recorded active company dependency.\",\"result\":\"no_alert\",\"run_id\":\"LSR-041\"}}",
+  "usage": {
+    "latency_ms": 25011,
+    "model_calls": 2,
+    "tokens_in": 6107,
+    "tokens_out": 1085,
+    "tool_calls": 8
+  }
+}

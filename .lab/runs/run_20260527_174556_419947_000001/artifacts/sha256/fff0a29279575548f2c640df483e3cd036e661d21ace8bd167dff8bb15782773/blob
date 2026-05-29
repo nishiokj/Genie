@@ -1,0 +1,8 @@
+{
+  "scan": {
+    "alerts": [],
+    "no_alert_rationale": "Bucephalus contract probe; no case workspace was supplied.",
+    "result": "no_alert",
+    "run_id": "preflight-contract-probe"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-041",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911717701_rsbya5",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"H01 plausibly maps to castor_derived_polyol in CMC-410, but the exposure helper returned no open orders and revenue_at_risk 0.\",\"result\":\"no_alert\",\"run_id\":\"LSR-041\"}}",
+  "usage": {
+    "latency_ms": 16805,
+    "model_calls": 3,
+    "tokens_in": 12670,
+    "tokens_out": 627,
+    "tool_calls": 9
+  }
+}

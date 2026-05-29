@@ -1,0 +1,44 @@
+{
+  "agent": {
+    "outputs": {
+      "result": {
+        "container_path": "/bucephalus/out/result.json",
+        "format": "json",
+        "host_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_174556_419947_000001/.scratch/trial_2_82598_6/out/result.json",
+        "value": {
+          "scan": {
+            "alerts": [],
+            "no_alert_rationale": "Bucephalus contract probe; no case workspace was supplied.",
+            "result": "no_alert",
+            "run_id": "preflight-contract-probe"
+          }
+        }
+      },
+      "trajectory": {
+        "container_path": "/bucephalus/out/nova-events.jsonl",
+        "format": "text",
+        "host_path": null,
+        "value": null
+      }
+    }
+  },
+  "grader": {
+    "outputs": {
+      "grade": {
+        "container_path": "/grader/out/latent-supply-risk-grade.json",
+        "format": "json",
+        "host_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_174556_419947_000001/.scratch/trial_2_82598_6/out/transport/captured/grader_grade.json",
+        "value": {
+          "case_id": "preflight-contract-probe",
+          "checks": {
+            "contract_probe": true
+          },
+          "false_positive_count": 0,
+          "passed": true,
+          "score": 1.0
+        }
+      }
+    }
+  },
+  "schema_version": "runtime_transport_envelope_v1"
+}

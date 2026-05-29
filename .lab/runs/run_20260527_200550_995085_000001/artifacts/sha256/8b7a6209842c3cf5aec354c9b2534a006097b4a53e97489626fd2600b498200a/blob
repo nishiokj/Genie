@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-014",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779912564247_amp031",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Mercy North Hospitals\"],\"affected_orders\":[\"SO-7844\"],\"constrained_inventory\":true,\"revenue_at_risk\":3692000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/suppliers.yaml\",\"records/bom.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"H01 South China resin tapping restrictions\",\"SUP-LANTERN tier2 South China resin brokers\",\"rosin_ester_flux\",\"ASM-44\",\"MTG-220\"],\"id\":\"ALERT-H01-MTG220\",\"latent_edge_hypothesis\":\"South China resin restrictions may disrupt resin-brokered flux inputs for ASM-44 used in MTG-220.\",\"real_world_prior\":\"Material restrictions can tighten specialty assembly input supply.\",\"reasoning\":\"The headline names South China resin and records tie South China resin brokers to a live MTG-220 assembly input.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The headline does not name Lantern or rosin ester flux directly.\",\"The duration and severity of any supply impact are not stated.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-014\"}}",
+  "usage": {
+    "latency_ms": 45596,
+    "model_calls": 4,
+    "tokens_in": 16483,
+    "tokens_out": 2192,
+    "tool_calls": 11
+  }
+}

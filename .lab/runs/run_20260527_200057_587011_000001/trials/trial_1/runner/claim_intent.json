@@ -1,0 +1,10 @@
+{
+  "created_at": "2026-05-27T20:01:01.258840+00:00",
+  "run_id": "run_20260527_200057_587011_000001",
+  "schedule_idx": 0,
+  "schema_version": "trial_claim_intent_v1",
+  "started_at": "2026-05-27T20:01:01.258491+00:00",
+  "trial_id": "trial_1",
+  "variant_id": "baseline",
+  "worker_id": "bucephalus-worker-1"
+}

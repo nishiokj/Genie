@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908033616_5ba0c2",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"events/headline-pack.md#H01\"],\"records\":[\"records/bom.yaml#EVB-330:FJ-31\",\"records/suppliers.yaml#SUP-SAFELINE\",\"records/orders.yaml#SO-8207\",\"records/inventory.yaml#EVB-330\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"antimony_trioxide_synergist\",\"FJ-31\",\"EVB-330\",\"SO-8207\"],\"id\":\"ALT-LSR-052-01\",\"latent_edge_hypothesis\":\"Provincial inspections at Hunan antimony smelters could tighten availability of antimony-based flame-retardant additives, creating a supply risk for the antimony_trioxide_synergist input used in Aster Vale's plenum-rated cable harness for EVB-330.\",\"real_world_prior\":\"Antimony trioxide is a common flame-retardant synergist, and enforcement actions at smelters can disrupt short-term output or shipment timing through downstream distributors.\",\"reasoning\":\"Headline H01 identifies new inspections at Hunan antimony smelters. EVB-330 requires component FJ-31, a plenum-rated cable harness whose BOM includes antimony_trioxide_synergist. Supplier SafeLine Interconnect provides FJ-31 / low_smoke_jacket_compound and notes that its fire-safety jacket package includes an oxide synergist sourced through Asian compound distributors, which is a plausible path from the Hunan smelter inspections to Aster Vale's dependency. EVB-330 has an open strategic order SO-8207 for 150 units, while inventory shows only 18 units available, so any interruption in replenishing the harness could expose near-term fulfillment.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The records do not name a direct supplier of antimony_trioxide_synergist; the linkage depends on SafeLine's tier-2 note about an oxide synergist sourced through Asian distributors.\",\"The headline reports inspections, not a confirmed shutdown or export restriction, so duration and severity of any supply impact are uncertain.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 26131,
+    "model_calls": 3,
+    "tokens_in": 12041,
+    "tokens_out": 1261,
+    "tool_calls": 9
+  }
+}

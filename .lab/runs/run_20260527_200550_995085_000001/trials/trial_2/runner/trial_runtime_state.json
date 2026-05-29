@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T20:08:04.205415+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:06:46.270871+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_2/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_2/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-052",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779912406449_m89gsk",
+        "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"antimony_trioxide_synergist\",\"FJ-31\",\"EVB-330\",\"SO-8207\"],\"id\":\"alert-H01-antimony-EVB-330\",\"latent_edge_hypothesis\":\"Hunan antimony smelter checks could tighten antimony oxide supply into EVB-330 cable harness materials.\",\"real_world_prior\":\"Antimony trioxide is a common flame-retardant synergist and inspections can disrupt smelter output.\",\"reasoning\":\"The headline maps to a flame-retardant input in EVB-330 with a current strategic open order and limited finished inventory.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The supplier record shows only a tier-2 Asian distributor link rather than a named Hunan source.\"]}],\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+        "usage": {
+          "latency_ms": 75261,
+          "model_calls": 6,
+          "tokens_in": 27932,
+          "tokens_out": 1497,
+          "tool_calls": 11
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "30ccff3b99264861d4182312210492edf353cf1e6f807371208c44bcc0ad67d6",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "86cdb13665600083c173a5e33e0448bd045bb2bac1be5cd09e9b3fd8fdb05681",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_2",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/.scratch/trial_2_348_6/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_2/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/.scratch/trial_2_348_6/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T20:08:04.449011+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:08:04.387059+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_2/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_2/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "30ccff3b99264861d4182312210492edf353cf1e6f807371208c44bcc0ad67d6",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 1
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 1,
+      "task_id": "LSR-052",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "86cdb13665600083c173a5e33e0448bd045bb2bac1be5cd09e9b3fd8fdb05681",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-052"
+    }
+  },
+  "updated_at": "2026-05-27T20:08:04.709952+00:00"
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-027",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779913584672_7q88ru",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline credibly connects to an active company dependency with a complete event-to-exposure chain, and the strongest checked candidate lacked a matching trigger despite helper exposure on castor_derived_polyol.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+  "usage": {
+    "latency_ms": 69153,
+    "model_calls": 10,
+    "tokens_in": 54541,
+    "tokens_out": 1900,
+    "tool_calls": 18
+  }
+}

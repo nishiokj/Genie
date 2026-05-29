@@ -1,0 +1,63 @@
+{
+  "agent": {
+    "outputs": {
+      "nova_stderr": {
+        "container_path": "/bucephalus/out/nova-stderr.log",
+        "format": "text",
+        "host_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_180346_390765_000001/.scratch/trial_2_9949_6/out/nova-stderr.log",
+        "value": "[INFO] [config] Loaded from /opt/agent/config/defaults.json\n[INFO] [config] Resolved paths relative to /opt/agent:\n[INFO] [config]   graphd.dbPath: ~/.graphd/graphd.db -> /root/.graphd/graphd.db\n[INFO] [config]   skills.directory: .agent/skills -> /opt/agent/.agent/skills\n[INFO] [config]   hooks.directory: config/hooks -> /opt/agent/config/hooks\n[INFO] [auth-service] Auth service not enabled in config\n[harness-daemon] Client connected: conn_1\n[harness-daemon] Client disconnected: conn_1, remaining: 0\n"
+      },
+      "nova_stdout": {
+        "container_path": "/bucephalus/out/nova-stdout.log",
+        "format": "text",
+        "host_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_180346_390765_000001/.scratch/trial_2_9949_6/out/nova-stdout.log",
+        "value": "GraphD ready: db=/root/.graphd/graphd.db root=/opt/agent port=9444\nAuto-created session: run_mpodl5di\n"
+      },
+      "result": {
+        "container_path": "/bucephalus/out/result.json",
+        "format": "json",
+        "host_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_180346_390765_000001/.scratch/trial_2_9949_6/out/result.json",
+        "value": {
+          "model": {
+            "model": "gpt-5.4",
+            "provider": "codex"
+          },
+          "request_id": "run_1779905178486_z4m4yx",
+          "response": "{\"scan\":{\"run_id\":\"LSR-001-2026-06-12\",\"result\":\"alerts_found\",\"alerts\":[{\"id\":\"ALT-2026-06-12-01\",\"confidence\":\"medium\",\"source_headlines\":[\"H03\"],\"latent_edge_hypothesis\":\"Drought in Gujarat could tighten castor-derived feedstock availability for castor-based polyols, which could in turn constrain ArborChem Materials' supply of CR-88 conformal barrier resin used on CMC-410 builds.\",\"real_world_prior\":\"India, including Gujarat, is a major castor-growing region, and drought there can disrupt castor-derived chemical supply chains used in specialty polyols and related industrial materials.\",\"enterprise_path\":[\"H03 reports drought pressure across parts of Gujarat affecting agricultural export markets.\",\"Aster Vale depends on ArborChem Materials for input 'castor_derived_polyol' and component CR-88.\",\"BOM shows CR-88 conformal barrier resin is required for CMC-410 and supports its coastal corrosion rating.\",\"Open order SO-7731 for CMC-410 is strategic and due soon.\",\"Inventory shows only 80 CMC-410 units available versus 420 ordered, so additional production is needed and could be exposed if CR-88 replenishment is disrupted.\"],\"business_exposure\":{\"revenue_at_risk\":3400000,\"affected_orders\":[\"SO-7731\"],\"affected_customers\":[\"Atlantic Energy\"],\"constrained_inventory\":true},\"reasoning\":\"Observed facts: H03 reports drought conditions in Gujarat. Company records show ArborChem Materials supplies castor_derived_polyol and CR-88; CR-88 is used in CMC-410; SO-7731 is an open strategic order for 420 CMC-410 units due 2026-06-20; on-hand CMC-410 inventory is 80 units. Hypothesis: if Gujarat drought reduces castor-export availability, ArborChem's castor-derived polyol input could tighten, delaying CR-88 availability and limiting the company's ability to build the 340 units not already covered by inventory. Using current open demand net of inventory, the potentially exposed revenue is 340 × 10000 = 3400000.\",\"citations\":{\"headlines\":[\"H03\"],\"records\":[\"records/suppliers.yaml: ArborChem Materials supplies castor_derived_polyol and CR-88\",\"records/bom.yaml: CMC-410 requires CR-88 conformal barrier resin\",\"records/orders.yaml: SO-7731 open for 420 units of CMC-410 at 10000 each for Atlantic Energy\",\"records/inventory.yaml: 80 units of CMC-410 available\",\"records/company-profile.md: specialty materials often assume 30-45 day lead times and strategic customers get review priority\"]},\"uncertainty\":[\"Records do not explicitly state ArborChem sources castor feedstock from Gujarat or India.\",\"Headline says agricultural export markets are pressured, not that exports are halted.\",\"No current PO, safety stock, or alternate source data is provided for CR-88 or castor-derived polyol.\"]}],\"no_alert_rationale\":null}}",
+          "usage": {
+            "latency_ms": 55511,
+            "model_calls": 3,
+            "tokens_in": 8614,
+            "tokens_out": 1579,
+            "tool_calls": 10
+          }
+        }
+      },
+      "trajectory": {
+        "container_path": "/bucephalus/out/nova-events.jsonl",
+        "format": "text",
+        "host_path": null,
+        "value": null
+      }
+    }
+  },
+  "grader": {
+    "outputs": {
+      "grade": {
+        "container_path": "/grader/out/latent-supply-risk-grade.json",
+        "format": "json",
+        "host_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_180346_390765_000001/.scratch/trial_2_9949_6/out/transport/captured/grader_grade.json",
+        "value": {
+          "case_id": "preflight-contract-probe",
+          "checks": {
+            "contract_probe": true
+          },
+          "false_positive_count": 0,
+          "passed": true,
+          "score": 1.0
+        }
+      }
+    }
+  },
+  "schema_version": "runtime_transport_envelope_v1"
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911448485_ax21g2",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"bom.yaml\",\"suppliers.yaml\",\"orders.yaml\",\"inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"antimony_trioxide_synergist\",\"FJ-31\",\"EVB-330\",\"SO-8207\"],\"id\":\"LSR-052-A1\",\"latent_edge_hypothesis\":\"Hunan antimony smelter inspections could tighten antimony trioxide supply used in EVB-330 cable harness fire-safety chemistry.\",\"real_world_prior\":\"Antimony oxide is a common flame-retardant synergist and smelter checks can disrupt supply.\",\"reasoning\":\"The headline maps to a named EVB-330 input, its harness component, and an open strategic order with limited finished inventory.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The supplier file shows a tier-2 Asian oxide source but not a direct Hunan site match.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 20778,
+    "model_calls": 4,
+    "tokens_in": 18285,
+    "tokens_out": 906,
+    "tool_calls": 9
+  }
+}

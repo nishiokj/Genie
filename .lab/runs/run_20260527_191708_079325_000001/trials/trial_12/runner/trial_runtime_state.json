@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T19:25:51.876217+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:25:30.706194+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/trials/trial_12/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/trials/trial_12/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-041",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779909930861_ildmkv",
+        "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"Reviewed the provided headlines and company records. The only plausible company-specific latent edge was H01 drought conditions in Gujarat potentially affecting castor-derived feedstocks for input_id castor_derived_polyol, which maps to component_id CR-88 and product_id CMC-410. However, the required business-exposure check returned revenue_at_risk 0, open_orders [], affected_customers [], and constrained_inventory false for castor_derived_polyol, so there is no current measurable open-order exposure. Other headlines did not connect to an active company dependency with a complete event-to-exposure chain.\",\"result\":\"no_alert\",\"run_id\":\"LSR-041\"}}",
+        "usage": {
+          "latency_ms": 18609,
+          "model_calls": 3,
+          "tokens_in": 11726,
+          "tokens_out": 756,
+          "tool_calls": 9
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "3262fdd6c5887506d8b4e6844a35b45215fe1541e86c6e7eea784320a80d2174",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "a5ce9ee5fb19585318902ea91f3ecf567b143abeaeb97404b104f75b634a05d3",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/trials/trial_12",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/.scratch/trial_12_26387_16/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/trials/trial_12/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/.scratch/trial_12_26387_16/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T19:25:52.162552+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:25:52.104104+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/trials/trial_12/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/trials/trial_12/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "3262fdd6c5887506d8b4e6844a35b45215fe1541e86c6e7eea784320a80d2174",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 11
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 11,
+      "task_id": "LSR-041",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "a5ce9ee5fb19585318902ea91f3ecf567b143abeaeb97404b104f75b634a05d3",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-041"
+    }
+  },
+  "updated_at": "2026-05-27T19:25:52.427420+00:00"
+}

@@ -1,0 +1,15 @@
+{
+  "request_id": "run_1779905622074_8w7w7i",
+  "response": "{\"scan\":{\"run_id\":\"LSR-001-2026-06-12\",\"result\":\"alerts_found\",\"alerts\":[{\"id\":\"ALERT-H03-CMC410\",\"confidence\":\"medium\",\"source_headlines\":[\"H03\"],\"latent_edge_hypothesis\":\"Drought in Gujarat could tighten castor-related agricultural exports, which may reduce availability or extend lead times for castor-derived polyol used in the conformal barrier resin for CMC-410, creating supply pressure against current open demand.\",\"real_world_prior\":\"Gujarat is a major hub for castor cultivation and castor-oil-linked export chains. Weather stress in that region can propagate into downstream specialty chemical availability, including castor-derived industrial inputs.\",\"enterprise_path\":[\"H03 reports deepening drought across parts of Gujarat and pressure on agricultural export markets.\",\"Aster Vale's CMC-410 BOM includes component CR-88 conformal barrier resin.\",\"CR-88 requires input castor_derived_polyol.\",\"Supplier SUP-ARBCHEM is the recorded source for castor_derived_polyol / CR-88.\",\"CMC-410 has only 80 units available in inventory versus open strategic order SO-7731 for 420 units.\",\"Any incremental delay or shortage in this input could worsen an already constrained fulfillment position for CMC-410.\"],\"business_exposure\":{\"revenue_at_risk\":4200000,\"affected_orders\":[\"SO-7731\"],\"affected_customers\":[\"Atlantic Energy\"],\"constrained_inventory\":true},\"reasoning\":\"Observed facts: H03 flags drought pressure in Gujarat agricultural export markets. Company records show CMC-410 depends on CR-88, which in turn uses castor_derived_polyol, supplied by ArborChem. Inventory shows 80 CMC-410 units available, while open strategic order SO-7731 requires 420 units. Hypothesis: if Gujarat drought disrupts castor-linked feedstock availability, ArborChem could face tighter supply or longer replenishment on castor-derived polyol, slowing CR-88 availability and increasing risk to CMC-410 fulfillment. Because current inventory is already below open demand, even a latent upstream disruption could translate into business exposure quickly.\",\"citations\":{\"headlines\":[\"events/headline-pack.md#H03\"],\"records\":[\"records/bom.yaml#CMC-410->CR-88\",\"records/suppliers.yaml#SUP-ARBCHEM\",\"records/inventory.yaml#CMC-410\",\"records/orders.yaml#SO-7731\",\"records/company-profile.md\"]},\"uncertainty\":[\"The records do not state ArborChem's own upstream sourcing geography for castor-derived polyol.\",\"The headline describes pressure on agricultural export markets broadly, not a confirmed castor export disruption specifically.\",\"No current supplier notice confirms an actual shortage or lead-time extension for CR-88 or castor-derived polyol.\"]}],\"no_alert_rationale\":null}}",
+  "model": {
+    "provider": "codex",
+    "model": "gpt-5.4"
+  },
+  "usage": {
+    "latency_ms": 46241,
+    "tokens_in": 23830,
+    "tokens_out": 2108,
+    "model_calls": 5,
+    "tool_calls": 16
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-05-27T19:36:58.678282+00:00",
+  "schedule": [
+    {
+      "repl_idx": 0,
+      "task_idx": 0,
+      "variant_idx": 0
+    },
+    {
+      "repl_idx": 0,
+      "task_idx": 0,
+      "variant_idx": 1
+    }
+  ],
+  "schema_version": "resolved_schedule_v1",
+  "total_slots": 2
+}

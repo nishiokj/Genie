@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-033",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908910849_8pads3",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No external headline explicitly names a supplier, material, component, product, region, or logistics lane that also appears in the company records with a direct company-specific dependency requiring no latent bridge. Potential near-matches fail the RULES_ONLY threshold: H01 mentions Quebec silicon metal furnaces, while records only reference silicone elastomer and a tier-2 note about metallurgical-grade silicon availability, which would require an unstated chemistry/supply conversion bridge; H05 mentions a specialty alumina producer, while records list alumina_filler but the event is not a disruption and does not name a matching supplier or component; H06 mentions Gulf Coast resin warehouses, but Gulf Coast does not appear in records; H07 mentions Canadian port clerks, but no company record names a Canadian port, lane, or clerk-dependent route.\",\"result\":\"no_alert\",\"run_id\":\"LSR-033\"}}",
+  "usage": {
+    "latency_ms": 18839,
+    "model_calls": 2,
+    "tokens_in": 6054,
+    "tokens_out": 907,
+    "tool_calls": 8
+  }
+}

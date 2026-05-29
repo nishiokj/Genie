@@ -112,21 +112,22 @@ ADVERSARY_REPORT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
     "properties": {
-        "revision_disposition": {"type": "string"},
-        "disposition_rationale": {"type": "string"},
-        "attack_summary": {"type": "string"},
+        "revision_disposition": {"type": "string", "enum": ["pass", "revise", "nuke"]},
+        "disposition_rationale": {"type": "string", "maxLength": 500},
+        "attack_summary": {"type": "string", "maxLength": 400},
         "attacks": {
             "type": "array",
+            "maxItems": 3,
             "items": {
                 "type": "object",
                 "additionalProperties": False,
                 "properties": {
-                    "attack_target": {"type": "string"},
-                    "attack_type": {"type": "string"},
-                    "exploit_path": {"type": "string"},
-                    "evidence": {"type": "string"},
-                    "severity": {"type": "string"},
-                    "why_it_invalidates_proxy": {"type": "string"},
+                    "attack_target": {"type": "string", "maxLength": 80},
+                    "attack_type": {"type": "string", "maxLength": 80},
+                    "exploit_path": {"type": "string", "maxLength": 450},
+                    "evidence": {"type": "string", "maxLength": 260},
+                    "severity": {"type": "string", "enum": ["critical", "high", "medium", "low"]},
+                    "why_it_invalidates_proxy": {"type": "string", "maxLength": 360},
                 },
                 "required": [
                     "attack_target",
@@ -138,9 +139,13 @@ ADVERSARY_REPORT_SCHEMA: dict[str, Any] = {
                 ],
             },
         },
-        "cheap_pass_strategy": {"type": "string"},
-        "proxy_damage": {"type": "string"},
-        "survival_requirements": {"type": "array", "items": {"type": "string"}},
+        "cheap_pass_strategy": {"type": "string", "maxLength": 350},
+        "proxy_damage": {"type": "string", "maxLength": 350},
+        "survival_requirements": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {"type": "string", "maxLength": 220},
+        },
     },
     "required": [
         "revision_disposition",
@@ -156,6 +161,11 @@ ADVERSARY_REPORT_SCHEMA: dict[str, Any] = {
 
 def generation_output_schema(domain: DomainConfig) -> dict[str, Any]:
     schema = deepcopy(domain.output_schema)
+    defs = schema.setdefault("$defs", {})
+    if isinstance(defs, dict) and isinstance(domain.benchmark_case_schema, dict):
+        benchmark_case_schema = deepcopy(domain.benchmark_case_schema)
+        benchmark_case_schema.pop("$schema", None)
+        defs["benchmark_case"] = benchmark_case_schema
     if domain.deterministic_rules.get("require_runtime_requirements"):
         agent_artifact = schema.get("properties", {}).get("agent_artifact")
         if isinstance(agent_artifact, dict):
@@ -164,7 +174,6 @@ def generation_output_schema(domain: DomainConfig) -> dict[str, Any]:
                 if field not in required:
                     required.append(field)
             agent_artifact["required"] = required
-        defs = schema.setdefault("$defs", {})
         benchmark_case_schema = deepcopy(domain.benchmark_case_schema or defs.get("benchmark_case") or {})
         if isinstance(benchmark_case_schema, dict):
             benchmark_case_schema.pop("$schema", None)

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779907841550_s3br01",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"events/headline-pack.md#H01\"],\"records\":[\"records/bom.yaml#EVB-330\",\"records/suppliers.yaml#SUP-SAFELINE\",\"records/products.yaml#EVB-330\",\"records/orders.yaml#SO-8207\",\"records/inventory.yaml#EVB-330\"]},\"confidence\":\"high\",\"enterprise_path\":[\"H01: Provincial inspectors in Hunan announce a new round of checks at several antimony smelters.\",\"BOM for EVB-330 includes component FJ-31 plenum-rated cable harness with input antimony_trioxide_synergist.\",\"Supplier SafeLine Interconnect supplies FJ-31 and low_smoke_jacket_compound, with tier-2 note that the fire-safety jacket package includes an oxide synergist sourced through Asian compound distributors.\",\"EVB-330 is active and has an open strategic order.\",\"Inventory for EVB-330 is limited relative to open demand, so any supply interruption could constrain fulfillment.\"],\"id\":\"ALERT-EVB330-ANTIMONY-2026-06-17\",\"latent_edge_hypothesis\":\"New inspections at Hunan antimony smelters could tighten availability of antimony-derived flame-retardant synergists used in low-smoke cable compounds, creating a supply risk for Aster Vale's plenum-rated cable harness input chain.\",\"real_world_prior\":\"Antimony trioxide is a common synergist in flame-retardant cable compounds, and smelter inspections can disrupt supply or extend lead times even when the company buys through downstream compounders and distributors.\",\"reasoning\":\"The external event is specifically relevant because H01 concerns antimony smelters, and EVB-330's plenum-fire-safety BOM explicitly depends on antimony_trioxide_synergist through the FJ-31 cable harness. Supplier records further connect that harness to an oxide synergist sourced through Asian compound distributors, making the headline a plausible upstream disruption signal rather than generic macro noise. EVB-330 has a current open strategic order and only 18 units of available inventory against that demand, so the dependency maps to measurable business exposure.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The headline reports inspections, not confirmed shutdowns or output cuts.\",\"The supplier note references Asian compound distributors but does not name the exact tier-2 or tier-3 source in Hunan.\",\"No direct evidence shows current purchase orders for antimony-bearing compound are delayed yet.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 29696,
+    "model_calls": 4,
+    "tokens_in": 17119,
+    "tokens_out": 1412,
+    "tool_calls": 10
+  }
+}

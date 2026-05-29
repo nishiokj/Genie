@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779914104177_4ogvhu",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"high\",\"enterprise_path\":[\"antimony_trioxide_synergist -> FJ-31 -> EVB-330 -> SO-8207\"],\"id\":\"alert-LSR-052-1\",\"latent_edge_hypothesis\":\"Hunan antimony smelter checks could tighten antimony trioxide supply for plenum cable compounds.\",\"real_world_prior\":\"Antimony supply checks can disrupt flame-retardant additive availability.\",\"reasoning\":\"EVB-330 depends on FJ-31, which uses antimony trioxide synergist, and an open strategic order is exposed.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The supplier record names an oxide synergist at tier 2 but does not name the distributor or site.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 26995,
+    "model_calls": 4,
+    "tokens_in": 17200,
+    "tokens_out": 1272,
+    "tool_calls": 9
+  }
+}

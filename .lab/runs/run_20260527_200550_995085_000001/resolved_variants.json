@@ -1,0 +1,35 @@
+{
+  "baseline_id": "baseline",
+  "generated_at": "2026-05-27T20:05:51.034493+00:00",
+  "schema_version": "resolved_variants_v1",
+  "variants": [
+    {
+      "args": [],
+      "bindings": {
+        "mode": "baseline",
+        "model": "gpt-5.4",
+        "model_provider": "codex",
+        "reasoning": "low"
+      },
+      "env": {},
+      "id": "baseline",
+      "image": null,
+      "runtime_overrides": null,
+      "variant_digest": "sha256:ec46c5e98eb989a6e3b87b08878fe3be3da64b9b1480ca5e9f377430eb9a1b69"
+    },
+    {
+      "args": [],
+      "bindings": {
+        "mode": "evidence_first",
+        "model": "gpt-5.4",
+        "model_provider": "codex",
+        "reasoning": "low"
+      },
+      "env": {},
+      "id": "evidence_first",
+      "image": null,
+      "runtime_overrides": null,
+      "variant_digest": "sha256:252459a0c52fcaaa2f18f1d897a4fcd1c34e33dd2993d580e759e237802da007"
+    }
+  ]
+}

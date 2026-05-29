@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T19:07:18.014872+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:06:45.788643+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_5/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_5/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-014",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779908805940_benlhu",
+        "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Mercy North Hospitals\"],\"affected_orders\":[\"SO-7844\"],\"constrained_inventory\":true,\"revenue_at_risk\":3692000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/suppliers.yaml: Lantern Assembly Works tier2_notes and supplies\",\"records/bom.yaml: MTG-220 uses ASM-44 with rosin_ester_flux input\",\"records/orders.yaml: SO-7844 open strategic order for MTG-220\",\"records/inventory.yaml: MTG-220 quantity_available 34\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"H01: South China forestry bureaus extend resin tapping restrictions\",\"Supplier record: Lantern Assembly Works tier2_notes = flux solids sourced through South China resin brokers\",\"Supplier record: Lantern Assembly Works supplies ASM-44 and rosin_ester_flux\",\"BOM: MTG-220 depends on ASM-44 low-residue sensor board assembly with rosin_ester_flux input\",\"Orders/Inventory: open MTG-220 demand exceeds available inventory\"],\"id\":\"H01-MTG220\",\"latent_edge_hypothesis\":\"South China resin tapping restrictions could constrain the South China resin-brokered tier-2 input stream referenced in company supplier records for the MTG-220 sensor board assembly path.\",\"real_world_prior\":\"Company records explicitly reference South China resin brokers in the supply path for Lantern Assembly Works, and the external event explicitly names South China and resin restrictions.\",\"reasoning\":\"The alert is based only on explicit overlaps in the records: the headline names South China and resin restrictions, while supplier records explicitly state that flux solids are sourced through South China resin brokers for Lantern Assembly Works, which supplies ASM-44 / rosin_ester_flux used in MTG-220. MTG-220 has an open strategic order for 260 units, while only 34 units are available in inventory, so any disruption on this path would hit currently constrained demand.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The records identify South China resin brokers at tier 2, but do not quantify current in-transit or safety stock for rosin_ester_flux or ASM-44.\",\"The headline does not name Lantern Assembly Works or a specific resin grade tied to the company.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-014\"}}",
+        "usage": {
+          "latency_ms": 29584,
+          "model_calls": 2,
+          "tokens_in": 6049,
+          "tokens_out": 1480,
+          "tool_calls": 8
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "ddb30a1ca1ca4e14dbf39eb8611e99bfae37d0b13643b9e5ff8e44f19b2dac9b",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "b73101bf0b489c011954cd700bd7449e0b871504bda1c1537ac2dcdb77295852",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_5",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/.scratch/trial_5_8246_9/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_5/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/.scratch/trial_5_8246_9/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T19:07:18.283147+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:07:18.226523+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_5/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_5/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "ddb30a1ca1ca4e14dbf39eb8611e99bfae37d0b13643b9e5ff8e44f19b2dac9b",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 4
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 4,
+      "task_id": "LSR-014",
+      "variant_id": "baseline"
+    },
+    "task_sandbox": {
+      "container_id": "b73101bf0b489c011954cd700bd7449e0b871504bda1c1537ac2dcdb77295852",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-014"
+    }
+  },
+  "updated_at": "2026-05-27T19:07:18.616887+00:00"
+}

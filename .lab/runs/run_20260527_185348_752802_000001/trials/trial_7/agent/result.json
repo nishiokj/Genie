@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-027",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908104932_eidxy6",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline provides an explicit match to an active company supplier, material, component, product, region, or logistics lane together with current measurable business exposure. The only exact named supplier match is Beta Components (H06), but the company record shows that supplier is inactive and tied only to discontinued product LTH-90, with no current orders or inventory exposure. Other headlines would require unstated bridges (for example inferring port, commodity, process, or product relevance) and therefore do not qualify under the RULES_ONLY constraint.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+  "usage": {
+    "latency_ms": 16641,
+    "model_calls": 2,
+    "tokens_in": 5965,
+    "tokens_out": 727,
+    "tool_calls": 8
+  }
+}

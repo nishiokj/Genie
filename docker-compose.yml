@@ -1,0 +1,32 @@
+services:
+  agent:
+    build:
+      context: ./server/agent
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      AGENT_MODEL: ${AGENT_MODEL:-gpt-5.5}
+    expose:
+      - "8001"
+    volumes:
+      - ./domains:/app/examples:ro
+    networks:
+      - internal
+
+  app:
+    build:
+      context: ./server/app
+    environment:
+      AGENT_URL: http://agent:8001
+      DOMAINS_DIR: /workspace/domains
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./domains:/workspace/domains
+    depends_on:
+      - agent
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge

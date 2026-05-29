@@ -1,0 +1,15 @@
+{
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779905622068_n45w4x",
+  "response": "{\"scan\":{\"run_id\":\"LSR-001-2026-06-12\",\"result\":\"alerts_found\",\"alerts\":[{\"id\":\"ALERT-H03-CMC410\",\"confidence\":\"medium\",\"source_headlines\":[\"H03\"],\"latent_edge_hypothesis\":\"Drought in Gujarat may tighten availability of castor-derived feedstocks that flow into ArborChem's castor-derived polyol input for CR-88 conformal barrier resin, creating a material constraint for CMC-410 production.\",\"real_world_prior\":\"Gujarat is a major castor-growing region and India is a significant source of castor-oil-derived industrial inputs; drought there can reduce agricultural output and disrupt export availability for downstream chemical derivatives.\",\"enterprise_path\":[\"H03 reports drought conditions deepening across parts of Gujarat and pressure on agricultural export markets.\",\"Aster Vale's supplier ArborChem Materials supplies input_id castor_derived_polyol and component CR-88.\",\"CR-88 conformal barrier resin is in the BOM for product CMC-410 and supports its coastal_corrosion_rating role.\",\"Open order SO-7731 for CMC-410 is 420 units due 2026-06-20.\",\"Available CMC-410 inventory is only 80 units, so fulfillment beyond inventory depends on ongoing material/component availability.\"],\"business_exposure\":{\"revenue_at_risk\":3400000,\"affected_orders\":[\"SO-7731\"],\"affected_customers\":[\"Atlantic Energy\"],\"constrained_inventory\":true},\"reasoning\":\"Observed facts: Gujarat drought was reported in today's headline pack. Company records show ArborChem supplies castor_derived_polyol and CR-88; CR-88 is used in CMC-410; CMC-410 has 80 units available in inventory; and open strategic order SO-7731 requires 420 units. Hypothesis: if Gujarat drought reduces castor export availability, ArborChem's castor-derived polyol input could tighten, slowing CR-88 replenishment and limiting Aster Vale's ability to build the 340 units not covered by finished-goods inventory before the near-term due date.\",\"citations\":{\"headlines\":[\"/workspace/task/LSR-001/events/headline-pack.md#H03\"],\"records\":[\"/workspace/task/LSR-001/records/suppliers.yaml\",\"/workspace/task/LSR-001/records/bom.yaml\",\"/workspace/task/LSR-001/records/inventory.yaml\",\"/workspace/task/LSR-001/records/orders.yaml\"]},\"uncertainty\":[\"Records do not explicitly state ArborChem sources castor feedstock from Gujarat or India.\",\"No current PO, WIP, or raw-material inventory position for CR-88 or castor_derived_polyol is provided.\",\"The headline indicates pressure on agricultural export markets, not a confirmed export halt or supplier outage.\"]}],\"no_alert_rationale\":null}}",
+  "usage": {
+    "latency_ms": 31114,
+    "model_calls": 3,
+    "tokens_in": 8612,
+    "tokens_out": 1551,
+    "tool_calls": 10
+  }
+}

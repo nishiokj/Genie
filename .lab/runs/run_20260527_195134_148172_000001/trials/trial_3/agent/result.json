@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-001",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911540832_vuzs2n",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly matches a company dependency with current measurable business exposure; Beta Components only links to inactive legacy supply with no open demand.\",\"result\":\"no_alert\",\"run_id\":\"LSR-001\"}}",
+  "usage": {
+    "latency_ms": 13831,
+    "model_calls": 2,
+    "tokens_in": 6781,
+    "tokens_out": 632,
+    "tool_calls": 8
+  }
+}

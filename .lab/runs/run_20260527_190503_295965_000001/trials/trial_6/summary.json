@@ -1,0 +1,48 @@
+{
+  "agent": {
+    "events": "agent/events.jsonl",
+    "exit_status": "0",
+    "outcome": "success",
+    "result": "agent/result.json",
+    "stderr": "agent/stderr.log",
+    "stdout": "agent/stdout.log"
+  },
+  "artifacts": {
+    "candidate_patch": "candidate.patch",
+    "contract_trace": "runner/contract_trace.json",
+    "metadata": "runner/trial_metadata.json",
+    "prepared_task_environment": "runner/prepared_task_environment.json",
+    "state_inventory": "runner/state_inventory.json"
+  },
+  "grader": {
+    "grader": "runtime_transport",
+    "mapped_output": "grader/mapped_output.json",
+    "status": "success",
+    "strategy": "separate"
+  },
+  "ids": {
+    "repl_idx": 0,
+    "run_id": "run_20260527_190503_295965_000001",
+    "task_id": "LSR-014",
+    "trial_id": "trial_6",
+    "variant_id": "evidence_first"
+  },
+  "metrics": {
+    "mapped_grader_output_state": "valid",
+    "status_code": "0",
+    "trial_conclusion_grader": "runtime_transport",
+    "trial_conclusion_grader_strategy": "separate",
+    "trial_conclusion_payload": {
+      "false_positive_count": 0,
+      "pass_rate": true,
+      "score": 1.0
+    },
+    "trial_conclusion_reported_outcome": "success"
+  },
+  "outcome": "success",
+  "primary_metric": {
+    "name": "pass_rate",
+    "value": true
+  },
+  "schema_version": "trial_summary_v1"
+}

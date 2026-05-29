@@ -39,13 +39,17 @@ def _agent_artifact_from_payload(payload: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(agent_artifact, dict):
         raise ProviderError("generator output must include agent_artifact object")
     normalized = {
-        "benchmark_case": dict(agent_artifact.get("benchmark_case", {})),
+        "benchmark_case": _drop_none_fields(dict(agent_artifact.get("benchmark_case", {}))),
     }
     if agent_artifact.get("runtime_requirements") is not None:
         normalized["runtime_requirements"] = agent_artifact.get("runtime_requirements")
     if agent_artifact.get("environment_artifact") is not None:
         normalized["environment_artifact"] = agent_artifact.get("environment_artifact")
     return normalized
+
+
+def _drop_none_fields(value: dict[str, Any]) -> dict[str, Any]:
+    return {key: item for key, item in value.items() if item is not None}
 
 
 def _candidate_from_generation_payload(
@@ -340,6 +344,28 @@ def _finalize_payload_from_tool_args(args: dict[str, Any], domain: DomainConfig)
     return parsed
 
 
+def validate_generation_contract(domain: DomainConfig) -> list[str]:
+    """Return local contract problems that would make generation output impossible."""
+    errors: list[str] = []
+    if not isinstance(domain.benchmark_case_schema, dict) or domain.benchmark_case_schema.get("type") != "object":
+        errors.append("domain.benchmark_case_schema must be an object schema")
+        return errors
+    example = _example_output_for_domain(domain)
+    benchmark_case = example.get("agent_artifact", {}).get("benchmark_case")
+    errors.extend(_schema_errors(domain.benchmark_case_schema, benchmark_case, "benchmark_case_schema example"))
+    if domain.output_schema:
+        errors.extend(_schema_errors(_generation_output_schema(domain), example, "generation output example"))
+    return errors
+
+
+def _schema_errors(schema: dict[str, Any], value: Any, label: str) -> list[str]:
+    validator = Draft202012Validator(schema)
+    return [
+        f"{label} at {'.'.join(str(part) for part in error.path) or '<root>'}: {error.message}"
+        for error in sorted(validator.iter_errors(value), key=lambda item: list(item.path))
+    ]
+
+
 def _generation_payload_from_workspace_final(finalized: dict[str, Any], workspace: ExecutionWorkspace, design: DesignBrief) -> dict[str, Any]:
     commands = finalized.get("workspace_commands")
     if isinstance(commands, dict):
@@ -591,14 +617,16 @@ def _apply_environment_edit(workspace: ExecutionWorkspace, op: dict[str, Any], i
 
 def _example_output_for_domain(domain: DomainConfig) -> dict[str, Any]:
     agent_artifact: dict[str, Any] = {
-        "benchmark_case": {
-            "prompt": "agent-facing task prompt string",
-            "setup": "optional agent-facing setup",
-            "inputs": {},
-            "environment": {},
-        }
+        "benchmark_case": _example_for_schema(domain.benchmark_case_schema),
     }
     if domain.domain_id == "benchmark_code_debug":
+        agent_artifact["benchmark_case"] = {
+            **dict(agent_artifact["benchmark_case"]),
+            "prompt": "Debug the provided project workspace and explain the causal fix.",
+            "setup": "Run the visible test command from the workspace root.",
+            "inputs": {},
+            "environment": {"runtime": "python", "test_command": "python -m pytest -q"},
+        }
         agent_artifact["runtime_requirements"] = {
             "kind": "filesystem_task",
             "execution": {"mode": "task_image", "base_image": "python:3.11-slim", "os": "linux", "arch": "amd64"},
@@ -621,7 +649,7 @@ def _example_output_for_domain(domain: DomainConfig) -> dict[str, Any]:
         "agent_artifact": agent_artifact,
         "judge_artifact": {
             "score_x": {
-                "score_type": "one allowed scoring method",
+                "score_type": _first(domain.scoring_methods, "rubric"),
                 "range": [0, 1],
                 "dimensions": [
                     {
@@ -639,8 +667,11 @@ def _example_output_for_domain(domain: DomainConfig) -> dict[str, Any]:
             "candidate_visibility_boundaries": [
                 "Do not reveal the private root cause, faulty expression, expected fix, or shallow traps in agent_artifact."
             ],
-            "proxy_claim": "judge-facing claim for why score_x should indicate ability_z in environment_y",
-            "diagnostic_pressure": ["judge-facing pressure exerted by this case"],
+            "proxy_claim": "This benchmark case should make score_x useful evidence for the named ability because shallow compliance is penalized and success requires the intended observable behavior.",
+            "diagnostic_pressure": [
+                "judge-facing pressure exerted by this case",
+                "second diagnostic signal that helps distinguish shallow success from robust success",
+            ],
             "scoring_contract": {
                 "credit": ["observable behavior that earns credit"],
                 "penalties": ["shallow or bad behavior that loses credit"],
@@ -651,9 +682,55 @@ def _example_output_for_domain(domain: DomainConfig) -> dict[str, Any]:
             "coverage_tags": ["short coverage tags"],
             "negative_controls": [{"output": "known-bad agent output", "should_fail_because": "why score_x should penalize it"}],
         },
-        "ability_z": {"name": "target ability", "sub_abilities": ["specific sub-ability"]},
-        "environment_y": {"name": "target environment", "assumptions": ["assumption"]},
+        "ability_z": {"name": _first(domain.abilities, "target ability"), "sub_abilities": ["specific sub-ability"]},
+        "environment_y": {"name": _first(domain.environments, "target environment"), "assumptions": ["assumption"]},
     }
+
+
+def _first(values: list[str], fallback: str) -> str:
+    return values[0] if values else fallback
+
+
+def _example_for_schema(schema: Any, *, field_name: str = "value") -> Any:
+    if not isinstance(schema, dict):
+        return {}
+    schema_type = schema.get("type")
+    if isinstance(schema_type, list):
+        schema_type = next((item for item in schema_type if item != "null"), schema_type[0] if schema_type else None)
+    if "enum" in schema and isinstance(schema["enum"], list) and schema["enum"]:
+        return schema["enum"][0]
+    if schema_type == "object" or "properties" in schema:
+        properties = schema.get("properties") if isinstance(schema.get("properties"), dict) else {}
+        required = schema.get("required") if isinstance(schema.get("required"), list) else []
+        result: dict[str, Any] = {}
+        for name in required:
+            if isinstance(name, str):
+                result[name] = _example_for_schema(properties.get(name, {}), field_name=name)
+        return result
+    if schema_type == "array":
+        min_items = int(schema.get("minItems") or 0)
+        if min_items <= 0:
+            return []
+        return [_example_for_schema(schema.get("items", {}), field_name=field_name) for _ in range(min_items)]
+    if schema_type == "integer":
+        return int(schema.get("minimum") or 1)
+    if schema_type == "number":
+        return float(schema.get("minimum") or 1.0)
+    if schema_type == "boolean":
+        return False
+    if schema_type == "string" or schema_type is None:
+        pattern = schema.get("pattern")
+        if pattern == "^VND-[0-9]{3}$":
+            return "VND-001"
+        return _example_string(field_name, int(schema.get("minLength") or 1))
+    return {}
+
+
+def _example_string(field_name: str, min_length: int) -> str:
+    text = f"example {field_name.replace('_', ' ')}"
+    if len(text) >= min_length:
+        return text
+    return text + " " + ("x" * (min_length - len(text)))
 
 def revision_patch_metrics(patch: Any) -> dict[str, Any]:
     if not isinstance(patch, dict):

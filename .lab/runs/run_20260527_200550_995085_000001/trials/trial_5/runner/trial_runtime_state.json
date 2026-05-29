@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T20:10:12.342543+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:09:24.078188+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_5/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_5/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-014",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779912564247_amp031",
+        "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Mercy North Hospitals\"],\"affected_orders\":[\"SO-7844\"],\"constrained_inventory\":true,\"revenue_at_risk\":3692000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/suppliers.yaml\",\"records/bom.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"H01 South China resin tapping restrictions\",\"SUP-LANTERN tier2 South China resin brokers\",\"rosin_ester_flux\",\"ASM-44\",\"MTG-220\"],\"id\":\"ALERT-H01-MTG220\",\"latent_edge_hypothesis\":\"South China resin restrictions may disrupt resin-brokered flux inputs for ASM-44 used in MTG-220.\",\"real_world_prior\":\"Material restrictions can tighten specialty assembly input supply.\",\"reasoning\":\"The headline names South China resin and records tie South China resin brokers to a live MTG-220 assembly input.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The headline does not name Lantern or rosin ester flux directly.\",\"The duration and severity of any supply impact are not stated.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-014\"}}",
+        "usage": {
+          "latency_ms": 45596,
+          "model_calls": 4,
+          "tokens_in": 16483,
+          "tokens_out": 2192,
+          "tool_calls": 11
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "5e05707bc23496cadd0e2aab686bbaef9170c08120de44f23313198057a03550",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "cbddf3b2181e93958ce48a127e75133755a4713e127518a3c1438e7f12e89b55",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_5",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/.scratch/trial_5_348_9/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_5/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/.scratch/trial_5_348_9/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T20:10:12.566218+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:10:12.504284+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_5/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_200550_995085_000001/trials/trial_5/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "5e05707bc23496cadd0e2aab686bbaef9170c08120de44f23313198057a03550",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 4
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 4,
+      "task_id": "LSR-014",
+      "variant_id": "baseline"
+    },
+    "task_sandbox": {
+      "container_id": "cbddf3b2181e93958ce48a127e75133755a4713e127518a3c1438e7f12e89b55",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-014"
+    }
+  },
+  "updated_at": "2026-05-27T20:10:12.809286+00:00"
+}

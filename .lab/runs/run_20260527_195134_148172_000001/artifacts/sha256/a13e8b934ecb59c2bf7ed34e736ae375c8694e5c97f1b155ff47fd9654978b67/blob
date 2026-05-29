@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-033",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911683681_srqfah",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Canal Rail\"],\"affected_orders\":[\"SO-7991\"],\"constrained_inventory\":true,\"revenue_at_risk\":3330000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"silicone_elastomer\",\"POT-72\",\"RSG-700\",\"SO-7991\"],\"id\":\"alert-LSR-033-1\",\"latent_edge_hypothesis\":\"Quebec silicon metal curtailments can tighten upstream siloxane availability for silicone elastomer.\",\"real_world_prior\":\"Silicon disruptions can propagate into silicone supply chains with lead-time delays.\",\"reasoning\":\"RSG-700 depends on POT-72, which depends on silicone elastomer supplied through a silicon-linked upstream chain.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The record only shows an upstream index linkage, not a confirmed supplier outage.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-033\"}}",
+  "usage": {
+    "latency_ms": 18172,
+    "model_calls": 3,
+    "tokens_in": 12684,
+    "tokens_out": 851,
+    "tool_calls": 9
+  }
+}

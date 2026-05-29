@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911429643_b3ecs9",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names the same supplier, material, component, product, region, or logistics lane in a way that creates a rules-only company-specific exposure without latent bridging.\",\"result\":\"no_alert\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 15800,
+    "model_calls": 2,
+    "tokens_in": 7155,
+    "tokens_out": 758,
+    "tool_calls": 8
+  }
+}

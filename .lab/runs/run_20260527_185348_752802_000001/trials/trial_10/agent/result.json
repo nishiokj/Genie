@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-033",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908148604_lcgrf7",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Canal Rail\"],\"affected_orders\":[\"SO-7991\"],\"constrained_inventory\":true,\"revenue_at_risk\":3330000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"suppliers.yaml: SUP-NORTHSIL -> silicone_elastomer, POT-72; tier2 note on metallurgical-grade silicon availability\",\"bom.yaml: RSG-700 -> POT-72 -> silicone_elastomer\",\"orders.yaml: SO-7991\",\"inventory.yaml: RSG-700 quantity_available 22\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"silicone_elastomer\",\"POT-72\",\"RSG-700\",\"SO-7991\"],\"id\":\"ALT-001\",\"latent_edge_hypothesis\":\"Hydro curtailments shutting Quebec silicon metal furnaces can tighten metallurgical-grade silicon availability, which may constrain silicone base polymer feedstock for NorthSil Compounds' silicone_elastomer supply into Aster Vale's POT-72 potting compound used in RSG-700.\",\"real_world_prior\":\"Silicone supply chains are sensitive to upstream silicon metal availability; disruptions at energy-intensive silicon furnaces can propagate into silicone intermediates and specialty compounds with multiweek lead times.\",\"reasoning\":\"Headline H01 reports Quebec hydro curtailments forcing silicon metal furnaces offline. In company records, supplier SUP-NORTHSIL supplies input silicone_elastomer and component POT-72, and notes that its silicone base polymer is indexed to metallurgical-grade silicon availability. BOM records show silicone_elastomer is an input to POT-72, which is required for the vibration_hardened RSG-700. Order SO-7991 is an open strategic order for 180 units of RSG-700, while inventory shows only 22 units available, so any inbound constraint on POT-72 is plausibly business-relevant now.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The disruption is upstream and indirect: the record links NorthSil to metallurgical-grade silicon availability, not specifically to the affected Quebec furnaces.\",\"NorthSil's listed site is in Ontario, so the exposure depends on broader regional silicon tightness rather than a confirmed direct outage at its own site.\",\"No supplier allocation notice or shipment delay is yet recorded in company data.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-033\"}}",
+  "usage": {
+    "latency_ms": 31016,
+    "model_calls": 3,
+    "tokens_in": 11281,
+    "tokens_out": 1335,
+    "tool_calls": 9
+  }
+}

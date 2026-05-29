@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-033",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779909871895_estztk",
+  "response": "{\"decision\":\"alert\",\"headline_id\":\"H01\",\"event_summary\":\"Hydro curtailments in Quebec are forcing some silicon metal furnaces offline.\",\"world_event\":\"Potential reduction in metallurgical-grade silicon availability in Canada due to hydro curtailments.\",\"latent_edge\":\"Aster Vale's supplier NorthSil Compounds notes its silicone base polymer is indexed to metallurgical-grade silicon availability, creating a plausible upstream dependency from silicon disruption to silicone elastomer supply.\",\"enterprise_dependency\":\"Input silicone_elastomer is used in component POT-72 (vibration dampening potting compound), which is required for product RSG-700 (Rail Signal Gateway).\",\"enterprise_path\":[\"silicone_elastomer\",\"POT-72\",\"RSG-700\",\"SO-7991\"],\"business_exposure\":{\"revenue_at_risk\":3330000,\"open_orders\":[\"SO-7991\"],\"affected_customers\":[\"Canal Rail\"],\"constrained_inventory\":true},\"supporting_evidence\":{\"supplier_id\":\"SUP-NORTHSIL\",\"supplier_name\":\"NorthSil Compounds\",\"supplier_site_id\":\"SITE-NORTHSIL-ON\",\"tier2_note\":\"silicone base polymer is indexed to metallurgical-grade silicon availability\",\"affected_product\":\"RSG-700\",\"affected_order\":\"SO-7991\"},\"rationale\":\"The external event connects to a company-specific upstream dependency: Quebec silicon curtailments can tighten metallurgical-grade silicon availability, which NorthSil explicitly links to silicone base polymer supply. Silicone elastomer is a BOM input to POT-72 for RSG-700, and the exposure helper confirms an open order and non-zero revenue at risk with constrained inventory.\",\"confidence\":\"medium\"}",
+  "usage": {
+    "latency_ms": 27377,
+    "model_calls": 3,
+    "tokens_in": 10186,
+    "tokens_out": 1298,
+    "tool_calls": 8
+  }
+}

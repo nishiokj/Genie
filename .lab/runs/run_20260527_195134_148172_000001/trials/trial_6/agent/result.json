@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-014",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911604600_rfstu2",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Mercy North Hospitals\"],\"affected_orders\":[\"SO-7844\"],\"constrained_inventory\":true,\"revenue_at_risk\":3692000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"high\",\"enterprise_path\":[\"rosin_ester_flux\",\"ASM-44\",\"MTG-220\",\"SO-7844\"],\"id\":\"ALT-LSR-014-01\",\"latent_edge_hypothesis\":\"South China resin tapping limits can tighten rosin ester flux supply for ASM-44.\",\"real_world_prior\":\"Rosin-derived flux inputs are plausibly exposed to South China resin broker disruption.\",\"reasoning\":\"H01 links through Lantern's tier-2 South China resin sourcing to MTG-220 with an open strategic order exposed.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The record states broker exposure but not current supplier allocation coverage.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-014\"}}",
+  "usage": {
+    "latency_ms": 19140,
+    "model_calls": 3,
+    "tokens_in": 12676,
+    "tokens_out": 841,
+    "tool_calls": 9
+  }
+}

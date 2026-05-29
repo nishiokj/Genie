@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-001",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779910966648_qpzz0v",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Atlantic Energy\"],\"affected_orders\":[\"SO-7731\"],\"constrained_inventory\":true,\"revenue_at_risk\":4200000},\"citations\":{\"headlines\":[\"H03\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"castor_derived_polyol\",\"CR-88\",\"CMC-410\",\"SO-7731\"],\"id\":\"alert-H03-castor_derived_polyol-CMC-410\",\"latent_edge_hypothesis\":\"Drought in Gujarat can tighten castor-derived feedstock availability, creating a latent supply risk for castor_derived_polyol used in conformal barrier resin CR-88 for CMC-410.\",\"real_world_prior\":\"Gujarat is a significant castor-growing region, so drought pressure there is a plausible upstream constraint on castor-derived polyol supply.\",\"reasoning\":\"Headline H03 identifies drought conditions in Gujarat affecting agricultural export markets. In company records, castor_derived_polyol is a BOM input to component CR-88, the conformal barrier resin that enables the coastal_corrosion_rating role in product CMC-410. Supplier records show ArborChem Materials supplies both CR-88 and castor_derived_polyol, establishing a company-specific dependency on this input. Orders show open strategic demand for CMC-410 on SO-7731, and the exposure helper confirms current business exposure tied to this dependency.\",\"source_headlines\":[\"H03\"],\"uncertainty\":[\"The headline does not name castor specifically, so the upstream commodity linkage is inferential rather than explicitly stated.\",\"Supplier records identify the direct supplier but do not disclose ArborChem's own geographic sourcing footprint for castor-derived feedstock.\"]}],\"no_alert_rationale\":\"\",\"result\":\"alerts_found\",\"run_id\":\"LSR-001\"}}",
+  "usage": {
+    "latency_ms": 20187,
+    "model_calls": 3,
+    "tokens_in": 10952,
+    "tokens_out": 936,
+    "tool_calls": 8
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T19:47:34.616779+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:47:14.440720+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_11/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_11/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-041",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779911234585_x7470e",
+        "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a supplier, material, component, product, region, or logistics lane that cleanly and directly matches a company record with a negative business impact without requiring latent-world bridging. Apparent overlaps are either non-disruptive (H02 normal replenishment; H05 operating normally), too generic to tie directly to Aster Vale records (H06 Oregon road work near an unspecified industrial park), or not an explicit company dependency match (H03 Asia-Europe loop; H08 discontinued industrial panels/display-module reseller).\",\"result\":\"no_alert\",\"run_id\":\"LSR-041\"}}",
+        "usage": {
+          "latency_ms": 17552,
+          "model_calls": 2,
+          "tokens_in": 6667,
+          "tokens_out": 854,
+          "tool_calls": 8
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "b833523930d08d9848f9e557f19ecd896559118f1f5a9ceaf2606f17305dd71c",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "c827c39bff5e71e20bf519a40f892f8fc120991097388e4f14c839abbf79feb0",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_11",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/.scratch/trial_11_60867_15/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_11/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/.scratch/trial_11_60867_15/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T19:47:34.901877+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:47:34.846508+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_11/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_11/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "b833523930d08d9848f9e557f19ecd896559118f1f5a9ceaf2606f17305dd71c",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 10
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 10,
+      "task_id": "LSR-041",
+      "variant_id": "baseline"
+    },
+    "task_sandbox": {
+      "container_id": "c827c39bff5e71e20bf519a40f892f8fc120991097388e4f14c839abbf79feb0",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-041"
+    }
+  },
+  "updated_at": "2026-05-27T19:47:35.215813+00:00"
+}

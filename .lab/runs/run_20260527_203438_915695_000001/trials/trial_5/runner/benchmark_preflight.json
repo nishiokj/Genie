@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-05-27T20:36:34.858054+00:00",
+  "environment_image": "latent-supply-risk-workspaces:local",
+  "frozen_agent_artifacts": {
+    "trial_input_digest": "sha256:0f4bd296f7cb374e23a31f27f85364381a8cfcac023e899c50307007a0e648f7",
+    "trial_input_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_203438_915695_000001/trials/trial_5/artifacts/benchmark_frozen_agent_input/trial_input.json"
+  },
+  "grading": {
+    "enabled": true
+  },
+  "run_id": "run_20260527_203438_915695_000001",
+  "schedule_idx": 4,
+  "schema_version": "benchmark_trial_preflight_v1",
+  "task_id": "LSR-014",
+  "trial_id": "trial_5",
+  "variant_id": "baseline"
+}

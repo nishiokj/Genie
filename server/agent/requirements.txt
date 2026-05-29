@@ -1,0 +1,7 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.12.5
+PyYAML==6.0.1
+httpx==0.27.2
+websocket-client>=1.8.0
+substrate-sdk==0.1.1

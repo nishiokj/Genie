@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T20:27:36.130329+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:26:24.519804+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/trials/trial_8/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/trials/trial_8/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-027",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779913584672_7q88ru",
+        "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline credibly connects to an active company dependency with a complete event-to-exposure chain, and the strongest checked candidate lacked a matching trigger despite helper exposure on castor_derived_polyol.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+        "usage": {
+          "latency_ms": 69153,
+          "model_calls": 10,
+          "tokens_in": 54541,
+          "tokens_out": 1900,
+          "tool_calls": 18
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "c4c5c2665f5362ca11dadfb335f8ffd12219eef6886c02f0578e74244e9c99eb",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "fccc9f849670de60ce55bcb15be23f44d97bd02537841e69b07623a81c0ae69e",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/trials/trial_8",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/.scratch/trial_8_22720_12/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/trials/trial_8/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/.scratch/trial_8_22720_12/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T20:27:36.396819+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:27:36.342244+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/trials/trial_8/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/trials/trial_8/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "c4c5c2665f5362ca11dadfb335f8ffd12219eef6886c02f0578e74244e9c99eb",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 7
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 7,
+      "task_id": "LSR-027",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "fccc9f849670de60ce55bcb15be23f44d97bd02537841e69b07623a81c0ae69e",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-027"
+    }
+  },
+  "updated_at": "2026-05-27T20:27:36.709596+00:00"
+}

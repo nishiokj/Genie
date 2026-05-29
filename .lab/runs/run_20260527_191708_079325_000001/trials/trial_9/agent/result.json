@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-033",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779909841422_uvhd7z",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a supplier, material, component, product, region, or logistics lane in a way that cleanly matches a company record and supports a company-specific risk path without introducing unstated chemistry, commodity, process, geography, or logistics bridges. Potentially related headlines either require latent world knowledge (for example silicon/silicone linkages or generic Canadian port implications), describe non-disruptive conditions, or do not create measurable business exposure from the current records.\",\"result\":\"no_alert\",\"run_id\":\"LSR-033\"}}",
+  "usage": {
+    "latency_ms": 27075,
+    "model_calls": 2,
+    "tokens_in": 6106,
+    "tokens_out": 1367,
+    "tool_calls": 8
+  }
+}

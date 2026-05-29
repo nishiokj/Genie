@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-001",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779909481481_n1ipau",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a supplier, material, component, product, region, or logistics lane that both appears in the company records and creates current company-specific exposure under the RULES_ONLY constraint. The only direct supplier match is H04 naming Beta Components, but records show Beta Components is an inactive supplier for LTH-90 only, and the only LTH-90 order is cancelled, so there is no open business exposure. Other headlines are generic macro or regional items without an explicit matching company dependency and measurable active exposure.\",\"result\":\"no_alert\",\"run_id\":\"LSR-001\"}}",
+  "usage": {
+    "latency_ms": 20694,
+    "model_calls": 2,
+    "tokens_in": 6104,
+    "tokens_out": 1035,
+    "tool_calls": 8
+  }
+}

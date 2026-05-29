@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779910739118_r23vs9",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"antimony_trioxide_synergist\",\"FJ-31\",\"EVB-330\",\"SO-8207\"],\"id\":\"alert-H01-antimony-EVB-330\",\"latent_edge_hypothesis\":\"New inspections at Hunan antimony smelters could tighten availability of antimony trioxide synergist used in the plenum-rated cable harness (FJ-31), constraining EVB-330 production.\",\"real_world_prior\":\"Antimony trioxide is a common flame-retardant synergist; smelter inspections can disrupt supply, and SafeLine's tier-2 note explicitly references an oxide synergist sourced through Asian compound distributors.\",\"reasoning\":\"Headline H01 identifies a potential supply disruption in antimony smelting. Internal BOM data ties antimony_trioxide_synergist to component FJ-31, which is required for EVB-330's plenum fire safety role. Supplier notes for SafeLine indicate the relevant oxide synergist is sourced through Asian compound distributors, making the external event plausibly connected to this dependency. EVB-330 has a current open strategic order, and the exposure helper confirms active order and revenue exposure.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The headline names Hunan smelter inspections but does not identify specific exporters or whether Aster Vale's tier-2 distributors source directly from affected facilities.\",\"No direct supplier confirmation yet of delayed shipments or allocation changes.\"]}],\"no_alert_rationale\":\"\",\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 26922,
+    "model_calls": 3,
+    "tokens_in": 11705,
+    "tokens_out": 917,
+    "tool_calls": 8
+  }
+}

@@ -55,6 +55,7 @@ from generation_artifacts import (
     _normalize_tool_call_for_input,
     _revision_patch_shape,
     _test_command_from_design,
+    validate_generation_contract,
     _workspace_tool_final_shape,
     _workspace_tool_schemas,
     revision_patch_metrics,
@@ -74,6 +75,7 @@ class Designer:
         run_id: str,
         target_n: int,
         coverage_snapshot: dict[str, int],
+        instruction: str | None = None,
         retry_route_code: RouteCode | None = None,
         retry_subcodes: list[str] | None = None,
     ) -> tuple[list[DesignBrief], dict[str, Any]]:
@@ -169,6 +171,13 @@ class Designer:
                 ]
             },
         }
+        if instruction:
+            payload["user_instruction"] = instruction
+            payload["instruction_policy"] = (
+                "Treat user_instruction as the requested benchmark intent. Stay within the domain taxonomy, "
+                "but make every returned design instantiate this instruction unless doing so would violate "
+                "domain rules or create a weak benchmark."
+            )
         if retry_route_code is not None:
             payload["prior_design_rejection"] = {
                 "route_code": retry_route_code.value,
@@ -305,33 +314,6 @@ def _format_gate_guidance(domain: DomainConfig, rules_attr: str) -> str:
     return "\n".join(parts)
 
 
-def _format_probe_principles(parts: list[str], principles: dict[str, Any]) -> None:
-    if not principles:
-        return
-    parts.append("\nGENERAL PROBE PRINCIPLES")
-    for name, value in principles.items():
-        if not isinstance(value, dict):
-            parts.append(f"\n{name}:\n{value}")
-            continue
-        parts.append(f"\n{name}:")
-        for key in ("definition", "test_question", "bad_example", "good_example"):
-            if value.get(key):
-                parts.append(f"  {key}: {str(value[key]).strip()}")
-        shortcuts = value.get("shortcuts", [])
-        if shortcuts:
-            parts.append("  shortcuts:")
-            for shortcut in shortcuts:
-                parts.append(f"    - {shortcut}")
-
-
-def _format_anti_overfit_policy(parts: list[str], policy: list[str]) -> None:
-    if not policy:
-        return
-    parts.append("\nANTI-OVERFIT POLICY")
-    for item in policy:
-        parts.append(f"  - {item}")
-
-
 def _section(parts: list[str], title: str, body: Any) -> None:
     if body:
         parts.append(f"\n{title}:\n{str(body).strip()}")
@@ -359,6 +341,7 @@ class SampleGenerator:
         self.domain = domain
         self.execution_workspace = execution_workspace
         self._system = GENERATOR_PRINCIPLES + _format_generator_guidance(domain) + GENERATOR_IMPLEMENTATION_CONTRACT
+        self._contract_errors = validate_generation_contract(domain)
 
     def generate(
         self,
@@ -390,6 +373,8 @@ class SampleGenerator:
         retry_subcodes: list[str] | None = None,
         execution_workspace: ExecutionWorkspace | None = None,
     ) -> tuple[CandidateSample, dict[str, Any]]:
+        if self._contract_errors:
+            raise ProviderError("generation preflight failed: " + "; ".join(self._contract_errors))
         design = envelope.design
         system = self._system
         supports_tools = getattr(self.client, "supports_function_tools", lambda: False)
@@ -406,15 +391,15 @@ class SampleGenerator:
         payload: dict[str, Any] = {
             "generation_envelope": _generation_envelope_prompt_view(envelope),
             "design_brief": design_prompt_view(design),
-            "domain": {
-                "output_schema": self.domain.output_schema,
+            "domain_contract": {
                 "benchmark_case_schema": self.domain.benchmark_case_schema,
                 "abilities": self.domain.abilities,
                 "environments": self.domain.environments,
                 "diagnostic_pressure_types": self.domain.diagnostic_pressure_types,
                 "scoring_methods": self.domain.scoring_methods,
+                "required_top_level_fields": ["agent_artifact", "judge_artifact", "ability_z", "environment_y"],
+                "benchmark_case_must_match": "domain_contract.benchmark_case_schema",
             },
-            "required_json_schema": self.domain.output_schema,
             "example_output": _example_output_for_domain(self.domain),
         }
         if retry_route_code is not None:
@@ -459,12 +444,14 @@ class SampleGenerator:
         user_payload: dict[str, Any] = {
             "generation_envelope": _generation_envelope_prompt_view(envelope),
             "design_brief": design_prompt_view(design),
-            "domain": {
+            "domain_contract": {
                 "benchmark_case_schema": self.domain.benchmark_case_schema,
                 "abilities": self.domain.abilities,
                 "environments": self.domain.environments,
                 "diagnostic_pressure_types": self.domain.diagnostic_pressure_types,
                 "scoring_methods": self.domain.scoring_methods,
+                "required_top_level_fields": ["agent_artifact", "judge_artifact", "ability_z", "environment_y"],
+                "benchmark_case_must_match": "domain_contract.benchmark_case_schema",
             },
             "workspace_authoring": {
                 "available_tools": ["write_file", "read_file", "list_files", "finalize_candidate"],
@@ -511,8 +498,7 @@ class SampleGenerator:
             tool_call_items = [item for item in output_items if item.get("type") in {"function_call", "tool_call", "function_tool_call"}]
             if not output_items:
                 raise ProviderError("workspace tool loop returned no output items")
-            # Normalize to "function_call" input format — codex emits "function_tool_call" in output
-            # but the API only accepts "function_call" items when they appear in the input array.
+            # Codex output uses function_tool_call; follow-up input expects function_call.
             input_items.extend(_normalize_tool_call_for_input(item) for item in tool_call_items)
             tool_outputs: list[dict[str, Any]] = []
             for item in tool_call_items:
@@ -609,13 +595,13 @@ class SampleGenerator:
             "design_brief": design_prompt_view(design),
             "prior_candidate": candidate_prompt_view(candidate),
             "adversary_attack_report": adversary_report_prompt_view(report),
-            "domain": {
-                "output_schema": self.domain.output_schema,
+            "domain_contract": {
                 "benchmark_case_schema": self.domain.benchmark_case_schema,
                 "abilities": self.domain.abilities,
                 "environments": self.domain.environments,
                 "diagnostic_pressure_types": self.domain.diagnostic_pressure_types,
                 "scoring_methods": self.domain.scoring_methods,
+                "benchmark_case_must_match": "domain_contract.benchmark_case_schema",
             },
             "required_revision_patch_shape": _revision_patch_shape(self.domain),
             "benchmark_invariants": [
@@ -750,25 +736,17 @@ def _adversary_report_schema_for_mode(disposition_mode: str) -> dict[str, Any]:
 class Adversary:
     role_name = "Adversary"
     base_system_prompt = (
-        "You are the Adversary for a benchmark-generation pipeline. "
-        "You are not a gate, not a reviewer, not a design compliance checker, and not an improver. Your only job is to attack the benchmark candidate as an independent third party. "
-        "The design brief is a claim to attack, not an authority to obey. You may reject the design premise, the implementation, the scoring setup, the proxy claim, or all of them. "
-        "Find how the benchmark can be passed cheaply, gamed, leaked, misread, overclaimed, or made meaningless. "
-        "Do not rewrite the benchmark and do not offer helpful edits. You may state survival requirements: conditions that would have to become true for your attack to fail. "
-        "Be explicit and concrete: name the exact one-line patch, file edit, test edit, flag/default flip, cache bypass, synchronous toggle, sleep/logging hack, or grading loophole a weak solver would use. "
-        "If a cheap pass exists, call it out even when the benchmark text says it is forbidden; prose constraints do not stop adversarial solvers. "
-        "Decide whether the candidate should pass onward, receive one revision attempt, or be nuked. Choose pass only when you find no blocking attack that would materially damage the proxy claim. Choose revise when the artifact has a substantive core worth preserving but has concrete fixable weaknesses. Choose nuke when the core task is inherently toy-shaped, leaked, fake-hard, or reducible to local patching such that revision would mostly decorate a bad premise. "
-        "The prompt separates agent_visible_artifact from evaluator_private_context. Hidden evaluator-private context may reveal intended scoring or proxy claims; never count that private context as answer leakage. "
-        "Only label answer_leakage when the leak appears in agent_visible_artifact: candidate-facing prompt, files, comments, tests, fixture names, visible outputs, or setup. "
-        "Attack candidate-facing prompt, files, comments, tests, fixture names, visible outputs, scoring criteria, negative controls, proxy claims, and known limits. "
-        "Prioritize answer leakage, trivial core repairs, fake difficulty, vague scoring, missing operational checks, overbroad proxy claims, and shallow pass strategies. "
-        "Return JSON only. Do not reveal hidden chain-of-thought."
+        "You are the Adversary for benchmark generation. Attack the concrete candidate as an independent hostile reviewer. "
+        "Find cheap passes, answer leakage, fake difficulty, weak scoring, proxy overclaims, and loopholes. "
+        "Do not rewrite or improve the benchmark. Return concise JSON only. "
+        "Hidden evaluator_private_context is judge-only; never count it as candidate-facing answer leakage. "
+        "Only label answer_leakage when the leak appears in agent_visible_artifact: prompt, setup, visible files, comments, tests, fixtures, names, or visible outputs. "
     )
     ternary_disposition_prompt = (
-        "Decide whether the candidate should pass onward, receive one revision attempt, or be nuked. Choose pass only when you find no blocking attack that would materially damage the proxy claim. Choose revise when the artifact has a substantive core worth preserving but has concrete fixable weaknesses. Choose nuke when the core task is inherently toy-shaped, leaked, fake-hard, or reducible to local patching such that revision would mostly decorate a bad premise. "
+        "Decide pass, revise, or nuke. Pass only when no blocking attack damages the proxy claim; revise for fixable weaknesses; nuke leaked, toy-shaped, fake-hard, or cheap-local-patch cores."
     )
     binary_disposition_prompt = (
-        "Decide whether the candidate should pass onward or receive one revision attempt. Choose pass only when you find no blocking attack that would materially damage the proxy claim. Choose revise for every concrete weakness, including severe, leaked, toy-shaped, fake-hard, or local-patching failures; preserve severity and reason codes in attacks instead of using a terminal discard state. "
+        "Decide pass or revise. Pass only when no blocking attack damages the proxy claim; revise for every concrete weakness and preserve severity in attacks."
     )
 
     def __init__(self, client: ModelClient, domain: DomainConfig, *, disposition_mode: str = "ternary") -> None:
@@ -780,45 +758,37 @@ class Adversary:
         disposition_prompt = (
             self.binary_disposition_prompt if disposition_mode == "binary" else self.ternary_disposition_prompt
         )
-        self.system_prompt = self.base_system_prompt.replace(
-            self.ternary_disposition_prompt,
-            disposition_prompt,
-        )
+        self.system_prompt = f"{self.base_system_prompt} {disposition_prompt}"
         self._schema = _adversary_report_schema_for_mode(disposition_mode)
 
     def attack(self, candidate: CandidateSample, design: DesignBrief | None = None) -> tuple[AdversaryReport, dict[str, Any]]:
+        decision_policy = {
+            "revision_disposition": "pass or revise"
+            if self.disposition_mode == "binary"
+            else "pass, revise, or nuke",
+            "pass": "no blocking attack materially damages the proxy claim",
+            "revise": "concrete fixable weakness in an otherwise salvageable candidate",
+        }
+        if self.disposition_mode != "binary":
+            decision_policy["nuke"] = "core is leaked, toy-shaped, fake-hard, or cheap-local-patchable"
         payload = {
-            "design_brief": design_prompt_view(design) if design is not None else None,
-            "candidate": candidate_prompt_view(candidate),
+            "design_brief": adversary_design_prompt_view(design) if design is not None else None,
+            "candidate": candidate_adversary_prompt_view(candidate),
             "attack_surface": {
                 "domain_id": self.domain.domain_id,
-                "general_probe_principles": self.domain.general_probe_principles,
-                "anti_overfit_policy": self.domain.anti_overfit_policy,
-                "common_rejection_patterns": self.domain.generator_guidance.get("common_rejection_patterns", []),
-                "attack_type_taxonomy": ADVERSARY_ATTACK_TYPE_TAXONOMY,
+                "attack_types": list(ADVERSARY_ATTACK_TYPE_TAXONOMY),
+                "common_rejection_pattern_names": _common_rejection_pattern_names(self.domain),
+                "output_contract": {
+                    "revision_disposition": (
+                        "pass or revise"
+                        if self.disposition_mode == "binary"
+                        else "pass, revise, or nuke"
+                    ),
+                    "attacks_max": 3,
+                    "style": "concise concrete report; cite candidate-facing paths for leakage claims",
+                },
             },
-            "required_json_shape": {
-                "revision_disposition": "pass or revise"
-                if self.disposition_mode == "binary"
-                else "pass, revise, or nuke",
-                "disposition_rationale": "why this candidate can proceed or deserves revision"
-                if self.disposition_mode == "binary"
-                else "why this candidate can proceed, deserves revision, or should be discarded instead",
-                "attack_summary": "short hostile summary of how this benchmark can be defeated",
-                "attacks": [
-                    {
-                        "attack_target": "design_premise | implementation | scoring | proxy_claim | leakage | other",
-                        "attack_type": "one attack_type label from attack_surface.attack_type_taxonomy, or other if none fit",
-                        "exploit_path": "how a weak evaluated agent or bad grader can exploit the benchmark",
-                        "evidence": "specific candidate-facing field/path/span",
-                        "severity": "critical | high | medium | low",
-                        "why_it_invalidates_proxy": "why this damages score_x as evidence of ability_z",
-                    }
-                ],
-                "cheap_pass_strategy": "most likely cheap strategy for getting a high score without the target ability",
-                "proxy_damage": "how badly these attacks damage the benchmark's proxy claim",
-                "survival_requirements": ["conditions that would have to hold for the attack to fail"],
-            },
+            "decision_policy": decision_policy,
         }
         user = json.dumps(payload, sort_keys=True)
         raw, meta = self.client.complete_json(system=self.system_prompt, user=user, schema=self._schema, temperature=0.2)
@@ -928,6 +898,87 @@ def candidate_prompt_view(candidate: CandidateSample, *, include_evaluator_priva
             "judge_artifact": candidate.judge_artifact.model_dump(mode="json"),
         }
     return view
+
+
+def adversary_design_prompt_view(design: DesignBrief) -> dict[str, Any]:
+    """Return only the design claim the adversary needs to falsify."""
+    return {
+        "cell": design.cell.model_dump(mode="json"),
+        "target_ability": design.target_ability,
+        "target_environment": design.target_environment,
+        "design_intent": design.design_intent,
+        "failure_mode_family": design.failure_mode_family,
+        "diagnostic_pressure": design.diagnostic_pressure[:4],
+        "tempting_shallow_solutions": design.tempting_shallow_solutions[:4],
+        "minimum_depth_requirements": design.minimum_depth_requirements[:4],
+        "forbidden_shortcuts": design.forbidden_shortcuts[:4],
+    }
+
+
+def candidate_adversary_prompt_view(candidate: CandidateSample) -> dict[str, Any]:
+    """Return a compact adversary-facing candidate view."""
+    return {
+        "agent_visible_artifact": candidate.agent_artifact.model_dump(mode="json", exclude_none=True),
+        "benchmark_context": {
+            "ability_z": candidate.ability_z,
+            "environment_y": candidate.environment_y,
+            "difficulty": candidate.difficulty,
+            "case_type": candidate.case_type,
+            "cell": candidate.cell.model_dump(mode="json"),
+        },
+        "evaluator_private_context": {
+            "judge_artifact": _compact_judge_artifact(candidate.judge_artifact.model_dump(mode="json")),
+        },
+    }
+
+
+def _compact_judge_artifact(judge: dict[str, Any]) -> dict[str, Any]:
+    score_x = judge.get("score_x") if isinstance(judge.get("score_x"), dict) else {}
+    dimensions = score_x.get("dimensions") if isinstance(score_x.get("dimensions"), list) else []
+    return {
+        "score_x": {
+            "score_type": score_x.get("score_type"),
+            "dimensions": [
+                {
+                    "name": dim.get("name"),
+                    "weight": dim.get("weight"),
+                    "high_score_criterion": dim.get("high_score_criterion"),
+                    "low_score_criterion": dim.get("low_score_criterion"),
+                }
+                for dim in dimensions[:4]
+                if isinstance(dim, dict)
+            ],
+        },
+        "private_root_cause": judge.get("private_root_cause", ""),
+        "proxy_claim": judge.get("proxy_claim", ""),
+        "diagnostic_pressure": _compact_list(judge.get("diagnostic_pressure"), 4),
+        "shallow_solution_traps": _compact_list(judge.get("shallow_solution_traps"), 4),
+        "scoring_contract": judge.get("scoring_contract", {}),
+        "leakage_risks": _compact_list(judge.get("leakage_risks"), 4),
+        "known_limits": _compact_list(judge.get("known_limits"), 4),
+        "negative_controls": _compact_list(judge.get("negative_controls"), 3),
+    }
+
+
+def _compact_list(value: Any, max_items: int) -> list[Any]:
+    if not isinstance(value, list):
+        return []
+    return value[:max_items]
+
+
+def _common_rejection_pattern_names(domain: DomainConfig, *, max_items: int = 12) -> list[str]:
+    patterns = domain.generator_guidance.get("common_rejection_patterns", [])
+    names: list[str] = []
+    if not isinstance(patterns, list):
+        return names
+    for item in patterns:
+        if isinstance(item, dict) and item.get("name"):
+            names.append(str(item["name"]))
+        elif isinstance(item, str):
+            names.append(item)
+        if len(names) >= max_items:
+            break
+    return names
 
 
 def candidate_quality_prompt_view(candidate: CandidateSample) -> dict[str, Any]:

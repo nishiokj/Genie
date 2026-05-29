@@ -1,0 +1,115 @@
+domain_id: flaky_concurrency_bug_triage_python
+case_types:
+- proxy_strong
+difficulties:
+- 1
+- 2
+- 3
+- 4
+- 5
+scenarios:
+- nominal
+- edge
+- adversarial
+abilities:
+- triage flaky concurrency failures
+- localize race conditions and ordering hazards
+- produce minimal corrective patches
+- explain root cause succinctly
+environments:
+- small Python codebases with pytest-based test suites
+- debugging context with failing pytest traces and source files
+diagnostic_pressure_types:
+- identify the true shared-state/timing race behind flaky symptoms
+- prefer minimal single-file synchronization or ordering fixes
+- require interleaving-specific causal reasoning in root-cause note
+- reject non-causal stabilization hacks
+scoring_methods:
+- rubric
+- hard_checks_plus_rubric
+route_codes:
+- code_debugging
+subcodes:
+- flaky_test_triage
+- concurrency_bug_fix
+novelty_threshold: 0.08
+max_design_retries: 2
+max_generation_retries: 2
+deterministic_rules:
+  require_negative_control: true
+  min_proxy_claim_chars: 80
+  min_diagnostic_pressure_items: 2
+  min_leakage_risk_items: 1
+  min_known_limit_items: 1
+semantic_rules:
+- Patch must directly address the concurrency root cause rather than masking failures
+  with sleeps/retries.
+- Root-cause note must be specific to the observed trace and changed code.
+- Excellent solutions identify the actual race/interleaving, not just surface assertion
+  symptoms.
+- 'Excellent patches are surgical: single-file and narrowly scoped synchronization/ordering
+  changes.'
+- Root-cause notes must name the failing interleaving/order-of-operations.
+generator_guidance:
+  goal: Evaluate whether an agent can reliably triage and fix flaky concurrency bugs
+    in small Python projects from pytest failure evidence.
+  scoring_contract_bar: Full credit only if response includes (1) correct shared-state
+    or timing race diagnosis, (2) minimal single-file patch implementing surgical
+    synchronization/ordering fix, and (3) 2-3 sentence root-cause note that explicitly
+    names the failing interleaving. Penalize symptom-level guesses and over-broad
+    mitigations.
+  proxy_claim_bar: Agent must infer a concrete concurrency failure mechanism from
+    incomplete, noisy evidence and produce a minimally invasive patch that stabilizes
+    behavior without degrading intended semantics.
+  common_rejection_patterns:
+  - Adding sleep/retry/backoff or timeout increases without fixing the race.
+  - Widening locks across unrelated code rather than targeted synchronization.
+  - Disabling/xfailing/skipping flaky tests to hide failure.
+  - Rerun-until-pass strategies presented as a fix.
+  - Root-cause note that omits concrete interleaving details.
+quality_gate_rules:
+- Cases must include enough evidence to support at least one plausible but wrong diagnosis.
+- Gold patch must be minimal and causally linked to the root cause.
+rubric_gate_rules:
+- Reject if success can be achieved by non-concurrency edits (e.g., blanket retries/timeouts).
+- Reject if root-cause explanation is generic and not tied to files/lines/synchronization
+  behavior.
+- Reject if patch is not minimal/single-file when a surgical fix is available.
+- Reject if explanation does not name the shared state or timing interleaving causing
+  failure.
+benchmark_case_schema:
+  type: object
+  additionalProperties: false
+  required:
+  - case_id
+  - repo_files
+  - failing_test
+  - pytest_trace
+  - task_instructions
+  properties:
+    case_id:
+      type: string
+    repo_files:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+        - path
+        - content
+        properties:
+          path:
+            type: string
+          content:
+            type: string
+    failing_test:
+      type: string
+    pytest_trace:
+      type: string
+    task_instructions:
+      type: string
+    constraints:
+      type: array
+      items:
+        type: string
+output_schema_path: schemas/benchmark_output.schema.json

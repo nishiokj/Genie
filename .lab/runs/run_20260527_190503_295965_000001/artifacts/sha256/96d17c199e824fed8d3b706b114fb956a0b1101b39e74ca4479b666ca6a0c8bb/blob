@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-027",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908867998_j3pi03",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline satisfies the RULES_ONLY threshold with current business exposure. Although H06 explicitly names Beta Components, that supplier appears only as an inactive source for the discontinued LTH-90, and there are no open orders or inventory exposure for that product in the records. Other headlines do not explicitly name a supplier, material, component, product, region, or logistics lane that matches the company records closely enough without introducing unstated bridges.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+  "usage": {
+    "latency_ms": 16417,
+    "model_calls": 2,
+    "tokens_in": 5965,
+    "tokens_out": 795,
+    "tool_calls": 8
+  }
+}

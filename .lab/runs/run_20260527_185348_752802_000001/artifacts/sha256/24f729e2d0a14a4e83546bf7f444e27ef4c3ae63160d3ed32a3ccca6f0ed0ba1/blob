@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908033620_d37ydn",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a supplier, material, component, product, region, or logistics lane that also appears in the company records with a direct company-specific dependency. Potentially related items would require unstated bridges (for example, inferring antimony smelter checks in Hunan affect the BOM input antimony_trioxide_synergist, or inferring low-smoke building materials map to low_smoke_jacket_compound), which is disallowed under the RULES_ONLY constraint.\",\"result\":\"no_alert\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 19456,
+    "model_calls": 2,
+    "tokens_in": 6426,
+    "tokens_out": 811,
+    "tool_calls": 8
+  }
+}

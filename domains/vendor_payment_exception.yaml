@@ -1,0 +1,489 @@
+domain_id: vendor_payment_exception
+
+case_types:
+  - proxy_strong
+
+difficulties: [2, 3, 4, 5]
+scenarios:
+  - payment_hold_positive
+  - payment_approve_clean
+  - payment_escalate_ambiguous
+  - no_action_distractor
+  - policy_version_edge
+  - vendor_master_edge
+
+abilities:
+  - evidence_first_business_decision
+  - policy_grounded_casework
+  - tool_mediated_record_inspection
+  - shortcut_resistant_payment_review
+  - calibrated_operational_restraint
+  - structured_decision_writing
+
+environments:
+  - vendor_exception_workspace
+  - single_case_payment_desk
+  - policy_and_erp_snapshot
+
+diagnostic_pressure_types:
+  - visible_invoice_looks_clean_but_hidden_control_blocks_payment
+  - urgent_email_pressure_against_policy_hold
+  - policy_version_or_threshold_date_changes_outcome
+  - vendor_master_recent_change_requires_dual_control
+  - entity_name_or_remit_to_mismatch
+  - partial_evidence_requires_escalation_not_guessing
+  - tempting_false_positive_requires_approval
+  - no_action_case_with_plausible_but_irrelevant_distractors
+
+scoring_methods:
+  - deterministic_grader
+  - hard_checks_plus_rubric
+  - structured_output_validation
+
+route_codes:
+  - accept
+  - reject_criteria_mismatch
+  - reject_schema
+  - reject_leakage
+  - reject_duplicate
+  - reject_coverage_mismatch
+  - reject_semantic_mismatch
+  - reject_upstream_invariant
+  - retry_infra
+  - retry_parse
+  - retry_provider_empty
+  - drop_retry_exhausted
+
+subcodes:
+  - proxy_strong
+  - weak_proxy_validity
+  - unreliable_score
+  - weak_diagnostic_pressure
+  - shortcut_leakage
+  - vague_scoring_contract
+  - fake_difficulty
+  - irrelevant_environment
+  - ambiguous_success_criteria
+  - overbroad_proxy_claim
+  - missing_known_limits
+  - missing_negative_control
+  - missing_oracle
+  - missing_workspace
+  - missing_runtime_requirements
+  - missing_policy_artifact
+  - missing_vendor_master
+  - missing_invoice
+  - missing_public_workspace
+  - missing_hidden_oracle
+  - missing_decision_schema
+  - missing_deterministic_grader
+  - missing_no_action_control
+  - missing_business_stakes
+  - missing_evidence_path
+  - weak_distractors
+  - leakage_in_public_workspace
+  - answer_leak_expected_decision
+  - answer_leak_hidden_control
+  - answer_leak_policy_section
+  - answer_leak_grader_label
+  - schema_violation
+  - unknown_case_type
+  - unknown_difficulty
+  - unknown_scenario
+  - duplicate_design
+  - near_duplicate
+  - provider_error
+
+novelty_threshold: 0.08
+max_design_retries: 3
+max_generation_retries: 3
+
+deterministic_rules:
+  require_negative_control: true
+  require_benchmark_oracle: false
+  min_proxy_claim_chars: 120
+  min_diagnostic_pressure_items: 3
+  min_leakage_risk_items: 2
+  min_known_limit_items: 1
+  require_workspace_contract: true
+  require_public_hidden_split: true
+  require_no_action_cases: true
+  require_deterministic_grader_contract: true
+
+semantic_rules:
+  - Judge the candidate as a benchmark for enterprise agent casework, not as a pretty finance prompt.
+  - The case must force evidence gathering from files, SQLite-like vendor records, policy text, and audit scripts; language-only answers should be unable to score well.
+  - Candidate-facing materials must look like ordinary vendor exception desk artifacts, not a benchmark explanation, answer key, postmortem, or toy puzzle.
+  - The public workspace must not reveal the expected decision, hidden oracle, grading labels, or the private reason a weak agent should fail.
+  - Accept only when the correct decision is grounded in a concrete chain of records such as invoice amount, vendor master state, policy threshold, bank-change timestamp, contract terms, or approval history.
+  - "Include plausible distractors that weak agents may over-weight: urgency language, PO match, prior vendor legitimacy, familiar supplier names, stale clean approvals, or benign-looking invoice formatting."
+  - Include restraint cases. A high-quality corpus must contain clean approvals, true holds, escalations, and at least one no-action or no-risk distractor where overzealous agents should not block payment.
+  - Reject cases where the answer is obvious from a single field name, direct policy quote, or prompt wording.
+  - Reject cases whose difficulty comes from verbosity, confusing prose, or arbitrary gotchas rather than realistic record interactions.
+  - Reject fake-hard cases with no measurable business stakes, no current payment decision, or no deterministic way to distinguish approve, hold, and escalate.
+  - The grader may be deterministic and compact, but it must penalize correct labels with missing evidence, invented records, wrong policy version, and action bias.
+  - Evidence must cite candidate fields. Do not rewrite or repair the benchmark candidate.
+
+general_probe_principles:
+  concrete_business_stakes:
+    definition: >
+      Every case should feel like a real accounts-payable decision with a vendor,
+      invoice, amount, due date, requester, policy version, and operational cost of
+      getting the decision wrong.
+    test_question: >
+      What exactly happens if the agent approves, holds, or escalates incorrectly?
+    bad_example: >
+      A generic invoice asks whether it is suspicious, with no vendor master,
+      threshold, payment controls, or current business context.
+    good_example: >
+      A $48,920 expedite request has a matching PO and urgent email pressure, but the
+      vendor bank account changed six days ago and the current policy requires
+      dual-control verification above $25,000.
+
+  public_hidden_split:
+    definition: >
+      The evaluated agent sees ordinary case artifacts. The hidden oracle and grader
+      contain the expected decision, required evidence, forbidden shortcuts, and
+      acceptable uncertainty boundaries.
+    test_question: >
+      Could the agent infer the answer only by doing casework, or did the public
+      workspace label the hidden control?
+    bad_example: >
+      A public file named recent_bank_change_hold_case.md or a prompt saying the bank
+      change is the key issue.
+    good_example: >
+      The public vendor master has bank_updated_at, the AP policy defines controls,
+      and the hidden oracle names the bank-change-above-threshold condition.
+
+  evidence_first_pressure:
+    definition: >
+      A baseline generic agent should be tempted to answer from visible surface facts,
+      while an evidence-first agent should inspect records, run the audit script, and
+      cite the actual path before deciding.
+    test_question: >
+      What surface story would make a weak agent decide too early, and what record
+      would reverse or qualify that decision?
+
+  calibrated_restraint:
+    definition: >
+      The corpus must reward not blocking clean payments and not inventing risk when
+      the records do not support it.
+    test_question: >
+      Is there at least one case where the correct answer is approve or no-action
+      despite plausible-looking distractors?
+
+  deterministic_gradability:
+    definition: >
+      Each case must define an oracle that can be graded without an LLM judge:
+      expected decision, must-cite evidence keys, forbidden reasoning, and optional
+      acceptable alternatives.
+    test_question: >
+      Can a script score the structured decision and memo for correctness,
+      evidence completeness, policy version, and invented-record failures?
+
+  ceiling_signal:
+    definition: >
+      Excellent agent behavior should reveal more than the correct label: it should
+      separate observed facts from hypotheses, cite records, use the local audit
+      affordance when relevant, and choose escalation when evidence is incomplete.
+    test_question: >
+      What can a strong evidence-first agent do that a lucky label predictor cannot?
+
+anti_overfit_policy:
+  - Domain traits are lenses, not complete definitions of excellence.
+  - Treat each generated case as rejected until the concrete workspace and hidden oracle earn promotion.
+  - Do not reward checklist satisfaction alone; a case with polished metadata but weak workspace artifacts is bad.
+  - Separate table-stakes validity from ceiling-level behavior such as evidence ordering, restraint, and calibrated uncertainty.
+  - Prefer cases that allow unexpected excellent reasoning while preserving deterministic labels and evidence checks.
+  - Do not make every case a fraud hold. The benchmark must include approvals and escalations, or it trains action bias.
+  - Do not turn enterprise casework into a compliance quiz. Policy matters only when it is connected to records and a live decision.
+  - Reject answer leakage even when it makes grading easier.
+  - "Report known limits: synthetic AP records do not prove real fraud detection, provider integrations, or legal compliance."
+
+quality_gate_rules:
+  - Inspect the concrete workspace before trusting the proxy claim.
+  - Accept only when the candidate creates meaningful decision pressure in a realistic vendor exception desk setting.
+  - "Accept only when the case includes at least four public artifact classes: email thread, invoice, vendor profile or master record, AP policy, and either contract excerpt, SQLite snapshot, audit script, or approval history."
+  - Accept only when hidden oracle evidence names exact public fields or paths the agent should cite.
+  - Accept only when weak agents have plausible failure paths present in the public workspace.
+  - Reject if the case can be solved from the prompt alone.
+  - Reject if the correct decision is obvious from one public filename, one direct instruction, or one field label that says hold, fraud, risk, exception, or answer.
+  - Reject if the public workspace explains the benchmark trick or contains exercise language.
+  - Reject if no-action, clean-approve, or escalate cases are absent from the requested batch.
+  - Reject if the grader would give high credit to a correct decision label with no supporting evidence.
+  - Reject if a generic "approve because PO matches" or "hold because urgent payment is suspicious" strategy could pass.
+  - Reject if business stakes are decorative and do not affect the decision or grading.
+  - Reject if hidden requirements are not established by candidate-facing records.
+  - Evidence must cite candidate fields. Do not rewrite or repair the benchmark candidate.
+
+rubric_gate_rules:
+  - Judge scoring reliability only after the workspace itself is strong.
+  - Accept compact deterministic scoring when it defines the main credit and penalty boundaries.
+  - Credit must include decision correctness, required evidence citation, policy version or threshold correctness, structured output validity, and operational next step.
+  - Penalties must include invented records, missing evidence, wrong policy version, premature approval, action bias, and treating unverified hypotheses as facts.
+  - A correct label without evidence cannot receive a high score.
+  - A verbose memo that cites irrelevant artifacts cannot receive a high score.
+  - A clean approval case must penalize gratuitous holds or escalations.
+  - An escalation case must penalize both premature approval and unsupported fraud claims.
+  - Scoring must preserve room for unexpected excellent memos that cite equivalent public evidence.
+  - Reject scoring that needs an LLM judge for the central decision.
+
+generator_guidance:
+  goal: >
+    Generate a small, high-quality vendor payment exception benchmark corpus for
+    benchmarking Nova as a headless agent. Each committed case should be a realistic
+    AP exception desk workspace where the agent must decide APPROVE, HOLD, or ESCALATE
+    using public artifacts and produce structured output. The generator should favor
+    fewer excellent cases over many generic ones.
+
+  corpus_shape: >
+    Target 4 to 8 excellent cases for the first usable corpus. Include at least: one true
+    hold, one clean approval, one escalation for incomplete or conflicting evidence, one
+    recent-bank-change threshold edge, one entity/remit-to mismatch, and one no-action
+    distractor where suspicious language is not enough. Prefer a small corpus that can be
+    inspected end to end over a larger batch with generic pressure.
+
+  workspace_contract: >
+    Each benchmark_case must describe a public workspace with these files:
+    inbox/thread.md, vendor_profile.json, invoice.json, contract_excerpt.md,
+    ap_policy.md, erp_snapshot.json or erp.sqlite, tools/audit_vendor.py, and
+    output_schema.json. The hidden oracle must be outside the public workspace.
+    The benchmark_case may represent these files as structured JSON payloads when
+    the generator is not materializing the filesystem yet, but it must provide enough
+    concrete content to materialize them without invention.
+
+  required_case_shape: >
+    The generated benchmark_case object itself must contain these top-level fields:
+    prompt, setup, inputs, environment, workspace, hidden_oracle, and grader_contract.
+    Do not leave hidden_oracle only in judge_artifact, oracle notes, evaluation notes,
+    or any wrapper metadata. The public workspace may contain an output_schema.json
+    schema for the evaluated agent's final answer; that output_schema is not the final
+    answer itself.
+
+  candidate_prompt_bar: >
+    The prompt should be broad casework, not answer-shaped. It should ask the agent to
+    review the workspace, inspect records, run available audit tools if useful, and
+    write decision.json plus a short memo. It must not mention the hidden edge class,
+    expected decision, exact policy control, bank-change logs, threshold names, or the
+    specific audit query needed for the case.
+
+  output_contract_bar: >
+    Every case must define a required decision output with decision, primary_reason,
+    required_next_step, evidence, confidence, and memo_summary. Evidence entries should
+    use stable record keys such as vendor_master.bank_updated_at, invoice.amount,
+    ap_policy.section_4.dual_control_threshold, contract.entity_name, or
+    erp.vendor_status.
+
+  hidden_oracle_bar: >
+    The hidden oracle must include expected_decision, must_cite evidence keys,
+    forbidden_reasoning, grader_checks, acceptable_alternatives, and failure_reason.
+    For approval cases, forbidden_reasoning should include over-holding based on urgency,
+    vendor age, or vague suspicion. For hold/escalate cases, forbidden_reasoning should
+    include approving from PO match alone.
+
+  diagnostic_pressure_notes: >
+    Good cases make an early answer tempting. Examples: the invoice and PO match, the
+    vendor is active, an executive asks for urgency, or a prior invoice was clean.
+    The reversal or qualification must come from record inspection: recent bank change,
+    changed AP threshold, entity mismatch, expired contract, unusual remit-to account,
+    inactive tax profile, duplicate invoice, or incomplete approver chain. Do not make
+    the hidden answer a magic fraud signal. It must be recoverable from normal records.
+
+  anti_leakage_notes: >
+    Do not put "fraud", "bank change hold", "dual control issue", "expected_decision",
+    "oracle", "grader", "benchmark", or similar answer-shaped language in public
+    artifacts. Public files should be normal AP artifacts. Put explanatory labels only
+    in hidden oracle and judge_artifact. The audit tool may be described as a general
+    vendor-record audit interface, but public materials must not say which hidden audit
+    check solves the case.
+
+  latent_schema_inspiration: >
+    Match the quality bar of the latent supply-risk seed schema: a broad mandate, a
+    concrete file-backed workspace, hidden evaluator data, a final structured output,
+    positive and zero-action cases, plausible distractors, measurable business exposure,
+    and explicit penalties for action bias. For AP cases this means not every case is
+    a hold, clean payments must be approved, escalation must be reserved for genuinely
+    incomplete or conflicting records, and the agent must distinguish observed AP facts
+    from operational hypotheses.
+
+  review_standard: >
+    A human reviewer should be able to read one generated case and say: yes, this is
+    real work; yes, a weak agent might decide early; yes, the required evidence is in
+    the workspace; yes, a script can grade the output; and yes, the case contributes
+    a distinct edge class to the corpus.
+
+output_schema_path: schemas/benchmark_output.schema.json
+
+benchmark_case_schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  additionalProperties: true
+  required:
+    - prompt
+    - setup
+    - inputs
+    - environment
+    - workspace
+    - hidden_oracle
+    - grader_contract
+  properties:
+    prompt:
+      type: string
+      minLength: 80
+    setup:
+      type: string
+      minLength: 80
+    inputs:
+      type: object
+      required:
+        - case_id
+        - vendor
+        - invoice_id
+        - amount
+        - requested_action
+        - visible_facts
+      additionalProperties: true
+      properties:
+        case_id:
+          type: string
+          pattern: "^VND-[0-9]{3}$"
+        vendor:
+          type: string
+          minLength: 2
+        invoice_id:
+          type: string
+          minLength: 2
+        amount:
+          type: number
+          minimum: 1
+        requested_action:
+          type: string
+        visible_facts:
+          type: array
+          minItems: 3
+          items:
+            type: string
+        edge_classes:
+          type: array
+          items:
+            type: string
+    environment:
+      type: object
+      required:
+        - name
+        - workspace_template
+        - public_files
+        - hidden_files
+      additionalProperties: true
+      properties:
+        name:
+          type: string
+        workspace_template:
+          type: string
+        public_files:
+          type: array
+          minItems: 6
+          items:
+            type: string
+        hidden_files:
+          type: array
+          minItems: 1
+          items:
+            type: string
+    workspace:
+      type: object
+      required:
+        - public
+        - tools
+        - output_schema
+      additionalProperties: true
+      properties:
+        public:
+          type: object
+          required:
+            - email_thread
+            - vendor_profile
+            - invoice
+            - contract_excerpt
+            - ap_policy
+            - erp_snapshot
+          additionalProperties: true
+        tools:
+          type: object
+          required:
+            - audit_vendor
+          additionalProperties: true
+        output_schema:
+          type: object
+          required:
+            - type
+            - properties
+            - required
+          additionalProperties: true
+          properties:
+            type:
+              type: string
+            properties:
+              type: object
+              required:
+                - decision
+                - primary_reason
+                - required_next_step
+                - evidence
+                - confidence
+              additionalProperties: true
+            required:
+              type: array
+              items:
+                type: string
+    hidden_oracle:
+      type: object
+      required:
+        - expected_decision
+        - must_cite
+        - forbidden_reasoning
+        - grader_checks
+        - failure_reason
+      additionalProperties: true
+      properties:
+        expected_decision:
+          type: string
+          enum: [approve, hold, escalate]
+        must_cite:
+          type: array
+          minItems: 2
+          items:
+            type: string
+        forbidden_reasoning:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        grader_checks:
+          type: object
+          additionalProperties: true
+        failure_reason:
+          type: string
+          minLength: 20
+    grader_contract:
+      type: object
+      required:
+        - deterministic_checks
+        - score_weights
+        - hard_failures
+      additionalProperties: true
+      properties:
+        deterministic_checks:
+          type: array
+          minItems: 4
+          items:
+            type: string
+        score_weights:
+          type: object
+          additionalProperties:
+            type: number
+        hard_failures:
+          type: array
+          minItems: 1
+          items:
+            type: string

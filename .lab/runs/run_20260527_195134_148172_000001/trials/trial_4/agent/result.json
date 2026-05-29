@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-001",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911557708_jp1lcr",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Atlantic Energy\"],\"affected_orders\":[\"SO-7731\"],\"constrained_inventory\":true,\"revenue_at_risk\":4200000},\"citations\":{\"headlines\":[\"H03\"],\"records\":[\"castor_derived_polyol\",\"CR-88\",\"CMC-410\",\"SUP-ARBCHEM\",\"SO-7731\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"castor_derived_polyol\",\"CR-88\",\"CMC-410\",\"SO-7731\"],\"id\":\"alert-H03-castor_derived_polyol\",\"latent_edge_hypothesis\":\"Gujarat drought could tighten castor-derived polyol supply used in CMC-410 corrosion resin.\",\"real_world_prior\":\"Castor feedstock disruptions can propagate into specialty polyol availability.\",\"reasoning\":\"The drought headline matches a BOM input with an active supplier link and a current open CMC-410 order.\",\"source_headlines\":[\"H03\"],\"uncertainty\":[\"The records do not state ArborChem's exact castor sourcing geography.\"]}],\"result\":\"alerts_found\",\"run_id\":\"LSR-001\"}}",
+  "usage": {
+    "latency_ms": 22317,
+    "model_calls": 3,
+    "tokens_in": 11360,
+    "tokens_out": 1035,
+    "tool_calls": 9
+  }
+}

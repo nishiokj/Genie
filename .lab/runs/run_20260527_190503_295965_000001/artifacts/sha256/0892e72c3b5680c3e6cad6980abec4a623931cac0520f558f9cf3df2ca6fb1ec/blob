@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-001",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908756055_pic5ge",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly maps to a current company exposure under the RULES_ONLY constraint. The only direct entity match is H04 naming Beta Components, which appears in supplier records, but that supplier is inactive, tied only to discontinued product LTH-90, and the only related order is cancelled, so no active measurable business exposure is present. Other headlines mention regions or disruptions that do not explicitly match a company supplier, material, component, product, or logistics lane with current exposure without adding unstated bridges.\",\"result\":\"no_alert\",\"run_id\":\"LSR-001\"}}",
+  "usage": {
+    "latency_ms": 16473,
+    "model_calls": 2,
+    "tokens_in": 6052,
+    "tokens_out": 765,
+    "tool_calls": 8
+  }
+}

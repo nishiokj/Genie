@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-027",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779912672769_hhxa79",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"The strongest candidate is Beta Components legacy display modules, but the exposure helper shows no open orders and zero revenue at risk.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+  "usage": {
+    "latency_ms": 38859,
+    "model_calls": 8,
+    "tokens_in": 41126,
+    "tokens_out": 1441,
+    "tool_calls": 15
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-014",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908838960_xhx81m",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Mercy North Hospitals\"],\"affected_orders\":[\"SO-7844\"],\"constrained_inventory\":true,\"revenue_at_risk\":3692000},\"citations\":{\"headlines\":[\"events/headline-pack.md#H01\"],\"records\":[\"records/suppliers.yaml#SUP-LANTERN\",\"records/bom.yaml#MTG-220\",\"records/orders.yaml#SO-7844\",\"records/inventory.yaml#MTG-220\"]},\"confidence\":\"high\",\"enterprise_path\":[\"rosin_ester_flux\",\"ASM-44\",\"MTG-220\",\"SO-7844\"],\"id\":\"ALERT-LSR-014-01\",\"latent_edge_hypothesis\":\"South China resin tapping restrictions can tighten availability of resin-derived flux solids sourced through South China resin brokers, creating supply risk for rosin_ester_flux used in ASM-44 and therefore MTG-220.\",\"real_world_prior\":\"Forestry resin tapping restrictions after a dry spring can reduce feedstock availability for rosin-derived chemicals and flux ingredients, especially where tier-2 sourcing is tied to South China resin brokers.\",\"reasoning\":\"Headline H01 identifies a specific upstream disruption in South China resin supply. Company records show Lantern Assembly Works supplies both ASM-44 and the input rosin_ester_flux, with tier-2 notes explicitly stating flux solids are sourced through South China resin brokers. BOM records connect rosin_ester_flux to component ASM-44, which is used in product MTG-220. The exposure helper for rosin_ester_flux returns open order SO-7844, affected customer Mercy North Hospitals, constrained inventory true, and revenue at risk of 3692000, establishing a complete chain from external event to business exposure.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The records indicate South China broker exposure at tier 2 but do not quantify current supplier on-hand flux inventory.\",\"The headline describes a regional restriction, but the exact share of Lantern's rosin_ester_flux supply tied to the affected bureaus is not specified.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-014\"}}",
+  "usage": {
+    "latency_ms": 25956,
+    "model_calls": 3,
+    "tokens_in": 11654,
+    "tokens_out": 1234,
+    "tool_calls": 9
+  }
+}

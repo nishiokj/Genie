@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911989613_57h9hz",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"high\",\"enterprise_path\":[\"antimony_trioxide_synergist -> FJ-31 -> EVB-330 -> SO-8207\"],\"id\":\"alert-LSR-052-1\",\"latent_edge_hypothesis\":\"Hunan antimony smelter inspections could tighten antimony trioxide supply for plenum cable compounds.\",\"real_world_prior\":\"Antimony trioxide is a common flame-retardant synergist used in low-smoke cable systems.\",\"reasoning\":\"The headline maps to a named BOM input feeding an active product with a current open strategic order.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The supplier record shows distributor-based sourcing rather than a direct Hunan smelter link.\"]}],\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 30482,
+    "model_calls": 4,
+    "tokens_in": 16653,
+    "tokens_out": 1370,
+    "tool_calls": 9
+  }
+}

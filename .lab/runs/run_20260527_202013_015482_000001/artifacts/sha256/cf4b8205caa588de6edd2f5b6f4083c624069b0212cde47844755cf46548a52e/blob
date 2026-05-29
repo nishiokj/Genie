@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-033",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779913656993_beyt8v",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a company supplier, material, component, product, region, or lane with a direct risk link in the records.\",\"result\":\"no_alert\",\"run_id\":\"LSR-033\"}}",
+  "usage": {
+    "latency_ms": 53111,
+    "model_calls": 3,
+    "tokens_in": 10179,
+    "tokens_out": 1102,
+    "tool_calls": 8
+  }
+}

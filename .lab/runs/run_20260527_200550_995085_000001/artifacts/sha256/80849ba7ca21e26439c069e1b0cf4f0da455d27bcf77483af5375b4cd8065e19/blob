@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-041",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779912828157_runc8t",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a company-listed supplier, material, component, product, region, or logistics lane with a direct adverse exposure.\",\"result\":\"no_alert\",\"run_id\":\"LSR-041\"}}",
+  "usage": {
+    "latency_ms": 21873,
+    "model_calls": 3,
+    "tokens_in": 10143,
+    "tokens_out": 878,
+    "tool_calls": 8
+  }
+}

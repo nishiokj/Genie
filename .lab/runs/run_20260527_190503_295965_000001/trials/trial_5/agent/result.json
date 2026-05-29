@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-014",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908805940_benlhu",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Mercy North Hospitals\"],\"affected_orders\":[\"SO-7844\"],\"constrained_inventory\":true,\"revenue_at_risk\":3692000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/suppliers.yaml: Lantern Assembly Works tier2_notes and supplies\",\"records/bom.yaml: MTG-220 uses ASM-44 with rosin_ester_flux input\",\"records/orders.yaml: SO-7844 open strategic order for MTG-220\",\"records/inventory.yaml: MTG-220 quantity_available 34\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"H01: South China forestry bureaus extend resin tapping restrictions\",\"Supplier record: Lantern Assembly Works tier2_notes = flux solids sourced through South China resin brokers\",\"Supplier record: Lantern Assembly Works supplies ASM-44 and rosin_ester_flux\",\"BOM: MTG-220 depends on ASM-44 low-residue sensor board assembly with rosin_ester_flux input\",\"Orders/Inventory: open MTG-220 demand exceeds available inventory\"],\"id\":\"H01-MTG220\",\"latent_edge_hypothesis\":\"South China resin tapping restrictions could constrain the South China resin-brokered tier-2 input stream referenced in company supplier records for the MTG-220 sensor board assembly path.\",\"real_world_prior\":\"Company records explicitly reference South China resin brokers in the supply path for Lantern Assembly Works, and the external event explicitly names South China and resin restrictions.\",\"reasoning\":\"The alert is based only on explicit overlaps in the records: the headline names South China and resin restrictions, while supplier records explicitly state that flux solids are sourced through South China resin brokers for Lantern Assembly Works, which supplies ASM-44 / rosin_ester_flux used in MTG-220. MTG-220 has an open strategic order for 260 units, while only 34 units are available in inventory, so any disruption on this path would hit currently constrained demand.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The records identify South China resin brokers at tier 2, but do not quantify current in-transit or safety stock for rosin_ester_flux or ASM-44.\",\"The headline does not name Lantern Assembly Works or a specific resin grade tied to the company.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-014\"}}",
+  "usage": {
+    "latency_ms": 29584,
+    "model_calls": 2,
+    "tokens_in": 6049,
+    "tokens_out": 1480,
+    "tool_calls": 8
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908459444_3u6vjn",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No external headline explicitly names a supplier, material, component, product, region, or logistics lane that also appears in the company records with a direct rules-only match. Potentially suggestive items require disallowed latent bridges, such as inferring antimony smelter checks to the BOM input antimony_trioxide_synergist, mapping generic low-smoke building-material demand to low_smoke_jacket_compound, or connecting generic tunnel/rail/resin references to company-specific products or supply lanes.\",\"result\":\"no_alert\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 20607,
+    "model_calls": 2,
+    "tokens_in": 6426,
+    "tokens_out": 832,
+    "tool_calls": 8
+  }
+}

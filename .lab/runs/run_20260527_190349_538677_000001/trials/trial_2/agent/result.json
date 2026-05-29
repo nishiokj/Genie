@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908653904_hae3gx",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"events/headline-pack.md#H01\"],\"records\":[\"records/bom.yaml#EVB-330>FJ-31\",\"records/suppliers.yaml#SUP-SAFELINE\",\"records/orders.yaml#SO-8207\",\"records/inventory.yaml#EVB-330\"]},\"confidence\":\"high\",\"enterprise_path\":[\"antimony_trioxide_synergist\",\"FJ-31\",\"EVB-330\",\"SO-8207\"],\"id\":\"ALT-LSR-052-01\",\"latent_edge_hypothesis\":\"Provincial inspections at antimony smelters in Hunan could tighten availability of antimony trioxide synergist used in Aster Vale's plenum-rated cable harness, creating a supply constraint for EVB-330 builds.\",\"real_world_prior\":\"Antimony smelter inspections in China can disrupt antimony oxide output and export availability, and antimony trioxide is a common flame-retardant synergist in low-smoke fire-safety compounds.\",\"reasoning\":\"Headline H01 identifies a specific disruption vector affecting antimony smelters. Internal BOM records show antimony_trioxide_synergist is an input to component FJ-31, the plenum-rated cable harness used in product EVB-330. Supplier notes for SafeLine Interconnect state the fire-safety jacket package includes an oxide synergist sourced through Asian compound distributors, which supports the dependency path from the external event to this material. Open orders show SO-8207 for EVB-330 is currently open, and the exposure helper confirms revenue at risk, affected customer, and constrained inventory.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The supplier record indicates Asian distributor exposure for the oxide synergist but does not name Hunan specifically.\",\"The headline describes inspections rather than a confirmed shutdown, so the severity and duration of any supply interruption remain uncertain.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 27879,
+    "model_calls": 3,
+    "tokens_in": 12413,
+    "tokens_out": 1281,
+    "tool_calls": 9
+  }
+}

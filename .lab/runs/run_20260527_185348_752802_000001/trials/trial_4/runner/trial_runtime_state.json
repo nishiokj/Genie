@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T18:54:51.689834+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T18:54:22.957340+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/trials/trial_4/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/trials/trial_4/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-001",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779908063146_zx7adh",
+        "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Atlantic Energy\"],\"affected_orders\":[\"SO-7731\"],\"constrained_inventory\":true,\"revenue_at_risk\":4200000},\"citations\":{\"headlines\":[\"events/headline-pack.md#H03\"],\"records\":[\"records/bom.yaml#product_id:CMC-410 component_id:CR-88 input:castor_derived_polyol\",\"records/suppliers.yaml#id:SUP-ARBCHEM supplies:castor_derived_polyol,CR-88\",\"records/orders.yaml#id:SO-7731\",\"records/inventory.yaml#product_id:CMC-410\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"castor_derived_polyol\",\"CR-88\",\"CMC-410\",\"SO-7731\"],\"id\":\"ALERT-H03-CMC410\",\"latent_edge_hypothesis\":\"Drought in Gujarat can tighten castor crop availability and exports, creating a plausible supply shock for castor-derived polyol used in Aster Vale's conformal barrier resin.\",\"real_world_prior\":\"Gujarat is a major castor-growing region, so drought there can reduce feedstock availability for castor-derived chemical intermediates even when the direct supplier is outside India.\",\"reasoning\":\"Headline H03 reports drought conditions in Gujarat pressuring agricultural export markets. In Aster Vale's BOM, CMC-410 depends on component CR-88 conformal barrier resin, which explicitly uses input castor_derived_polyol. Supplier records show ArborChem Materials supplies both CR-88 and castor_derived_polyol, establishing a company-specific dependency on that agricultural derivative. The exposure helper for castor_derived_polyol identifies open order SO-7731 for CMC-410, affected customer Atlantic Energy, constrained inventory, and revenue_at_risk of 4200000. This creates a complete chain from external event to latent feedstock risk to enterprise dependency to measurable business exposure.\",\"source_headlines\":[\"H03\"],\"uncertainty\":[\"The records do not state ArborChem's direct country-of-origin for castor_derived_polyol, so the Gujarat link is a plausible upstream feedstock dependency rather than a confirmed direct sourcing route.\",\"No current supplier disruption notice or confirmed shortage quantity is provided; the alert is driven by plausible upstream agricultural stress plus present open-order exposure.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-001\"}}",
+        "usage": {
+          "latency_ms": 26050,
+          "model_calls": 3,
+          "tokens_in": 11288,
+          "tokens_out": 1257,
+          "tool_calls": 9
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "d797aad540f386b7ff1c726d41988218675c7c58b08630dfcef152de06f93a15",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "8a53597bec9cf2bf41e41f308ae34cb7319eb726fca3ecb0522e203f8b957ebd",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/trials/trial_4",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/.scratch/trial_4_90832_8/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/trials/trial_4/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/.scratch/trial_4_90832_8/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T18:54:51.983030+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T18:54:51.930961+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/trials/trial_4/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/trials/trial_4/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "d797aad540f386b7ff1c726d41988218675c7c58b08630dfcef152de06f93a15",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 3
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 3,
+      "task_id": "LSR-001",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "8a53597bec9cf2bf41e41f308ae34cb7319eb726fca3ecb0522e203f8b957ebd",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-001"
+    }
+  },
+  "updated_at": "2026-05-27T18:54:52.254199+00:00"
+}

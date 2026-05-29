@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T20:23:18.538162+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:22:30.641802+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/trials/trial_4/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/trials/trial_4/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-001",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779913350802_d62qii",
+        "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"The strongest candidate dependency is inactive legacy LCD-12 and the exposure helper returned no open orders and zero revenue at risk.\",\"result\":\"no_alert\",\"run_id\":\"LSR-001\"}}",
+        "usage": {
+          "latency_ms": 45323,
+          "model_calls": 7,
+          "tokens_in": 34350,
+          "tokens_out": 1517,
+          "tool_calls": 15
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "74833d535a5f667d94a8fd028d1968c117f644e82123e5393c4b0130cf425dc8",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "cca8cf5e70a21b13cf365f47f1d6c8d6096b9d9003463d86e57a0cd982c370f1",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/trials/trial_4",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/.scratch/trial_4_22720_8/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/trials/trial_4/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/.scratch/trial_4_22720_8/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T20:23:18.832728+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T20:23:18.774577+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/trials/trial_4/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_202013_015482_000001/trials/trial_4/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "74833d535a5f667d94a8fd028d1968c117f644e82123e5393c4b0130cf425dc8",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 3
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 3,
+      "task_id": "LSR-001",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "cca8cf5e70a21b13cf365f47f1d6c8d6096b9d9003463d86e57a0cd982c370f1",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-001"
+    }
+  },
+  "updated_at": "2026-05-27T20:23:19.140762+00:00"
+}

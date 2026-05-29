@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T18:56:18.535255+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T18:55:57.249679+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/trials/trial_11/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/trials/trial_11/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-041",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779908157419_711pwp",
+        "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No external headline explicitly names a supplier, material, component, product, region, or logistics lane in a way that creates a company-specific risk with measurable exposure under the RULES_ONLY standard. Several headlines are generic or benign: the clinical networking distributor reports normal orders, the packaging resin supplier says its Midwest warehouse is operating normally, and the display-module reseller headline does not indicate disruption. Other headlines mention entities or geographies not explicitly present in the records, or would require unstated bridges (for example Gujarat, copper wire rod, or Asia-Europe service implications). The Oregon road-work item names a region appearing in company records, but it does not explicitly identify Aster Vale\\u2019s facility, supplier, lane, material, component, or product, so it remains too generic to alert.\",\"result\":\"no_alert\",\"run_id\":\"LSR-041\"}}",
+        "usage": {
+          "latency_ms": 19002,
+          "model_calls": 2,
+          "tokens_in": 6055,
+          "tokens_out": 940,
+          "tool_calls": 8
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "0cac5c139f1f77e0e520fe22ac66a735396de5d65d169ef41abb7fb935ad7e38",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "903b3db81bf913288440431b93c408be320417abf8b7c9b6b3727ecc49e83563",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/trials/trial_11",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/.scratch/trial_11_90832_15/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/trials/trial_11/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/.scratch/trial_11_90832_15/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T18:56:18.814609+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T18:56:18.761854+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/trials/trial_11/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185348_752802_000001/trials/trial_11/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "0cac5c139f1f77e0e520fe22ac66a735396de5d65d169ef41abb7fb935ad7e38",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 10
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 10,
+      "task_id": "LSR-041",
+      "variant_id": "baseline"
+    },
+    "task_sandbox": {
+      "container_id": "903b3db81bf913288440431b93c408be320417abf8b7c9b6b3727ecc49e83563",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-041"
+    }
+  },
+  "updated_at": "2026-05-27T18:56:19.111723+00:00"
+}

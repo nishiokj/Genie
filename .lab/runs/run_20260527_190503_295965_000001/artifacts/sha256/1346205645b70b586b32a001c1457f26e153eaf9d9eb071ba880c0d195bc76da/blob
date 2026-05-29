@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908726596_ysz69w",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"open_orders\":[\"SO-8207\"],\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"events/headline-pack.md#H01\"],\"records\":[\"records/bom.yaml#EVB-330>FJ-31>antimony_trioxide_synergist\",\"records/suppliers.yaml#SUP-SAFELINE\",\"records/orders.yaml#SO-8207\",\"records/inventory.yaml#EVB-330\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"antimony_trioxide_synergist\",\"FJ-31\",\"EVB-330\",\"SO-8207\"],\"id\":\"LSR-052-A1\",\"latent_edge_hypothesis\":\"New inspections at Hunan antimony smelters could tighten availability of antimony-based flame-retardant synergists flowing through Asian compound distributors, disrupting supply of antimony_trioxide_synergist used in EVB-330's plenum-rated cable harness.\",\"real_world_prior\":\"Antimony trioxide is a common flame-retardant synergist, and smelter inspections in China can constrain near-term supply or delay shipments through downstream compound distributors.\",\"reasoning\":\"Headline H01 is company-relevant because EVB-330's BOM includes component FJ-31, whose inputs explicitly include antimony_trioxide_synergist. Supplier records add a tier-2 dependency: SafeLine's fire-safety jacket package includes an oxide synergist sourced through Asian compound distributors, consistent with exposure to antimony smelter inspections in Hunan. EVB-330 has a current open strategic order SO-8207, and the exposure helper shows constrained inventory with revenue at risk of 3360000 tied to that order.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The headline does not name a specific smelter that directly supplies Aster Vale's tier-2 network.\",\"Supplier records indicate Asian compound distributors but do not identify the exact distributor or current in-transit inventory.\",\"The helper confirms current exposure, but duration and severity of any antimony shortage remain uncertain.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 26428,
+    "model_calls": 3,
+    "tokens_in": 12413,
+    "tokens_out": 1261,
+    "tool_calls": 9
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-014",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908092623_tct76b",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Mercy North Hospitals\"],\"affected_orders\":[\"SO-7844\"],\"constrained_inventory\":true,\"open_orders\":[\"SO-7844\"],\"revenue_at_risk\":3692000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/suppliers.yaml: SUP-LANTERN -> input_id rosin_ester_flux; tier2_notes 'flux solids sourced through South China resin brokers'\",\"records/bom.yaml: MTG-220 -> component ASM-44 -> input rosin_ester_flux\",\"records/orders.yaml: SO-7844 open strategic order for MTG-220\",\"records/inventory.yaml: MTG-220 quantity_available 34\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"rosin_ester_flux\",\"ASM-44\",\"MTG-220\",\"SO-7844\"],\"id\":\"ALERT-LSR-014-01\",\"latent_edge_hypothesis\":\"South China resin tapping restrictions can tighten availability of resin-derived flux inputs sold through South China resin brokers, creating supply risk for rosin_ester_flux used in Aster Vale's low-residue sensor board assembly.\",\"real_world_prior\":\"Forestry resin tapping restrictions after dry weather plausibly reduce gum resin supply and can propagate into rosin-derivative chemicals used in electronics flux formulations.\",\"reasoning\":\"Headline H01 reports extended South China resin tapping restrictions. Aster Vale's supplier record for SUP-LANTERN states rosin_ester_flux is sourced with tier-2 dependence on South China resin brokers. The BOM shows rosin_ester_flux is an input to component ASM-44, the low-residue sensor board assembly used in product MTG-220. Orders show open strategic order SO-7844 for MTG-220, and inventory shows only 34 units available against 260 ordered, so the dependency connects to current measurable exposure. The exposure helper for rosin_ester_flux confirms the exposed order, customer, constrained inventory status, and revenue at risk.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The record links rosin_ester_flux to South China resin brokers at tier 2, but does not quantify supplier safety stock or alternate sourcing.\",\"The headline concerns resin tapping restrictions broadly; the exact share of SUP-LANTERN's flux solids affected is not stated.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-014\"}}",
+  "usage": {
+    "latency_ms": 26205,
+    "model_calls": 3,
+    "tokens_in": 11282,
+    "tokens_out": 1267,
+    "tool_calls": 9
+  }
+}

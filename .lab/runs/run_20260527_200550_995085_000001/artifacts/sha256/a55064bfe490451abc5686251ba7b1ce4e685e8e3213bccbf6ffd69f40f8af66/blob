@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-033",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779912771127_1t4yt0",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Canal Rail\"],\"affected_orders\":[\"SO-7991\"],\"constrained_inventory\":true,\"revenue_at_risk\":3330000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"silicone_elastomer\",\"POT-72\",\"RSG-700\",\"SO-7991\"],\"id\":\"alert-H01-silicone-elastomer-RSG-700\",\"latent_edge_hypothesis\":\"Quebec silicon curtailments may tighten siloxane-linked silicone feedstocks used in silicone elastomer for POT-72.\",\"real_world_prior\":\"Silicon metal disruptions can propagate into silicone intermediates and compound availability after a lag.\",\"reasoning\":\"RSG-700 depends on POT-72, NorthSil ties its silicone supply to upstream siloxane availability, and open demand exceeds inventory.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The record does not name the exact siloxane supplier or confirm immediate allocation impacts.\",\"The headline reports furnace curtailments, not a direct shipment interruption to NorthSil.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-033\"}}",
+  "usage": {
+    "latency_ms": 53861,
+    "model_calls": 10,
+    "tokens_in": 58112,
+    "tokens_out": 2259,
+    "tool_calls": 16
+  }
+}

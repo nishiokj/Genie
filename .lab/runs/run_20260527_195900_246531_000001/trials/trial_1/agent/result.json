@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911944267_gezzdw",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a supplier, material, component, product, region, or lane that also appears in company records without requiring latent bridges.\",\"result\":\"no_alert\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 42450,
+    "model_calls": 8,
+    "tokens_in": 43754,
+    "tokens_out": 1866,
+    "tool_calls": 14
+  }
+}

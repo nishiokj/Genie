@@ -1,0 +1,65 @@
+{
+  "artifacts": {
+    "candidate_patch": "candidate.patch",
+    "mapped_grader_output": "grader/mapped_output.json",
+    "trial_summary": "summary.json"
+  },
+  "ids": {
+    "repl_idx": 0,
+    "run_id": "run_20260527_200550_995085_000001",
+    "schedule_idx": 6,
+    "task_id": "LSR-027",
+    "trial_id": "trial_7",
+    "variant_id": "baseline"
+  },
+  "overall_status": "ok",
+  "schema_version": "trial_contract_trace_v1",
+  "score": {
+    "metric": "pass_rate",
+    "outcome": "success",
+    "source": "mapped_grader_output",
+    "value": true
+  },
+  "score_trust": "trusted",
+  "stages": {
+    "agent_execution": {
+      "exit_status": "0",
+      "outcome": "success",
+      "result_parse_error": null,
+      "status": "ok"
+    },
+    "artifact_extraction": {
+      "agent_result_artifact_source": "none",
+      "agent_result_artifact_state": "invalid",
+      "artifact_type": "structured_json",
+      "status": "invalid",
+      "workspace_delta": {
+        "captured_bytes": null,
+        "log_dir": "runner/workspace_patch",
+        "patch_path": "candidate.patch",
+        "scope": null,
+        "scoped_bytes": null,
+        "status": "invalid"
+      }
+    },
+    "grade_mapping": {
+      "mapped_output_present": true,
+      "reported_outcome": "success",
+      "score_source": "mapped_grader_output",
+      "status": "ok"
+    },
+    "grader_execution": {
+      "error": null,
+      "status": "ok",
+      "stderr": "grader/stderr.log",
+      "stdout": "grader/stdout.log",
+      "strategy": "separate"
+    },
+    "task_mapping": {
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization_kind": "task_image",
+      "status": "ok",
+      "workdir": "/workspace/task/LSR-027"
+    }
+  }
+}

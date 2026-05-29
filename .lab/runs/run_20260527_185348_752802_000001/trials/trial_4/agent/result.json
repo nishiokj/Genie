@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-001",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908063146_zx7adh",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Atlantic Energy\"],\"affected_orders\":[\"SO-7731\"],\"constrained_inventory\":true,\"revenue_at_risk\":4200000},\"citations\":{\"headlines\":[\"events/headline-pack.md#H03\"],\"records\":[\"records/bom.yaml#product_id:CMC-410 component_id:CR-88 input:castor_derived_polyol\",\"records/suppliers.yaml#id:SUP-ARBCHEM supplies:castor_derived_polyol,CR-88\",\"records/orders.yaml#id:SO-7731\",\"records/inventory.yaml#product_id:CMC-410\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"castor_derived_polyol\",\"CR-88\",\"CMC-410\",\"SO-7731\"],\"id\":\"ALERT-H03-CMC410\",\"latent_edge_hypothesis\":\"Drought in Gujarat can tighten castor crop availability and exports, creating a plausible supply shock for castor-derived polyol used in Aster Vale's conformal barrier resin.\",\"real_world_prior\":\"Gujarat is a major castor-growing region, so drought there can reduce feedstock availability for castor-derived chemical intermediates even when the direct supplier is outside India.\",\"reasoning\":\"Headline H03 reports drought conditions in Gujarat pressuring agricultural export markets. In Aster Vale's BOM, CMC-410 depends on component CR-88 conformal barrier resin, which explicitly uses input castor_derived_polyol. Supplier records show ArborChem Materials supplies both CR-88 and castor_derived_polyol, establishing a company-specific dependency on that agricultural derivative. The exposure helper for castor_derived_polyol identifies open order SO-7731 for CMC-410, affected customer Atlantic Energy, constrained inventory, and revenue_at_risk of 4200000. This creates a complete chain from external event to latent feedstock risk to enterprise dependency to measurable business exposure.\",\"source_headlines\":[\"H03\"],\"uncertainty\":[\"The records do not state ArborChem's direct country-of-origin for castor_derived_polyol, so the Gujarat link is a plausible upstream feedstock dependency rather than a confirmed direct sourcing route.\",\"No current supplier disruption notice or confirmed shortage quantity is provided; the alert is driven by plausible upstream agricultural stress plus present open-order exposure.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-001\"}}",
+  "usage": {
+    "latency_ms": 26050,
+    "model_calls": 3,
+    "tokens_in": 11288,
+    "tokens_out": 1257,
+    "tool_calls": 9
+  }
+}

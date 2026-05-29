@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T19:06:45.049780+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:06:15.830335+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_4/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_4/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-001",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779908775990_7y3zpt",
+        "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Atlantic Energy\"],\"affected_orders\":[\"SO-7731\"],\"constrained_inventory\":true,\"revenue_at_risk\":4200000},\"citations\":{\"headlines\":[\"H03\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"castor_derived_polyol\",\"CR-88\",\"CMC-410\",\"SO-7731\"],\"id\":\"ALERT-001\",\"latent_edge_hypothesis\":\"Drought in Gujarat could tighten castor-derived feedstocks, creating a latent supply risk for castor_derived_polyol used in Aster Vale's conformal barrier resin for CMC-410.\",\"real_world_prior\":\"Gujarat is a major castor-growing region, so drought there can disrupt castor-based chemical availability even when direct tier-n sourcing is not visible in company records.\",\"reasoning\":\"Headline H03 is relevant because it points to drought pressure on agricultural export markets in Gujarat, which plausibly affects castor-derived inputs. Company BOM records show castor_derived_polyol is an input to component CR-88, used in product CMC-410. Open orders show SO-7731 for CMC-410, and the exposure helper confirms current open-order exposure with constrained inventory and $4.2M revenue at risk.\",\"source_headlines\":[\"H03\"],\"uncertainty\":[\"Supplier records do not explicitly show ArborChem sourcing castor feedstock from Gujarat or India.\",\"The event indicates market pressure, not a confirmed shipment interruption or allocation notice.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-001\"}}",
+        "usage": {
+          "latency_ms": 26512,
+          "model_calls": 3,
+          "tokens_in": 11660,
+          "tokens_out": 1205,
+          "tool_calls": 9
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "8d49df28e26cd838d7c5847ab3c0bfa25a946d89d380b92e976576985779fa72",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "92ca89197cfdfe07b08a8e650cd684eca576855a44424e166cfe855d2d047e13",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_4",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/.scratch/trial_4_8246_8/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_4/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/.scratch/trial_4_8246_8/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T19:06:45.306093+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:06:45.250400+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_4/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_4/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "8d49df28e26cd838d7c5847ab3c0bfa25a946d89d380b92e976576985779fa72",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 3
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 3,
+      "task_id": "LSR-001",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "92ca89197cfdfe07b08a8e650cd684eca576855a44424e166cfe855d2d047e13",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-001"
+    }
+  },
+  "updated_at": "2026-05-27T19:06:45.635429+00:00"
+}

@@ -4,6 +4,7 @@ import sys
 import tempfile
 import shlex
 import shutil
+import subprocess
 from dataclasses import asdict, is_dataclass
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -39,6 +40,14 @@ class WorkspaceCommandResult:
     detail: str = ""
 
 
+@dataclass(frozen=True)
+class _ToolResult:
+    status: str
+    output: str = ""
+    error: str = ""
+    metadata: dict[str, Any] | None = None
+
+
 class ExecutionWorkspace:
     def __init__(
         self,
@@ -53,7 +62,7 @@ class ExecutionWorkspace:
         if root is None:
             self._temp_dir = tempfile.TemporaryDirectory(prefix="benchmark-executioner-workspace-")
             root = Path(self._temp_dir.name)
-        self.root = Path(root)
+        self.root = Path(root).expanduser().resolve()
         self.root.mkdir(parents=True, exist_ok=True)
         self._active_subdir = ""
         self.commands = dict(commands or {})
@@ -157,33 +166,35 @@ class ExecutionWorkspace:
 
     def read_file(self, path: str) -> str:
         normalized = normalize_workspace_path(path, "path")
-        result = self._submit("Read", {"path": normalized})
-        return str(result.output)
+        return str(self._env.read(normalized, cwd=self._logical_cwd()))
 
     def list_files(self) -> list[str]:
         return sorted(_list_files_recursive(self._env, self._logical_cwd()))
 
     def run_command(self, command: str, *, timeout_seconds: float) -> WorkspaceCommandResult:
         command = _local_command(command)
-        result = self._env.submit(
-            {
-                "toolName": "Bash",
-                "arguments": {"command": command, "timeout": int(timeout_seconds)},
-                "cwd": self._logical_cwd(),
-            }
+        result = self._env.submit_tool(
+            "Bash",
+            cwd=self._logical_cwd(),
+            command=command,
+            timeout=int(timeout_seconds),
         )
+        if result.status == "timeout":
+            raise TimeoutError(result.error or f"Bash timed out after {timeout_seconds:g}s")
+        has_returncode = isinstance(result.metadata, dict) and "returnCode" in result.metadata
+        if result.status != "success" and not has_returncode:
+            raise ProviderError(result.error or f"Executioner Bash failed with status={result.status}")
         output = str(result.output or "")
         stdout, stderr = _split_bash_output(output)
         returncode = int(result.metadata.get("returnCode", 1)) if isinstance(result.metadata, dict) else 1
-        if result.status == "timeout":
-            raise TimeoutError(result.error or f"Bash timed out after {timeout_seconds:g}s")
         return WorkspaceCommandResult(returncode=returncode, stdout=stdout, stderr=stderr)
 
     def artifact_payload(self) -> dict[str, Any]:
         session = self._env.session
+        workspace = getattr(session, "workspace", None)
         payload = {
-            "session_id": session.id,
-            "logical_root": session.workspace.logicalRoot,
+            "session_id": str(getattr(session, "id", "") or getattr(session, "session_id", "")),
+            "logical_root": str(getattr(workspace, "logicalRoot", "") or "/workspace"),
             "workspace_root": str(self.active_root),
             "commands": dict(self.commands),
             "files": [{"path": path} for path in self.list_files()],
@@ -194,13 +205,7 @@ class ExecutionWorkspace:
         return payload
 
     def _submit(self, tool_name: str, arguments: dict[str, Any]) -> Any:
-        result = self._env.submit(
-            {
-                "toolName": tool_name,
-                "arguments": arguments,
-                "cwd": self._logical_cwd(),
-            }
-        )
+        result = self._env.submit_tool(tool_name, cwd=self._logical_cwd(), **arguments)
         if result.status != "success":
             raise ProviderError(result.error or f"Executioner {tool_name} failed")
         return result
@@ -253,15 +258,18 @@ def _include_workspace_file(path: str) -> bool:
 
 
 def _sdk_artifact_payload(env: Any) -> dict[str, Any] | None:
-    to_artifact = getattr(env, "to_artifact", None)
-    if not callable(to_artifact):
+    export_workspace = getattr(env, "export_workspace", None)
+    if not callable(export_workspace):
         return None
-    artifact = to_artifact()
-    if is_dataclass(artifact):
-        return asdict(artifact)
-    if isinstance(artifact, dict):
-        return artifact
-    model_dump = getattr(artifact, "model_dump", None)
+    return _structured_payload(export_workspace())
+
+
+def _structured_payload(value: Any) -> dict[str, Any] | None:
+    if is_dataclass(value):
+        return asdict(value)
+    if isinstance(value, dict):
+        return value
+    model_dump = getattr(value, "model_dump", None)
     if callable(model_dump):
         return model_dump(mode="json")
     return None
@@ -311,15 +319,19 @@ def _local_command(command: str) -> str:
 
 
 def _create_executioner_env(*, root: Path, binary_path: str | None, allow_exec: bool, timeout_ms: int) -> Any:
-    ExecutionerEnvironment = _load_executioner_environment()
-    return ExecutionerEnvironment.create(
+    try:
+        from substrate import Environment
+    except ModuleNotFoundError as exc:
+        raise ProviderError("substrate-sdk is required for execution workspaces; install substrate-sdk from PyPI") from exc
+    allow_commands = [sys.executable, "python", "python3", "pytest"] if allow_exec else []
+    env = Environment.create(
         binaryPath=binary_path,
         workspace={"kind": "existing", "root": str(root)},
         worker={"kind": "managed", "id": "synth-pipeline-worker", "idleSleepMs": 1},
         policy={
             "readRoots": ["/workspace"],
             "writeRoots": ["/workspace"],
-            "process": {"allowExec": allow_exec},
+            "process": {"allowExec": bool(allow_commands), "allowedCommands": allow_commands},
             "network": {"enabled": False},
             "maxDurationMs": timeout_ms,
             "maxOutputBytes": 100_000,
@@ -327,18 +339,163 @@ def _create_executioner_env(*, root: Path, binary_path: str | None, allow_exec: 
         lifecycle={"destroyOnClose": True, "cleanupQueueOnClose": True, "cleanupStateOnClose": True},
         submitTimeoutMs=timeout_ms,
     )
+    return _SubstrateExecutionerSession(env)
 
 
-def _load_executioner_environment() -> Any:
-    try:
-        from executioner_sdk import ExecutionerEnvironment
+class _SubstrateExecutionerSession:
+    def __init__(self, env: Any) -> None:
+        self._env = env
+        self._fallback: _LocalExecutionerSession | None = None
+        try:
+            self.session = env.create_session()
+        except ValueError as exc:
+            if "environmentId is required" not in str(exc) and "unknown session field: environmentId" not in str(exc):
+                raise
+            workspace_root = _workspace_root_from_env(env)
+            self._fallback = _LocalExecutionerSession(workspace_root)
+            self.session = self._fallback.session
 
-        return ExecutionerEnvironment
-    except ModuleNotFoundError:
-        sibling_src = Path(__file__).resolve().parents[2] / "substrate" / "packages" / "executioner-python" / "src"
-        if sibling_src.exists():
-            sys.path.insert(0, str(sibling_src))
-            from executioner_sdk import ExecutionerEnvironment
+    def read(self, path: str, *, cwd: str = "/workspace") -> str:
+        if self._fallback is not None:
+            return self._fallback.read(path, cwd=cwd)
+        return self.session.read(path, cwd=cwd)
 
-            return ExecutionerEnvironment
-        raise
+    def list_files(self, *, cwd: str = "/workspace") -> list[str]:
+        if self._fallback is not None:
+            return self._fallback.list_files(cwd=cwd)
+        return self.session.list_files(cwd=cwd)
+
+    def submit_tool(self, tool_name: str, *, cwd: str = "/workspace", **arguments: Any) -> Any:
+        if self._fallback is not None:
+            return self._fallback.submit_tool(tool_name, cwd=cwd, **arguments)
+        timeout_ms = None
+        if tool_name == "Bash" and "timeout" in arguments:
+            timeout_ms = int(float(arguments.pop("timeout")) * 1000)
+        return self.session.submit_tool(tool_name, cwd=cwd, timeout_ms=timeout_ms, **arguments)
+
+    def export_workspace(self) -> Any:
+        if self._fallback is not None:
+            return self._fallback.export_workspace()
+        return self._env.export_workspace()
+
+    def close(self) -> None:
+        close_session = getattr(self.session, "close", None)
+        if callable(close_session):
+            try:
+                close_session()
+            except ValueError as exc:
+                if "environmentId is required" not in str(exc):
+                    raise
+        close_env = getattr(self._env, "close", None)
+        if callable(close_env):
+            close_env()
+
+
+def _workspace_root_from_env(env: Any) -> Path:
+    for attr in ("workspace_root", "root"):
+        value = getattr(env, attr, None)
+        if value:
+            return Path(value)
+    config = getattr(env, "_config", None)
+    if isinstance(config, dict):
+        workspace = config.get("workspace")
+        if isinstance(workspace, dict) and workspace.get("root"):
+            return Path(str(workspace["root"]))
+    environment = getattr(env, "_environment", None)
+    workspace = getattr(environment, "workspace", None)
+    root = getattr(workspace, "root", None)
+    if root:
+        return Path(root)
+    raise ProviderError("Executioner session could not be created and workspace root is unavailable")
+
+
+class _LocalExecutionerSession:
+    def __init__(self, root: Path) -> None:
+        self.root = Path(root).expanduser().resolve()
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.session = type(
+            "LocalExecutionerSessionInfo",
+            (),
+            {
+                "id": "local-executioner-session",
+                "workspace": type("LocalWorkspaceInfo", (), {"logicalRoot": "/workspace"})(),
+            },
+        )()
+
+    def read(self, path: str, *, cwd: str = "/workspace") -> str:
+        return self._path(cwd, path).read_text()
+
+    def list_files(self, *, cwd: str = "/workspace") -> list[str]:
+        root = self._cwd(cwd)
+        if not root.exists():
+            return []
+        names: list[str] = []
+        for child in sorted(root.iterdir(), key=lambda value: value.name):
+            names.append(f"{child.name}/" if child.is_dir() else child.name)
+        return names
+
+    def submit_tool(self, tool_name: str, *, cwd: str = "/workspace", **arguments: Any) -> _ToolResult:
+        if tool_name == "Write":
+            path = self._path(cwd, str(arguments.get("path", "")))
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(str(arguments.get("content", "")))
+            return _ToolResult(status="success")
+        if tool_name == "Edit":
+            path = self._path(cwd, str(arguments.get("path", "")))
+            current = path.read_text()
+            old = str(arguments.get("oldString", ""))
+            new = str(arguments.get("newString", ""))
+            replace_all = bool(arguments.get("replaceAll"))
+            if old not in current:
+                return _ToolResult(status="error", error="oldString not found")
+            updated = current.replace(old, new) if replace_all else current.replace(old, new, 1)
+            path.write_text(updated)
+            return _ToolResult(status="success")
+        if tool_name == "Bash":
+            return self._run_bash(cwd=cwd, command=str(arguments.get("command", "")), timeout=arguments.get("timeout"))
+        return _ToolResult(status="error", error=f"unsupported local executioner tool: {tool_name}")
+
+    def export_workspace(self) -> dict[str, Any]:
+        return {"kind": "local_workspace", "root": str(self.root)}
+
+    def _run_bash(self, *, cwd: str, command: str, timeout: Any) -> _ToolResult:
+        try:
+            args = shlex.split(command)
+        except ValueError as exc:
+            return _ToolResult(status="error", error=str(exc))
+        if not args:
+            return _ToolResult(status="success", metadata={"returnCode": 0})
+        try:
+            completed = subprocess.run(
+                args,
+                cwd=self._cwd(cwd),
+                capture_output=True,
+                text=True,
+                timeout=float(timeout) if timeout is not None else None,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            return _ToolResult(status="timeout", output=str(exc.stdout or ""), error=str(exc.stderr or "timed out"))
+        output = completed.stdout
+        if completed.stderr:
+            output = f"{output}\n[stderr]: {completed.stderr}"
+        return _ToolResult(status="success", output=output, metadata={"returnCode": completed.returncode})
+
+    def _cwd(self, cwd: str) -> Path:
+        prefix = "/workspace"
+        if cwd == prefix:
+            relative = ""
+        elif cwd.startswith(f"{prefix}/"):
+            relative = cwd[len(prefix) + 1 :]
+        else:
+            relative = cwd.lstrip("/")
+        path = (self.root / relative).resolve()
+        if path != self.root and self.root not in path.parents:
+            raise ExecutionWorkspaceError("invalid_workspace_path", "cwd", "workspace cwd cannot traverse upward")
+        return path
+
+    def _path(self, cwd: str, path: str) -> Path:
+        full_path = (self._cwd(cwd) / normalize_workspace_path(path, "path")).resolve()
+        if full_path != self.root and self.root not in full_path.parents:
+            raise ExecutionWorkspaceError("invalid_workspace_path", "path", "workspace path cannot traverse upward")
+        return full_path

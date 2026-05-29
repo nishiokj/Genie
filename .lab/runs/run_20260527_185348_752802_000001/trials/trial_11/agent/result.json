@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-041",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908157419_711pwp",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No external headline explicitly names a supplier, material, component, product, region, or logistics lane in a way that creates a company-specific risk with measurable exposure under the RULES_ONLY standard. Several headlines are generic or benign: the clinical networking distributor reports normal orders, the packaging resin supplier says its Midwest warehouse is operating normally, and the display-module reseller headline does not indicate disruption. Other headlines mention entities or geographies not explicitly present in the records, or would require unstated bridges (for example Gujarat, copper wire rod, or Asia-Europe service implications). The Oregon road-work item names a region appearing in company records, but it does not explicitly identify Aster Vale\\u2019s facility, supplier, lane, material, component, or product, so it remains too generic to alert.\",\"result\":\"no_alert\",\"run_id\":\"LSR-041\"}}",
+  "usage": {
+    "latency_ms": 19002,
+    "model_calls": 2,
+    "tokens_in": 6055,
+    "tokens_out": 940,
+    "tool_calls": 8
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-014",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779914195160_j66pes",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a company supplier, material, component, product, region, or lane with a direct record-matched disruption path that avoids latent bridges.\",\"result\":\"no_alert\",\"run_id\":\"LSR-014\"}}",
+  "usage": {
+    "latency_ms": 68690,
+    "model_calls": 6,
+    "tokens_in": 27947,
+    "tokens_out": 3139,
+    "tool_calls": 11
+  }
+}

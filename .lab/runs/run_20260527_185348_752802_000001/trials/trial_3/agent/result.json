@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-001",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908056575_a5k3v5",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No external event met the RULES_ONLY alert threshold with current business exposure. The only explicit entity overlap was H04 naming supplier Beta Components, which matches records/suppliers.yaml, but that supplier is inactive and noted as the legacy display module source for discontinued product LTH-90 only; the only LTH-90 order in records/orders.yaml is cancelled, so there is no measurable current exposure. Other headlines did not explicitly name a supplier, material, component, product, region, or logistics lane that also appears in the company records without requiring unstated world-knowledge bridges.\",\"result\":\"no_alert\",\"run_id\":\"LSR-001\"}}",
+  "usage": {
+    "latency_ms": 15284,
+    "model_calls": 2,
+    "tokens_in": 6052,
+    "tokens_out": 701,
+    "tool_calls": 8
+  }
+}

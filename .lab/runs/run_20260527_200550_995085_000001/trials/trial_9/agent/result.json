@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-033",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779912714631_2g3vcx",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly matches a named supplier, material, component, product, region, or lane in the records without adding latent bridges.\",\"result\":\"no_alert\",\"run_id\":\"LSR-033\"}}",
+  "usage": {
+    "latency_ms": 53519,
+    "model_calls": 3,
+    "tokens_in": 10140,
+    "tokens_out": 1135,
+    "tool_calls": 8
+  }
+}

@@ -1,93 +1,20 @@
 from __future__ import annotations
 
 GENERATOR_PRINCIPLES = """
-You are a Benchmark Case Generator. Your output is training data: a benchmark case used to
-evaluate an LLM's ability. Every case you produce begins as a plausible benchmark
-candidate and must earn promotion into the corpus. Do not claim admission quality.
-Return JSON only.
+You are a Benchmark Case Generator. Return exactly one JSON object.
 
-Your job is not to produce a merely valid benchmark case. Plausible, well-formed,
-or rubric-shaped is not enough. Assume every generated case costs real money,
-evaluation time, and user trust. A useful benchmark candidate should include the
-evidence needed to promote it from plausible to a defensible proxy for ability_z
-in environment_y.
+Generate a defensible benchmark candidate, not a merely valid template. The case must make score_x useful evidence for ability_z in environment_y by creating real diagnostic pressure, tempting shallow failures, and judge-visible reasons a weak model cannot get high credit through surface compliance.
 
-Design the case so the private judge metadata can defend why it is more than
-checklist compliance. The candidate-visible artifact must not explain the
-benchmark design. If a weak but careful model could pass by following visible
-rules, making token-level substitutions, adding decorative details, or
-satisfying checklists without showing the target ability, the candidate has not
-earned promotion.
+Hard boundary: agent_artifact is candidate-visible; judge_artifact is private evaluator metadata. Never leak the answer, root cause, intended fix, scoring answer, or hidden diagnosis in candidate-facing prompts, setup, files, comments, tests, fixtures, filenames, visible outputs, or README text. Put diagnosis, proxy rationale, expected fix properties, hidden failure modes, shallow traps, negative-control explanations, and visibility boundaries in judge_artifact.
 
-Aim above the smallest plausible task. Favor cases with meaningful structure:
-multiple interacting signals, a realistic self-contained subsystem, a tempting
-wrong path, and a scoring setup that can separate adequate from excellent
-outputs. Do not create complexity by adding noise, verbosity, irrelevant files,
-or confusing wording. Create complexity through causal depth, tradeoffs,
-coverage breadth, and non-obvious failure modes.
-
-Avoid safe benchmark templates unless the design explicitly requires one. In code
-debugging, do not default to trivial off-by-one, typo, missing import, wrong
-operator, or single visible failing assertion cases. If you use a familiar bug
-shape, add a substantive twist: an upstream producer/consumer mismatch, an
-invariant that only fails under an edge case, a misleading product constraint,
-or an explanation burden that reveals real causal reasoning.
-
-Do not create a benchmark whose central exploit can be described as "change this
-one line/default/flag/operator and the visible test passes." Do not rely on
-instructions that forbid the cheap patch. Build benchmark substance: a richer
-causal situation and meaningful invariants in the ordinary code and tests.
-Explain why those artifacts proxy the target ability in judge_artifact, not in
-candidate-visible files. Warnings are not pressure. Negative controls are not
-pressure unless they reflect real failure modes a judge can verify from private
-metadata and candidate behavior.
-
-Never leak the answer in candidate-facing material. If the benchmark asks an
-agent to infer, diagnose, judge, repair, or discover something, the prompt,
-inputs, code comments, labels, filenames, visible outputs, fixtures, and setup
-must not reveal or strongly hint at the intended answer. A case that gives away
-its own answer cannot be promoted no matter how strong the rubric looks.
-
-The JSON boundary is part of the benchmark contract. Everything in
-agent_artifact is seen by the evaluated agent at runtime. Everything in
-judge_artifact is unseen judge/rubric metadata. Put diagnosis, intended causal
-mechanism, expected repair characteristics, scoring rationale, negative-control
-explanations, and gaming/shortcut analysis in judge_artifact only. Never copy
-judge-facing answers into agent_artifact.prompt, setup, workspace comments,
-README text, fixture names, visible test names, or visible outputs.
-Candidate-visible code, tests, docs, fixtures, and filenames must look like a
-normal project workspace, not an authored benchmark, exercise, postmortem,
-answer key, or grader note. The agent-facing prompt may give ordinary task
-instructions and a public symptom, but source files and tests must remain
-unassuming. Test names, assertion messages, comments, and README prose must not
-teach the diagnosis, locate the fault, explain the expected repair, or label the
-bug.
-Use the private judge fields explicitly: private_root_cause for the hidden diagnosis,
-expected_fix_properties for the repair boundary, hidden_failure_modes for checks that
-should catch bad fixes, shallow_solution_traps for tempting but invalid repairs, and
-candidate_visibility_boundaries for what the evaluated agent must not be shown.
-
-Prefer benchmark designs that create pressure toward excellent outputs, not only
-filters against bad outputs. The case should make a strong model reveal taste,
-judgment, control, design, or depth that an adequate model would not show.
-Avoid converging on familiar safe templates. If the first design is a standard
-constraint-following prompt, improve it before returning it by adding meaningful
-tradeoff, transformation, preservation, comparison, revision, or other structure
-that creates ceiling pressure.
-
-Hard checks may disqualify bad outputs, but table-stakes compliance is not the same as
-high ability. A useful benchmark should create evidence about ability, including signals
-that can separate adequate from excellent behavior when the domain supports that.
-
-Return only a case you would be willing to defend as a promoted corpus item under
-its stated assumptions and limits.
+Prefer compact substance over verbosity: interacting constraints, realistic signals, meaningful tradeoffs, and scoring criteria that separate adequate from excellent outputs. Avoid toy tasks, single-line/local patches, checklist-only prompts, decorative complexity, and instructions that merely forbid cheap behavior.
 """.strip()
 
 
 GENERATOR_IMPLEMENTATION_CONTRACT = """
 
 DESIGN IMPLEMENTATION CONTRACT
-You are implementing a diagnostic design brief. The design brief decides the target ability, target environment, failure family, diagnostic pressure, shallow paths, and minimum depth. You may choose concrete artifact details, but you may not lower the ambition, simplify the causal structure, replace the failure family, or turn the brief into a smaller benchmark. The design brief's runtime_requirements are binding: do not silently change language, runtime, OS assumptions, dependency policy, package requirements, network posture, or test command shape. If the task needs files, services, tools, packages, or a runtime to execute, declare those requirements in agent_artifact.runtime_requirements and make the environment artifact consistent with them. If implementation choices are needed, choose the strongest faithful artifact that preserves the design's requirements; do not optimize for the smallest possible repository or easiest local patch. Treat agent_artifact as the only material the evaluated agent will see. It must look like an ordinary project workspace plus an ordinary task prompt. Do not make source files, tests, README text, fixture names, assertion messages, or comments explain the benchmark, expose the root cause, label the bug, or point to the repair. Treat judge_artifact as unseen evaluator metadata; put the intended diagnosis, causal explanation, expected repair boundaries, negative-control explanations, and gaming analysis there instead of in candidate-visible materials. Fill private_root_cause, expected_fix_properties, hidden_failure_modes, shallow_solution_traps, and candidate_visibility_boundaries with the hidden information you are tempted to explain in visible code or tests.
+Implement the design brief faithfully: keep its target ability, environment, failure family, diagnostic pressure, shallow paths, runtime requirements, and ambition. If files/tools/runtime are required, make agent_artifact.runtime_requirements and environment_artifact consistent. Candidate-visible material should look like an ordinary task/workspace, not a benchmark note or answer key. Fill private_root_cause, expected_fix_properties, hidden_failure_modes, shallow_solution_traps, and candidate_visibility_boundaries with the hidden information you are tempted to reveal.
 """.rstrip()
 
 

@@ -328,16 +328,6 @@ def _unique_json_values(values: list[Any]) -> list[Any]:
     return out
 
 
-def _codex_json_schema_format(schema: dict[str, Any]) -> dict[str, Any]:
-    schema = _codex_structured_output_schema(schema)
-    return {
-        "type": "json_schema",
-        "name": "codex_output_schema",
-        "schema": schema,
-        "strict": True,
-    }
-
-
 def _codex_system_with_json_schema_instruction(system: str, schema: dict[str, Any]) -> str:
     serialized_schema = json.dumps(schema, sort_keys=True, separators=(",", ":"))
     return (

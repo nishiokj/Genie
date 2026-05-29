@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-001",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779909505242_sfo72h",
+  "response": "{\"decision\":\"alert\",\"headline_id\":\"H03\",\"event\":\"Unseasonal drought conditions deepen across parts of Gujarat, pressuring several agricultural export markets.\",\"company\":\"Aster Vale Controls\",\"risk_summary\":\"Drought pressure in Gujarat creates a plausible supply risk for castor-derived agricultural feedstocks. Aster Vale depends on input castor_derived_polyol for component CR-88 in product CMC-410, which has a current open strategic order.\",\"chain_of_evidence\":[{\"link\":\"world_event\",\"evidence\":\"H03 reports drought conditions deepening across parts of Gujarat and pressuring agricultural export markets.\"},{\"link\":\"latent_edge\",\"evidence\":\"castor_derived_polyol is an agricultural-derived input and is a plausible downstream dependency exposed to agricultural export disruption.\"},{\"link\":\"enterprise_dependency\",\"evidence\":\"BOM shows castor_derived_polyol as an input to component CR-88 (conformal barrier resin) used in product CMC-410. Supplier records show ArborChem Materials supplies castor_derived_polyol and CR-88.\"},{\"link\":\"business_exposure\",\"evidence\":\"Open order SO-7731 for product CMC-410 exists for Atlantic Energy, and the exposure helper reports revenue at risk and constrained inventory.\"}],\"enterprise_path\":[\"castor_derived_polyol\",\"CR-88\",\"CMC-410\",\"SO-7731\"],\"business_exposure\":{\"revenue_at_risk\":4200000,\"open_orders\":[\"SO-7731\"],\"affected_customers\":[\"Atlantic Energy\"],\"constrained_inventory\":true},\"affected_records\":{\"input_id\":\"castor_derived_polyol\",\"component_id\":\"CR-88\",\"product_id\":\"CMC-410\",\"order_id\":\"SO-7731\",\"supplier_id\":\"SUP-ARBCHEM\"},\"recommended_action\":\"Review supply continuity for castor_derived_polyol / CR-88 supporting CMC-410 and prioritize strategic order SO-7731 if replenishment risk increases.\"}",
+  "usage": {
+    "latency_ms": 30977,
+    "model_calls": 3,
+    "tokens_in": 10184,
+    "tokens_out": 1431,
+    "tool_calls": 8
+  }
+}

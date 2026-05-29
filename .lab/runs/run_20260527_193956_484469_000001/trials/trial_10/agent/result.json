@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-033",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911209598_tm5ppd",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Canal Rail\"],\"affected_orders\":[\"SO-7991\"],\"constrained_inventory\":true,\"revenue_at_risk\":3330000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"silicone_elastomer\",\"POT-72\",\"RSG-700\",\"SO-7991\"],\"id\":\"ALT-LSR-033-01\",\"latent_edge_hypothesis\":\"Quebec hydro curtailments are forcing silicon metal furnaces offline, which can tighten metallurgical-grade silicon supply; NorthSil Compounds' silicone base polymer is indexed to that availability, creating a latent supply risk for silicone_elastomer used in POT-72 for RSG-700.\",\"real_world_prior\":\"Silicon metal disruptions can propagate into downstream silicone supply chains with multi-week lead-time pressure, especially where suppliers explicitly index availability to metallurgical-grade silicon.\",\"reasoning\":\"H01 reports silicon metal furnace outages in Quebec. Company records show POT-72 uses silicone_elastomer, and supplier SUP-NORTHSIL notes that its silicone base polymer is indexed to metallurgical-grade silicon availability. POT-72 is a BOM component of RSG-700. There is a current open strategic order SO-7991 for RSG-700, and the exposure helper confirms active order and revenue exposure with constrained inventory.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The record links NorthSil to metallurgical-grade silicon availability but does not specify whether Quebec furnaces are its direct upstream source.\",\"The headline indicates several furnaces offline, but not outage duration or exact volume impact to NorthSil's supply.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-033\"}}",
+  "usage": {
+    "latency_ms": 21525,
+    "model_calls": 3,
+    "tokens_in": 12508,
+    "tokens_out": 985,
+    "tool_calls": 9
+  }
+}

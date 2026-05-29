@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-001",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779912485030_kcczcs",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline has an explicit match to an active company dependency with current business exposure.\",\"result\":\"no_alert\",\"run_id\":\"LSR-001\"}}",
+  "usage": {
+    "latency_ms": 42844,
+    "model_calls": 8,
+    "tokens_in": 47436,
+    "tokens_out": 1658,
+    "tool_calls": 13
+  }
+}

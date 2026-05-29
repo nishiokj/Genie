@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779907916639_rh5lva",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a supplier, material, component, product, region, or logistics lane that directly matches the company records closely enough under the RULES_ONLY standard. Potentially suggestive items would require disallowed latent bridges: H01 names antimony smelters, while records name antimony_trioxide_synergist in a BOM; H04 mentions generic tunnel ventilation inspections but does not name the company, customer, product, or region from records; H06 mentions low-smoke building materials, which is not an explicit direct match to a recorded supplier/component disruption; H07 references oversized medical imaging equipment airfreight, which does not explicitly match any recorded product or lane.\",\"result\":\"no_alert\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 18838,
+    "model_calls": 2,
+    "tokens_in": 6426,
+    "tokens_out": 786,
+    "tool_calls": 8
+  }
+}

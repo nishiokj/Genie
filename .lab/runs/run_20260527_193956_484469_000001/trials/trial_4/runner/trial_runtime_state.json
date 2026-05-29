@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T19:43:09.232136+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:42:46.516995+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_4/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_4/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-001",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779910966648_qpzz0v",
+        "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Atlantic Energy\"],\"affected_orders\":[\"SO-7731\"],\"constrained_inventory\":true,\"revenue_at_risk\":4200000},\"citations\":{\"headlines\":[\"H03\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"castor_derived_polyol\",\"CR-88\",\"CMC-410\",\"SO-7731\"],\"id\":\"alert-H03-castor_derived_polyol-CMC-410\",\"latent_edge_hypothesis\":\"Drought in Gujarat can tighten castor-derived feedstock availability, creating a latent supply risk for castor_derived_polyol used in conformal barrier resin CR-88 for CMC-410.\",\"real_world_prior\":\"Gujarat is a significant castor-growing region, so drought pressure there is a plausible upstream constraint on castor-derived polyol supply.\",\"reasoning\":\"Headline H03 identifies drought conditions in Gujarat affecting agricultural export markets. In company records, castor_derived_polyol is a BOM input to component CR-88, the conformal barrier resin that enables the coastal_corrosion_rating role in product CMC-410. Supplier records show ArborChem Materials supplies both CR-88 and castor_derived_polyol, establishing a company-specific dependency on this input. Orders show open strategic demand for CMC-410 on SO-7731, and the exposure helper confirms current business exposure tied to this dependency.\",\"source_headlines\":[\"H03\"],\"uncertainty\":[\"The headline does not name castor specifically, so the upstream commodity linkage is inferential rather than explicitly stated.\",\"Supplier records identify the direct supplier but do not disclose ArborChem's own geographic sourcing footprint for castor-derived feedstock.\"]}],\"no_alert_rationale\":\"\",\"result\":\"alerts_found\",\"run_id\":\"LSR-001\"}}",
+        "usage": {
+          "latency_ms": 20187,
+          "model_calls": 3,
+          "tokens_in": 10952,
+          "tokens_out": 936,
+          "tool_calls": 8
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "2d738610db812609b0b8635326d6ec3f1ea559b07a6cd4aa565f9c98b0f29f01",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "5eb00f4cb5dd99b1abfcd81f86dbd088ef1c7094148c425498bf5b1fc457df32",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_4",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/.scratch/trial_4_60867_8/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_4/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/.scratch/trial_4_60867_8/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T19:43:09.464406+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:43:09.410107+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_4/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_4/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "2d738610db812609b0b8635326d6ec3f1ea559b07a6cd4aa565f9c98b0f29f01",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 3
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 3,
+      "task_id": "LSR-001",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "5eb00f4cb5dd99b1abfcd81f86dbd088ef1c7094148c425498bf5b1fc457df32",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-001"
+    }
+  },
+  "updated_at": "2026-05-27T19:43:09.756785+00:00"
+}

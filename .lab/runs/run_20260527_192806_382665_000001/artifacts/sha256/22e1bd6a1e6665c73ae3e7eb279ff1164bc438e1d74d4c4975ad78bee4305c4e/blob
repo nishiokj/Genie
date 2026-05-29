@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779910112043_yybmqz",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"antimony_trioxide_synergist\",\"FJ-31\",\"EVB-330\",\"SO-8207\"],\"id\":\"alert-001\",\"latent_edge_hypothesis\":\"New inspections at Hunan antimony smelters could tighten availability of antimony-based flame-retardant synergists used in Aster Vale's plenum-rated cable harnesses.\",\"real_world_prior\":\"Antimony trioxide is a common flame-retardant synergist, and smelter inspections can disrupt supply or reduce spot availability through distributor channels.\",\"reasoning\":\"H01 identifies a plausible supply disruption in antimony smelting. EVB-330 depends on component FJ-31, whose BOM explicitly includes antimony_trioxide_synergist, and supplier notes say the fire-safety jacket package uses an oxide synergist sourced through Asian compound distributors. EVB-330 has an open strategic order SO-8207, and the exposure helper confirms current revenue at risk and constrained inventory.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The headline reports inspections, not confirmed shutdown volumes or duration.\",\"Supplier records indicate Asian distributor exposure but do not name a specific Hunan smelter or direct contracted source.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 26419,
+    "model_calls": 3,
+    "tokens_in": 12227,
+    "tokens_out": 1055,
+    "tool_calls": 8
+  }
+}

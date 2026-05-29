@@ -1,0 +1,198 @@
+domain_id: latent_causal_path_discrimination_benchmark
+case_types:
+  - proxy_strong
+difficulties:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+scenarios:
+  - nominal
+  - edge
+  - adversarial
+abilities:
+  - suppress high-volume irrelevant operational events without over-triaging
+  - detect rare external events with second- or third-order business impact
+  - infer and explicitly name hidden intermediate causal nodes not present in provided ontology
+  - validate whether a traced path terminates at a watched business-state bottleneck variable
+  - perform cross-table composition to recover unmodeled edges rather than single-table retrieval
+environments:
+  - fictional multi-domain business with queryable relational tables and populated rows
+  - agent-visible business primer restricted to watched bottlenecks and state variables
+  - mixed event streams with randomized signal and null placement under realistic operational noise
+diagnostic_pressure_types:
+  - latent edge discovery under noisy high-volume event batches
+  - cross-table join dependence where true signal requires composed lookup across at least two tables
+  - near-miss discrimination where events resemble true signal shape but dead-end causally
+  - hidden-intermediate articulation requiring explicit naming of unstated mechanism nodes
+  - terminal relevance verification against firm-tracked bottleneck variables only
+  - leakage resistance where tone and salience cannot reveal signal status
+scoring_methods:
+  - rubric
+  - hard_checks_plus_rubric
+route_codes:
+  - accept
+  - reject_criteria_mismatch
+  - reject_schema
+  - retry_infra
+  - drop_retry_exhausted
+subcodes:
+  - accept_complete
+  - ratio_not_met
+  - missing_cross_table_signal
+  - leakage_detected
+  - missing_oracle_key
+  - primer_contains_bridge_mechanism
+  - invalid_top_level_shape
+  - missing_required_field
+  - wrong_case_type_annotation
+  - transient_generation_failure
+  - retries_exhausted
+novelty_threshold: 0.08
+max_design_retries: 2
+max_generation_retries: 2
+deterministic_rules:
+  require_negative_control: true
+  min_proxy_claim_chars: 80
+  min_diagnostic_pressure_items: 2
+  min_leakage_risk_items: 1
+  min_known_limit_items: 1
+semantic_rules:
+  - maintain strict separation between agent-visible content and hidden oracle key ground truth
+  - ensure exactly one latent causal path in each signal case and no accidental secondary valid paths
+  - enforce surface indistinguishability between signal and near-miss null event phrasing
+  - require near-miss nulls to be tempting and structurally similar to signals but to fail at a precise causal breakpoint
+  - keep primer limited to watched business bottlenecks and state variables without external mechanism hints
+  - require at least one signal path to depend on a cross-table join not pre-modeled as a direct edge
+generator_guidance:
+  goal: Generate a coherent multi-domain business world and ten benchmark cases that stress latent causal tracing, null suppression, and endpoint relevance judgment under realistic noise.
+  scoring_contract_bar: Outputs must satisfy case ratio 2 signal, 4 near-miss null, 4 ambient null, include hidden oracle keys for each case, and pass leakage and single-path hygiene constraints.
+  proxy_claim_bar: The benchmark demonstrates agent competence only when it suppresses ambient noise, traces rare multi-hop effects through named hidden intermediates, and correctly rejects tempting dead-end near-miss paths.
+  common_rejection_patterns:
+    - signal events are written with more urgency or specificity than nulls
+    - primer leaks bridge mechanism from external event to bottleneck variable
+    - signal solvable from one table without required cross-table composition
+    - near-miss null lacks explicit tempting similarity to signal form
+    - oracle key omits exact breakpoint for near-miss null
+    - ambient event accidentally connects to watched bottleneck
+quality_gate_rules:
+  - verify world includes at least three queryable tables with populated rows across multiple business domains
+  - verify at least one true signal path requires joining data across two or more tables
+  - verify each case provides two blocks labeled agent-visible and oracle key with required contents
+  - verify event batch realism and randomized placement so signal and near-miss are not clustered
+  - verify no authoring-tone leakage allows sorting signal versus null without reasoning
+rubric_gate_rules:
+  - full credit only if traced path includes explicit hidden intermediate node names and correct terminal bottleneck
+  - deduct for phantom-edging when model flags near-miss or ambient null as consequential
+  - deduct for missed signal when valid latent path reaches watched business-state variable
+  - require explicit statement of causal break point for null determinations
+  - require evidence of cross-table composition when asserting a true path
+benchmark_case_schema:
+  type: object
+  required:
+    - world
+    - primer
+    - cases
+  properties:
+    world:
+      type: object
+      required:
+        - tables
+      properties:
+        tables:
+          type: array
+          minItems: 3
+          items:
+            type: object
+            required:
+              - table_name
+              - schema
+              - rows
+            properties:
+              table_name:
+                type: string
+              schema:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+                  required:
+                    - column
+                    - type
+                  properties:
+                    column:
+                      type: string
+                    type:
+                      type: string
+              rows:
+                type: array
+                minItems: 1
+                items:
+                  type: object
+    primer:
+      type: object
+      required:
+        - watched_bottlenecks
+      properties:
+        watched_bottlenecks:
+          type: array
+          minItems: 1
+          items:
+            type: string
+    cases:
+      type: array
+      minItems: 10
+      maxItems: 10
+      items:
+        type: object
+        required:
+          - case_id
+          - case_type
+          - agent_visible
+          - oracle_key
+          - self_audit
+        properties:
+          case_id:
+            type: string
+          case_type:
+            type: string
+            enum:
+              - signal
+              - near_miss_null
+              - ambient_null
+          agent_visible:
+            type: object
+            required:
+              - event_batch
+            properties:
+              event_batch:
+                type: array
+                minItems: 20
+                maxItems: 40
+                items:
+                  type: string
+          oracle_key:
+            type: object
+            required:
+              - classification
+              - rationale
+            properties:
+              classification:
+                type: string
+              rationale:
+                type: object
+          self_audit:
+            type: object
+            required:
+              - leakage_check
+              - single_path_check
+              - null_inertness_check
+            properties:
+              leakage_check:
+                type: string
+              single_path_check:
+                type: string
+              null_inertness_check:
+                type: string
+output_schema_path: "schemas/benchmark_output.schema.json"

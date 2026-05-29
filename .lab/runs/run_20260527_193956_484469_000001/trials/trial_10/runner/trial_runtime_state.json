@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T19:47:13.671180+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:46:49.451536+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_10/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_10/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-033",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779911209598_tm5ppd",
+        "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Canal Rail\"],\"affected_orders\":[\"SO-7991\"],\"constrained_inventory\":true,\"revenue_at_risk\":3330000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"silicone_elastomer\",\"POT-72\",\"RSG-700\",\"SO-7991\"],\"id\":\"ALT-LSR-033-01\",\"latent_edge_hypothesis\":\"Quebec hydro curtailments are forcing silicon metal furnaces offline, which can tighten metallurgical-grade silicon supply; NorthSil Compounds' silicone base polymer is indexed to that availability, creating a latent supply risk for silicone_elastomer used in POT-72 for RSG-700.\",\"real_world_prior\":\"Silicon metal disruptions can propagate into downstream silicone supply chains with multi-week lead-time pressure, especially where suppliers explicitly index availability to metallurgical-grade silicon.\",\"reasoning\":\"H01 reports silicon metal furnace outages in Quebec. Company records show POT-72 uses silicone_elastomer, and supplier SUP-NORTHSIL notes that its silicone base polymer is indexed to metallurgical-grade silicon availability. POT-72 is a BOM component of RSG-700. There is a current open strategic order SO-7991 for RSG-700, and the exposure helper confirms active order and revenue exposure with constrained inventory.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The record links NorthSil to metallurgical-grade silicon availability but does not specify whether Quebec furnaces are its direct upstream source.\",\"The headline indicates several furnaces offline, but not outage duration or exact volume impact to NorthSil's supply.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-033\"}}",
+        "usage": {
+          "latency_ms": 21525,
+          "model_calls": 3,
+          "tokens_in": 12508,
+          "tokens_out": 985,
+          "tool_calls": 9
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "8bdb96cc652330646744087634de7f902690c747081fad6b4c2155ce735d8aa1",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "e316989ab625d5a727f468c9af2fa5ac83045d2a97d08e7d189553758e52f5e5",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_10",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/.scratch/trial_10_60867_14/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_10/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/.scratch/trial_10_60867_14/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T19:47:13.953001+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:47:13.900178+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_10/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_193956_484469_000001/trials/trial_10/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "8bdb96cc652330646744087634de7f902690c747081fad6b4c2155ce735d8aa1",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 9
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 9,
+      "task_id": "LSR-033",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "e316989ab625d5a727f468c9af2fa5ac83045d2a97d08e7d189553758e52f5e5",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-033"
+    }
+  },
+  "updated_at": "2026-05-27T19:47:14.256396+00:00"
+}

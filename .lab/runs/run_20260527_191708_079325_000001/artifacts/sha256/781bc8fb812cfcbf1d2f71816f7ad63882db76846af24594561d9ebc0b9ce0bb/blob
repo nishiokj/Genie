@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-027",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779909817474_f3n0bv",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"Headline H06 mentions Beta Components raising list prices for legacy display modules, but company records show Beta Components (SUP-BETA) is an inactive supplier for LCD-12 used only in discontinued product LTH-90. The required chain to current business exposure breaks because the exposure helper for strongest candidate product LTH-90 returned revenue_at_risk 0, open_orders none, affected_customers none, and constrained_inventory false. With no current open-order exposure, no alert is warranted.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+  "usage": {
+    "latency_ms": 20722,
+    "model_calls": 3,
+    "tokens_in": 11534,
+    "tokens_out": 862,
+    "tool_calls": 9
+  }
+}

@@ -137,10 +137,7 @@ class PipelineRunner:
         self.validation_ledger = ValidationLedger(self.writer)
         self.rejections = RejectionArchive(self.writer)
         self.corpus = CorpusIndex(config.data_dir, config.domain, self.client, config.run_id)
-        self.execution_workspace = ExecutionWorkspace(
-            root=config.logs_dir / config.run_id / "executioner",
-            allow_exec=True,
-        )
+        self.execution_workspace: ExecutionWorkspace | None = None
         self.designer = Designer(self.client, config.domain)
         self.design_auditor = DesignAuditor(self.client, config.domain)
         self.generator = SampleGenerator(
@@ -239,7 +236,8 @@ class PipelineRunner:
         try:
             final = self.graph.invoke(initial, config={"recursion_limit": _graph_recursion_limit(self.config)})
         finally:
-            self.execution_workspace.close()
+            if self.execution_workspace is not None:
+                self.execution_workspace.close()
         return {
             "run_id": self.config.run_id,
             "committed": final["committed_count"],
@@ -281,7 +279,8 @@ class PipelineRunner:
                 _write_generation_result(result)
             return result
         finally:
-            self.execution_workspace.close()
+            if self.execution_workspace is not None:
+                self.execution_workspace.close()
 
     def node_design(self, state: PipelineState) -> PipelineState:
         design_round = state["design_round"] + 1
@@ -298,6 +297,7 @@ class PipelineRunner:
             "run_id": f"{self.config.run_id}-r{design_round}",
             "target_n": count,
             "coverage_snapshot": coverage_snapshot,
+            "instruction": self.config.instruction,
             "retry_route_code": state.get("design_retry_route_code"),
             "retry_subcodes": state.get("design_retry_subcodes"),
         }
@@ -305,6 +305,7 @@ class PipelineRunner:
             run_id=f"{self.config.run_id}-r{design_round}",
             target_n=count,
             coverage_snapshot=coverage_snapshot,
+            instruction=self.config.instruction,
             retry_route_code=state.get("design_retry_route_code"),
             retry_subcodes=state.get("design_retry_subcodes"),
         )
@@ -455,7 +456,48 @@ class PipelineRunner:
             design_verdict = _local_design_verdict(design, route_code, subcodes)
             meta = _local_meta()
         else:
-            design_verdict, meta = self.design_auditor.audit(design)
+            try:
+                with self.client.stream_context(
+                    {
+                        "stage": "design_audit",
+                        "role": "audit_design",
+                        "design": design.id,
+                    }
+                ):
+                    design_verdict, meta = self.design_auditor.audit(design)
+            except ProviderError as exc:
+                decision = route_after(
+                    run_id=self.config.run_id,
+                    from_stage=StageKind.DESIGN_AUDIT,
+                    verdict=Verdict.REJECT,
+                    route_code=_provider_error_route_code(exc),
+                    retry_index=state["design_round"] - 1,
+                    max_design_retries=self.config.domain.max_design_retries,
+                    subcodes=["provider_error"],
+                )
+                self._record(
+                    stage_kind=StageKind.DESIGN_AUDIT,
+                    role="audit_design",
+                    agent_role=AgentRole.DESIGN_AUDITOR,
+                    artifact_id=f"{design.id}-design-verdict-error",
+                    parent_artifact_id=design.id,
+                    verdict=Verdict.REJECT,
+                    route_code=decision.route_code,
+                    subcodes=["provider_error"],
+                    context_policy=ContextPolicy.CRITERIA_ONLY,
+                    meta=_provider_error_meta(exc, self.client.config),
+                    retry_index=state["design_round"] - 1,
+                    stage_input={"design": design},
+                    stage_output={**_provider_error_output(exc), "decision": decision},
+                )
+                update: PipelineState = {"last_decision": decision}
+                if decision.terminal:
+                    self.rejections.append(design, decision)
+                    update["dropped_count"] = state["dropped_count"] + 1
+                else:
+                    update["design_retry_route_code"] = decision.route_code
+                    update["design_retry_subcodes"] = decision.subcodes
+                return update
         decision = route_after(
             run_id=self.config.run_id,
             from_stage=StageKind.DESIGN_AUDIT,
@@ -518,6 +560,7 @@ class PipelineRunner:
                     attempt=retry_index + 1,
                     retry_route_code=state.get("gen_retry_route_code"),
                     retry_subcodes=state.get("gen_retry_subcodes"),
+                    execution_workspace=self._workspace_for_generation(),
                 )
         except ProviderError as exc:
             route_code = _provider_error_route_code(exc)
@@ -1275,3 +1318,22 @@ class PipelineRunner:
                 **_event_fields({key: value for key, value in event.items() if key not in {"stage", "stream_event"}}),
             },
         )
+
+    def _workspace_for_generation(self) -> ExecutionWorkspace | None:
+        supports_tools = getattr(self.generator_client, "supports_function_tools", lambda: False)
+        if not _domain_needs_execution_workspace(self.config.domain) or not supports_tools():
+            return None
+        return self._get_execution_workspace()
+
+    def _get_execution_workspace(self) -> ExecutionWorkspace:
+        if self.execution_workspace is None:
+            self.execution_workspace = ExecutionWorkspace(
+                root=self.config.logs_dir / self.config.run_id / "executioner",
+                allow_exec=True,
+            )
+        return self.execution_workspace
+
+
+def _domain_needs_execution_workspace(domain: Any) -> bool:
+    rules = getattr(domain, "deterministic_rules", {}) or {}
+    return bool(rules.get("execute_workspace_tests") or rules.get("require_runtime_requirements"))

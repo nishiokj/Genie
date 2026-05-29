@@ -1,0 +1,23 @@
+{
+  "schema_version": "runtime_path_staging_manifest_v1",
+  "variants": {
+    "baseline": [
+      {
+        "original_relative_path": "run_nova_latent_supply_risk.py",
+        "packaged_path": "runtime_assets/run_nova_latent_supply_risk.py",
+        "read_only": true,
+        "required": true,
+        "runtime_path": "__BUCEPHALUS_TASK_WORKDIR__/.bucephalus/support/run_nova_latent_supply_risk.py"
+      }
+    ],
+    "evidence_first": [
+      {
+        "original_relative_path": "run_nova_latent_supply_risk.py",
+        "packaged_path": "runtime_assets/run_nova_latent_supply_risk.py",
+        "read_only": true,
+        "required": true,
+        "runtime_path": "__BUCEPHALUS_TASK_WORKDIR__/.bucephalus/support/run_nova_latent_supply_risk.py"
+      }
+    ]
+  }
+}

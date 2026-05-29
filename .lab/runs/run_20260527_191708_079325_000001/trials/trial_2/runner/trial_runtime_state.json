@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T19:18:00.727318+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:17:34.042695+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/trials/trial_2/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/trials/trial_2/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-052",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779909454201_6zz50d",
+        "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"open_orders\":[\"SO-8207\"],\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"events/headline-pack.md#H01\"],\"records\":[\"records/bom.yaml#EVB-330/FJ-31\",\"records/suppliers.yaml#SUP-SAFELINE\",\"records/orders.yaml#SO-8207\",\"records/inventory.yaml#EVB-330\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"antimony_trioxide_synergist\",\"FJ-31\",\"EVB-330\",\"SO-8207\"],\"id\":\"LSR-052-A1\",\"latent_edge_hypothesis\":\"New inspections at Hunan antimony smelters could tighten availability of antimony compounds. EVB-330 depends on plenum-rated cable harness FJ-31, whose inputs include antimony_trioxide_synergist, creating a plausible supply risk to current shipments.\",\"real_world_prior\":\"Antimony trioxide is a common flame-retardant synergist, and smelter inspections can disrupt oxide output or delay shipments through distributor channels.\",\"reasoning\":\"Headline H01 points to potential disruption in antimony smelting. In company records, EVB-330 requires component FJ-31, whose BOM inputs explicitly include antimony_trioxide_synergist. Supplier notes for SafeLine Interconnect say the fire-safety jacket package includes an oxide synergist sourced through Asian compound distributors, which matches the external event path. The exposure helper confirms current business impact through open order SO-8207 with constrained inventory and helper-calculated revenue at risk of 3360000.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The headline does not name specific smelters or confirm direct impact to SafeLine's distributor network.\",\"The supplier record indicates Asian distributor exposure at tier 2, but does not identify a contracted antimony source in Hunan specifically.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+        "usage": {
+          "latency_ms": 24427,
+          "model_calls": 3,
+          "tokens_in": 12491,
+          "tokens_out": 1131,
+          "tool_calls": 9
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "0402b7040a9de6ddf3390a5741e984eb2dd8cfa679d8903ce77e170ab23fa95f",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "a5ce9541843eeaff1ed2ab8b0906bd7ed57e500a1c74f4378fe7ab9f7a9d3294",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/trials/trial_2",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/.scratch/trial_2_26387_6/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/trials/trial_2/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/.scratch/trial_2_26387_6/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T19:18:00.942063+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:18:00.886954+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/trials/trial_2/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_191708_079325_000001/trials/trial_2/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "0402b7040a9de6ddf3390a5741e984eb2dd8cfa679d8903ce77e170ab23fa95f",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 1
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 1,
+      "task_id": "LSR-052",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "a5ce9541843eeaff1ed2ab8b0906bd7ed57e500a1c74f4378fe7ab9f7a9d3294",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-052"
+    }
+  },
+  "updated_at": "2026-05-27T19:18:01.207166+00:00"
+}

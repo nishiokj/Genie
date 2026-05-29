@@ -1,0 +1,4 @@
+FROM agentlab-rex-modal:2026-05-21
+
+WORKDIR /workspace
+COPY data/latent_supply_risk/workspaces /workspace/task

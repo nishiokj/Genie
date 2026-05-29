@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T19:08:29.903300+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:08:07.735007+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_8/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_8/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-027",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779908887893_p0ao55",
+        "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"Checked the strongest company-specific candidate: H06 ('Beta Components raises list prices for legacy display modules'). Company records link Beta Components (SUP-BETA) only to LCD-12 for discontinued product LTH-90, but there is no open-order chain to current business exposure. Exposure helper run for entity LTH-90 returned revenue_at_risk 0, open_orders [], affected_customers [], and constrained_inventory false, so there is no measurable current exposure and no alert should be raised.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+        "usage": {
+          "latency_ms": 19870,
+          "model_calls": 3,
+          "tokens_in": 11456,
+          "tokens_out": 916,
+          "tool_calls": 9
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "c5b72f5bc2a4050766851045825d47815eaacfdb10d88617b3fa96e02269d6e9",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "1022e936c6102ea1f0655c893a57300a68403ba088b278a9ec7c2662be8bbad7",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_8",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/.scratch/trial_8_8246_12/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_8/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/.scratch/trial_8_8246_12/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T19:08:30.177430+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T19:08:30.121581+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_8/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_190503_295965_000001/trials/trial_8/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "c5b72f5bc2a4050766851045825d47815eaacfdb10d88617b3fa96e02269d6e9",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 7
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 7,
+      "task_id": "LSR-027",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "1022e936c6102ea1f0655c893a57300a68403ba088b278a9ec7c2662be8bbad7",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-027"
+    }
+  },
+  "updated_at": "2026-05-27T19:08:30.484409+00:00"
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-001",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908775990_7y3zpt",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Atlantic Energy\"],\"affected_orders\":[\"SO-7731\"],\"constrained_inventory\":true,\"revenue_at_risk\":4200000},\"citations\":{\"headlines\":[\"H03\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"castor_derived_polyol\",\"CR-88\",\"CMC-410\",\"SO-7731\"],\"id\":\"ALERT-001\",\"latent_edge_hypothesis\":\"Drought in Gujarat could tighten castor-derived feedstocks, creating a latent supply risk for castor_derived_polyol used in Aster Vale's conformal barrier resin for CMC-410.\",\"real_world_prior\":\"Gujarat is a major castor-growing region, so drought there can disrupt castor-based chemical availability even when direct tier-n sourcing is not visible in company records.\",\"reasoning\":\"Headline H03 is relevant because it points to drought pressure on agricultural export markets in Gujarat, which plausibly affects castor-derived inputs. Company BOM records show castor_derived_polyol is an input to component CR-88, used in product CMC-410. Open orders show SO-7731 for CMC-410, and the exposure helper confirms current open-order exposure with constrained inventory and $4.2M revenue at risk.\",\"source_headlines\":[\"H03\"],\"uncertainty\":[\"Supplier records do not explicitly show ArborChem sourcing castor feedstock from Gujarat or India.\",\"The event indicates market pressure, not a confirmed shipment interruption or allocation notice.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-001\"}}",
+  "usage": {
+    "latency_ms": 26512,
+    "model_calls": 3,
+    "tokens_in": 11660,
+    "tokens_out": 1205,
+    "tool_calls": 9
+  }
+}

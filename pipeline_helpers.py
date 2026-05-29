@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from config import RuntimeConfig
@@ -199,12 +200,13 @@ def _local_meta(error: str | None = None) -> dict[str, Any]:
 
 
 def _provider_error_meta(exc: ProviderError, model_config: Any) -> dict[str, Any]:
+    latency_ms = _provider_error_latency_ms(str(exc))
     return {
         "provider": str(getattr(model_config, "provider", "unknown")),
         "model": str(getattr(model_config, "model", "unknown")),
         "input_tokens": 0,
         "output_tokens": 0,
-        "latency_ms": 0,
+        "latency_ms": latency_ms,
         "cost_usd": 0.0,
         "reasoning_effort": getattr(model_config, "reasoning_effort", None),
         "prompt_hash": stable_hash(
@@ -216,3 +218,10 @@ def _provider_error_meta(exc: ProviderError, model_config: Any) -> dict[str, Any
         ),
         "error": str(exc),
     }
+
+
+def _provider_error_latency_ms(message: str) -> int:
+    match = re.search(r"elapsed_ms=(\d+)", message)
+    if match:
+        return int(match.group(1))
+    return 0

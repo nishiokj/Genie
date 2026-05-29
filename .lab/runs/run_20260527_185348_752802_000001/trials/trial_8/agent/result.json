@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-027",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908122109_gww81o",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"Reviewed the headline pack against company records and found no complete chain from external event to company-specific dependency to current business exposure. The closest candidate was H06 (Beta Components raises list prices for legacy display modules), which maps to supplier SUP-BETA and component LCD-12, but SUP-BETA is inactive, the related product LTH-90 is discontinued, and there are no open orders or inventory exposure; risk_tools calculate_exposure for LCD-12 returned revenue_at_risk 0, open_orders [], affected_customers [], and constrained_inventory false. Other headlines were generic or could not be tied to a company material/component/product path with measurable open-order exposure.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+  "usage": {
+    "latency_ms": 23298,
+    "model_calls": 3,
+    "tokens_in": 11081,
+    "tokens_out": 1120,
+    "tool_calls": 9
+  }
+}

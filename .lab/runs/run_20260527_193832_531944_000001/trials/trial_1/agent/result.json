@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779910716727_gsuuv2",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a supplier, component, product, region, or logistics lane that directly matches the company records with a company-specific exposure path under the RULES_ONLY constraint. H01 mentions antimony smelters in Hunan, but the records only reference the more specific input antimony_trioxide_synergist and an unnamed Asian distributor path, which would require an unstated chemistry/supply-chain bridge. The remaining headlines are generic market, maintenance, standards, demand, or transport items without a direct explicit match to a recorded supplier, product, component, region, or lane.\",\"result\":\"no_alert\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 17778,
+    "model_calls": 2,
+    "tokens_in": 6261,
+    "tokens_out": 813,
+    "tool_calls": 7
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-033",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911180140_8p0fi6",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Canal Rail\"],\"affected_orders\":[\"SO-7991\"],\"constrained_inventory\":true,\"revenue_at_risk\":3330000},\"citations\":{\"headlines\":[\"events/headline-pack.md:H01\"],\"records\":[\"records/suppliers.yaml:SUP-NORTHSIL tier2_notes\",\"records/bom.yaml:RSG-700 uses POT-72\",\"records/orders.yaml:SO-7991\",\"records/inventory.yaml:RSG-700 quantity_available 22\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"H01 Quebec silicon metal furnaces offline\",\"NorthSil Compounds tier2 note: silicone base polymer indexed to metallurgical-grade silicon availability\",\"POT-72 vibration dampening potting compound\",\"RSG-700 Rail Signal Gateway\",\"Open order SO-7991 for Canal Rail\"],\"id\":\"H01-RSG700\",\"latent_edge_hypothesis\":\"Hydro curtailments in Quebec are forcing silicon metal furnaces offline, which could tighten the metallurgical-grade silicon availability explicitly referenced in NorthSil Compounds' tier-2 dependency notes for the POT-72 potting compound used in RSG-700.\",\"real_world_prior\":\"The company records explicitly state that NorthSil's silicone base polymer is indexed to metallurgical-grade silicon availability.\",\"reasoning\":\"This alert is raised because the external event explicitly names silicon metal, and the company records explicitly reference metallurgical-grade silicon availability in the supply chain for NorthSil Compounds, which supplies POT-72 used in RSG-700. RSG-700 has an open strategic order and only limited finished-goods inventory on hand.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The headline names Quebec furnaces, while the direct supplier site on record is in Ontario.\",\"The records show sensitivity to metallurgical-grade silicon availability, but do not quantify immediate supply interruption timing.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-033\"}}",
+  "usage": {
+    "latency_ms": 26289,
+    "model_calls": 2,
+    "tokens_in": 6666,
+    "tokens_out": 1192,
+    "tool_calls": 8
+  }
+}

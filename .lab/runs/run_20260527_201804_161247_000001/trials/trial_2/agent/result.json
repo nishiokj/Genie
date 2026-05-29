@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779913141644_xhj9v8",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml\",\"records/suppliers.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"high\",\"enterprise_path\":[\"antimony_trioxide_synergist\",\"FJ-31\",\"EVB-330\",\"SO-8207\"],\"id\":\"alert-H01-antimony-EVB-330\",\"latent_edge_hypothesis\":\"Hunan antimony smelter checks could tighten antimony trioxide supply for plenum cable compounds.\",\"real_world_prior\":\"Antimony inspections often disrupt flame-retardant additive availability.\",\"reasoning\":\"The inspected input maps to EVB-330 through FJ-31 and an open strategic order exceeds available inventory.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The supplier note indicates Asian distributors but does not name the exact smelter exposure.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 42671,
+    "model_calls": 7,
+    "tokens_in": 40141,
+    "tokens_out": 1799,
+    "tool_calls": 13
+  }
+}

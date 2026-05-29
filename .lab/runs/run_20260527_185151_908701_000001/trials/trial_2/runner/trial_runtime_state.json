@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T18:52:27.718432+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T18:51:56.470282+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185151_908701_000001/trials/trial_2/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185151_908701_000001/trials/trial_2/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-052",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779907916642_j3h32z",
+        "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/bom.yaml: EVB-330 -> FJ-31 -> antimony_trioxide_synergist\",\"records/suppliers.yaml: SUP-SAFELINE tier2_notes on oxide synergist via Asian compound distributors\",\"records/orders.yaml: SO-8207 open order for EVB-330\",\"records/inventory.yaml: EVB-330 available inventory = 18\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"antimony_trioxide_synergist\",\"FJ-31\",\"EVB-330\",\"SO-8207\"],\"id\":\"ALERT-LSR-052-01\",\"latent_edge_hypothesis\":\"New inspections at Hunan antimony smelters could tighten near-term availability of antimony oxide supply, which may disrupt the antimony_trioxide_synergist used in Aster Vale's plenum-rated cable harnesses.\",\"real_world_prior\":\"Antimony compounds are commonly used as flame-retardant synergists, and regulatory or inspection actions at smelters can reduce output or delay shipments before downstream buyers are formally notified.\",\"reasoning\":\"Headline H01 identifies a specific potential disruption point: antimony smelters in Hunan facing a new round of inspections. Internally, EVB-330 depends on component FJ-31, whose BOM includes antimony_trioxide_synergist. Supplier records for SafeLine Interconnect state the fire-safety jacket package includes an oxide synergist sourced through Asian compound distributors, creating a plausible dependency path from the external event to the company input. EVB-330 has a current open strategic order, SO-8207 for Metro Tunnel Authority, while inventory shows only 18 units available against 150 units ordered, so any interruption to replenishment of the relevant harness input creates measurable business exposure. The exposure helper confirms revenue at risk and constrained inventory for this dependency.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The headline cites inspections at Hunan smelters but does not confirm a shutdown or export delay.\",\"Supplier records indicate Asian distributor exposure for the oxide synergist, but do not name the exact smelter or province in the tier-2 chain.\",\"The duration and severity of any supply interruption are not yet known.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+        "usage": {
+          "latency_ms": 28968,
+          "model_calls": 3,
+          "tokens_in": 12041,
+          "tokens_out": 1350,
+          "tool_calls": 9
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "9e9cde1e5bf932131eae55376544628d498390ed2b21ef5f8755816e360166b0",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "eaaa750531e95dbd03bf28877c850eb28cbf48ea81ad613df8cd6ebe064494f6",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185151_908701_000001/trials/trial_2",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185151_908701_000001/.scratch/trial_2_87651_6/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185151_908701_000001/trials/trial_2/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185151_908701_000001/.scratch/trial_2_87651_6/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T18:52:27.997317+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T18:52:27.944423+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185151_908701_000001/trials/trial_2/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185151_908701_000001/trials/trial_2/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "9e9cde1e5bf932131eae55376544628d498390ed2b21ef5f8755816e360166b0",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 1
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 1,
+      "task_id": "LSR-052",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "eaaa750531e95dbd03bf28877c850eb28cbf48ea81ad613df8cd6ebe064494f6",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-052"
+    }
+  },
+  "updated_at": "2026-05-27T18:52:28.269603+00:00"
+}

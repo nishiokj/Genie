@@ -1,0 +1,9 @@
+{
+  "case_id": "preflight-contract-probe",
+  "checks": {
+    "contract_probe": true
+  },
+  "false_positive_count": 0,
+  "passed": true,
+  "score": 1.0
+}

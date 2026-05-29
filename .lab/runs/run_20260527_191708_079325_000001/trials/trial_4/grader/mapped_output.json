@@ -1,0 +1,17 @@
+{
+  "grader": {
+    "name": "runtime_transport",
+    "strategy": "separate"
+  },
+  "payload": {
+    "false_positive_count": 0,
+    "pass_rate": false,
+    "score": 0.0
+  },
+  "primary_metric": {
+    "name": "pass_rate",
+    "value": false
+  },
+  "reported_outcome": "success",
+  "schema_version": "trial_conclusion_v1"
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-033",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908124854_rwzwxx",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Canal Rail\"],\"affected_orders\":[\"SO-7991\"],\"constrained_inventory\":true,\"revenue_at_risk\":3330000},\"citations\":{\"headlines\":[\"events/headline-pack.md#H01\"],\"records\":[\"records/suppliers.yaml\",\"records/bom.yaml\",\"records/orders.yaml\",\"records/inventory.yaml\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"H01 names silicon metal furnaces going offline in Quebec.\",\"records/suppliers.yaml states NorthSil Compounds' silicone base polymer is indexed to metallurgical-grade silicon availability.\",\"records/suppliers.yaml shows NorthSil Compounds supplies POT-72 and silicone_elastomer.\",\"records/bom.yaml shows POT-72 is used in product RSG-700.\",\"records/orders.yaml shows open strategic order SO-7991 for RSG-700.\",\"records/inventory.yaml shows only 22 units of RSG-700 available versus 180 units on the open order.\"],\"id\":\"ALERT-H01-RSG700\",\"latent_edge_hypothesis\":\"A silicon availability disruption could tighten supply for NorthSil Compounds' silicone-linked input chain, affecting the POT-72 potting compound used in RSG-700.\",\"real_world_prior\":\"This alert relies only on an explicit record-level dependency: NorthSil's tier-2 note states its silicone base polymer is indexed to metallurgical-grade silicon availability.\",\"reasoning\":\"The external event explicitly names silicon metal, and company records explicitly state that NorthSil's silicone base polymer is indexed to metallurgical-grade silicon availability. NorthSil supplies the POT-72 compound used in RSG-700, which has a large open order with insufficient finished-goods inventory to cover demand.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The event is in Quebec, while the direct supplier site listed is in Ontario; the records do not specify whether NorthSil sources from Quebec.\",\"The headline does not quantify duration or severity of the silicon disruption.\",\"The exact buffering effect of existing component inventory is not provided.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-033\"}}",
+  "usage": {
+    "latency_ms": 29148,
+    "model_calls": 2,
+    "tokens_in": 6054,
+    "tokens_out": 1460,
+    "tool_calls": 8
+  }
+}

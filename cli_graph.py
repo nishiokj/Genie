@@ -94,6 +94,7 @@ ROLE_TO_NODE = {
     "adversary_attack_report": "adversary",
     "quality_gate_candidate": "quality_gate",
     "rubric_gate_candidate": "rubric_gate",
+    "join_quality_rubric_gates": "join_gates",
     "curate_committed_sample": "curate",
 }
 
@@ -117,6 +118,7 @@ AGENT_ROLE_NAMES = {
 
 COLORS = {
     "pending": "\033[90m",
+    "skipped": "\033[90m",
     "running": "\033[94m",
     "accept": "\033[92m",
     "reject": "\033[91m",
@@ -371,7 +373,7 @@ def render_graph(
             f"  dropped={stats.get('dropped', 0)}"
             f"  design={stats.get('design', '-')}"
         ),
-        "Legend: blue=active  green=accepted/last-ok  red=rejected  gray=pending",
+        "Legend: blue=active  green=accepted/last-ok  red=rejected  gray=pending/skipped",
     ]
     if compact:
         lines.extend([
@@ -439,6 +441,18 @@ def _handle_progress(
     if stage == "run" and progress_event == "start":
         stats["target"] = data.get("target", "-")
         recent.append(f"run start target={stats['target']} model={data.get('model', '-')}")
+        return
+    if stage == "run" and progress_event == "start_from_generation":
+        stats["target"] = 1
+        stats["design"] = data.get("design", "-")
+        for skipped in ("design", "validate_design_batch_det", "select_next_design", "audit_design"):
+            node_status[skipped] = "skipped"
+        recent.append(
+            "run start_from_generation "
+            f"envelope={_short_id(str(data.get('envelope', '-')))} "
+            f"design={_short_id(str(data.get('design', '-')))} "
+            f"model={data.get('model', '-')}"
+        )
         return
     if stage == "candidate":
         recent.append(_candidate_line(progress_event, data))

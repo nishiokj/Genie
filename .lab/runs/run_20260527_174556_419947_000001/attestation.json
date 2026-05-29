@@ -1,0 +1,19 @@
+{
+  "events_hashchain_heads": [],
+  "grades": {
+    "comparability_grade": "unknown",
+    "integration_level": "cli_events",
+    "isolation_grade": "hermetic",
+    "privacy_grade": "unknown",
+    "provenance_grade": "recorded",
+    "replay_grade": "best_effort",
+    "schema_version": "grades_v1"
+  },
+  "harness": {
+    "name": "unknown"
+  },
+  "image_digest": null,
+  "resolved_experiment_digest": "sha256:cc0e4b1fb1ae8a88ff0d044aba735103b21ce685fb05bb7eed4bfa73c3d1596a",
+  "schema_version": "attestation_v1",
+  "trace_ingestion": "events"
+}

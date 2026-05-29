@@ -1,0 +1,147 @@
+version: "0.5"
+
+experiment:
+  id: hero_vendor_v1_nova_seed_curated
+  name: "Hero Vendor Payment v1: Nova on Curated Genie Cases"
+  workload_type: agent_runtime
+  description: >-
+    Nova is evaluated on a small, curated vendor payment exception corpus seeded
+    by Genie generation and manually tightened for public/hidden separation,
+    calibrated restraint, and deterministic AP evidence keys.
+  tags: [hero-demo, vendor-payment-exception, nova, genie, curated-corpus]
+
+baseline:
+  variant_id: nova_codex_gpt54_smoke
+  bindings:
+    model_provider: codex
+    model: gpt-5.4
+    reasoning: medium
+
+variant_plan: []
+
+dataset:
+  suite_id: hero_vendor_v1_seed_curated
+  provider: local_jsonl
+  path: ./data/vendor_payment_exception/tasks/hero-vendor-v1-seed-curated.public_task_rows.jsonl
+  split_id: seed
+  limit: 4
+
+design:
+  comparison: single_variant
+  replications: 1
+  random_seed: 20260527
+  shuffle_tasks: false
+  max_concurrency: 2
+  policies:
+    scheduling: sequential
+    retry:
+      max_attempts: 1
+
+trial_runtime:
+  task:
+    interface: readonly_case
+    workspace:
+      source: task_row
+      workdir:
+        value: /workspace/task
+  agent:
+    command:
+      - nova
+      - run
+      - --input-file
+      - /agentlab/in/trial_input.json
+      - --output
+      - /agentlab/out/result.json
+      - --events
+      - /agentlab/out/nova-events.jsonl
+      - --working-dir
+      - /workspace/task
+      - --provider
+      - $model_provider
+      - --model
+      - $model
+      - --reasoning
+      - $reasoning
+      - --timeout-ms
+      - "900000"
+      - --dangerous
+    integration_level: cli_events
+    events:
+      - id: nova_events
+        format: jsonl
+        path: /agentlab/out/nova-events.jsonl
+        mode: jsonl
+        ingest: true
+    outputs:
+      result:
+        capture:
+          type: file
+          path: /agentlab/out/result.json
+          format: json
+          required: true
+    network: none
+  execution:
+    agent_site: task_runtime
+  grader:
+    strategy: in_task_runtime
+    command:
+      - sh
+      - -lc
+      - >-
+        CASE_ID="$(python3 -c 'import json; print(json.load(open("/agentlab/in/trial_input.json"))["id"])')" &&
+        python3 /agentlab/in/grade_vendor_payment_output.py
+        --case-id "$CASE_ID"
+        --output /agentlab/out/result.json
+        --oracles /agentlab/in/hidden_oracles.json
+        --report /agentlab/out/vendor-payment-grade.json
+    inputs:
+      grader_script:
+        source:
+          local_file: ./scripts/grade_vendor_payment_output.py
+        materialize:
+          as: file
+          path: /agentlab/in/grade_vendor_payment_output.py
+        required: true
+      hidden_oracles:
+        source:
+          local_file: ./data/vendor_payment_exception/evaluation/hero-vendor-v1-seed-curated.hidden_oracles.json
+        materialize:
+          as: file
+          path: /agentlab/in/hidden_oracles.json
+        required: true
+    outputs:
+      grade:
+        capture:
+          type: file
+          path: /agentlab/out/vendor-payment-grade.json
+          format: json
+          required: true
+
+metrics:
+  - id: pass_rate
+    label: Pass Rate
+    value_type: number
+    source:
+      type: grader_output
+      output: grade
+      pointer: /passed
+    direction: maximize
+    primary: true
+  - id: score
+    label: Evidence-Weighted Score
+    value_type: number
+    source:
+      type: grader_output
+      output: grade
+      pointer: /score
+    direction: maximize
+
+policy:
+  timeout_ms: 960000
+  task_sandbox:
+    profile: default
+    network: none
+
+validity:
+  fail_on_state_leak: true
+  fail_on_profile_invariant_violation: true

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-041",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911255524_wie7d7",
+  "response": "{\"scan\":{\"alerts\":[],\"citations\":{\"headlines\":[\"H01\",\"H02\",\"H03\",\"H04\",\"H05\",\"H06\",\"H07\",\"H08\"],\"records\":[\"company-profile.md\",\"bom.yaml\",\"suppliers.yaml\",\"orders.yaml\",\"inventory.yaml\"]},\"no_alert_rationale\":\"Headline H01 is the strongest plausible latent edge: Gujarat drought could pressure agricultural export markets including castor-derived feedstocks, and castor_derived_polyol is a recorded input to component CR-88 used in product CMC-410. However, the required business-exposure link is not present. The exposure helper for castor_derived_polyol returned revenue_at_risk 0, open_orders [], affected_customers [], and constrained_inventory false, so there is no current open-order exposure to alert on. Other headlines are either explicitly normal/benign or lack a company-specific dependency chain.\",\"result\":\"no_alert\",\"run_id\":\"LSR-041\"}}",
+  "usage": {
+    "latency_ms": 18042,
+    "model_calls": 3,
+    "tokens_in": 10940,
+    "tokens_out": 778,
+    "tool_calls": 8
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-027",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779914338963_ayr8v2",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"Only the Beta Components headline maps to an inactive legacy supplier path, and the exposure helper for LTH-90 returned zero open orders and zero revenue at risk.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+  "usage": {
+    "latency_ms": 31978,
+    "model_calls": 5,
+    "tokens_in": 20292,
+    "tokens_out": 1445,
+    "tool_calls": 10
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779913217405_smi92r",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly matches a company record without relying on unstated material or market bridges.\",\"result\":\"no_alert\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 23338,
+    "model_calls": 3,
+    "tokens_in": 10932,
+    "tokens_out": 998,
+    "tool_calls": 8
+  }
+}

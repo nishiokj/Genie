@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-027",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779914317692_up721q",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly matches an active supplier, material, component, product, region, or lane with current business exposure.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+  "usage": {
+    "latency_ms": 18044,
+    "model_calls": 3,
+    "tokens_in": 9909,
+    "tokens_out": 820,
+    "tool_calls": 8
+  }
+}

@@ -346,11 +346,7 @@ class CodexClient:
         text_delta_item_ids: set[str] = set()
         text_part_event_ids: set[str] = set()
         completed_text_item_ids: set[str] = set()
-        # Tracks in-flight function calls keyed by item_id and call_id.
-        # Populated from response.output_item.added; arguments accumulated via
-        # response.function_call_arguments.delta and finalised by
-        # response.function_call_arguments.done.  Used as fallback when
-        # response.output_item.done never arrives (backend stall between the two).
+        # Fallback for streams that finish arguments before output_item.done.
         pending_calls: dict[str, dict[str, Any]] = {}
 
         def _pending_call(item_id: str | None, call_id: str | None) -> dict[str, Any] | None:
@@ -439,7 +435,7 @@ class CodexClient:
                 effective_call_id = call_id or (call or {}).get("call_id") or item_id or ""
                 effective_item_id = item_id or (call or {}).get("item_id") or call_id or ""
                 effective_type = (call or {}).get("type") or "function_tool_call"
-                # Synthesise an output item now — response.output_item.done may never arrive if backend stalls.
+                # Commit now; output_item.done may never arrive.
                 synthetic = {
                     "type": effective_type,
                     "id": effective_item_id,
@@ -447,7 +443,6 @@ class CodexClient:
                     "name": name or "",
                     "arguments": final_args,
                 }
-                # Mark as pending-committed; response.output_item.done deduplicates via output_item_ids.
                 _track_pending_call({**(call or {}), "synthetic": synthetic})
                 _commit_output_item(synthetic)
             elif event_type in {"response.content_part.added", "response.content_part.done"}:
@@ -722,10 +717,6 @@ def _emit_codex_stream_event(
         **{key: value for key, value in fields.items() if value is not None},
     }
     stream_event_callback(payload)
-
-
-def _codex_stream_completed(raw: str) -> bool:
-    return _codex_stream_has_event(raw, {"response.completed"})
 
 
 def _codex_stream_terminal(raw: str) -> bool:

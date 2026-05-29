@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-027",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911643355_aaj1bs",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"H06 maps only to inactive supplier SUP-BETA and discontinued product LTH-90, and the exposure helper for LCD-12 returned no open orders and revenue at risk of 0.\",\"result\":\"no_alert\",\"run_id\":\"LSR-027\"}}",
+  "usage": {
+    "latency_ms": 19879,
+    "model_calls": 3,
+    "tokens_in": 12475,
+    "tokens_out": 759,
+    "tool_calls": 9
+  }
+}

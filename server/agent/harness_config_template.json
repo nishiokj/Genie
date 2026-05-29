@@ -1,0 +1,109 @@
+{
+  "agents": {
+    "standard": {
+      "llm": {
+        "provider": "codex",
+        "model": "gpt-5.4",
+        "max_tokens": 16000,
+        "temperature": 0.4,
+        "reasoning": {
+          "effort": "medium"
+        }
+      },
+      "budget": {
+        "max_iterations": 12,
+        "max_tool_calls": 80,
+        "max_duration_ms": 600000
+      },
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Glob",
+        "Grep"
+      ]
+    },
+    "explorer": {
+      "llm": {
+        "provider": "codex",
+        "model": "gpt-5.4",
+        "max_tokens": 16000,
+        "temperature": 0.4,
+        "reasoning": {
+          "effort": "medium"
+        }
+      },
+      "budget": {
+        "max_iterations": 12,
+        "max_tool_calls": 80,
+        "max_duration_ms": 600000
+      },
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Glob",
+        "Grep"
+      ]
+    },
+    "coding": {
+      "llm": {
+        "provider": "codex",
+        "model": "gpt-5.4",
+        "max_tokens": 16000,
+        "temperature": 0.4,
+        "reasoning": {
+          "effort": "medium"
+        }
+      },
+      "budget": {
+        "max_iterations": 12,
+        "max_tool_calls": 80,
+        "max_duration_ms": 600000
+      },
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Glob",
+        "Grep"
+      ]
+    },
+    "context_compactor": {
+      "llm": {
+        "provider": "codex",
+        "model": "gpt-5.4",
+        "max_tokens": 16000,
+        "temperature": 0.3
+      },
+      "budget": {
+        "max_iterations": 2,
+        "max_tool_calls": 0,
+        "max_duration_ms": 30000
+      }
+    }
+  },
+  "tools": {
+    "bash_timeout_ms": 30000,
+    "max_output_length": 20000,
+    "execution_backend": "substrate",
+    "executioner_workspace": "existing"
+  },
+  "graphd": {
+    "enabled": false,
+    "host": "127.0.0.1",
+    "port": 9444,
+    "db_path": ".graphd/graphd.db"
+  },
+  "context": {
+    "max_tokens": 200000
+  },
+  "skills": {
+    "enabled": false,
+    "directory": "config/skills"
+  },
+  "hooks": {
+    "enabled": false,
+    "directory": "config/hooks"
+  }
+}

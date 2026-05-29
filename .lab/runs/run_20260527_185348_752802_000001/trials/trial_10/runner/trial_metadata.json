@@ -1,0 +1,54 @@
+{
+  "chain": {
+    "chain_id": "evidence_first::LSR-033",
+    "step_index": 0
+  },
+  "ids": {
+    "repl_idx": 0,
+    "run_id": "run_20260527_185348_752802_000001",
+    "task_id": "LSR-033",
+    "task_index": 4,
+    "trial_id": "trial_10",
+    "variant_id": "evidence_first"
+  },
+  "policy_merge": {
+    "benchmark_type_policy": {
+      "required_evidence_classes": [],
+      "scoring_lifecycle": "predict_then_score",
+      "task_model": "independent"
+    },
+    "effective": {
+      "chain_failure_policy": "continue_with_flag",
+      "required_evidence_classes": [],
+      "scoring_lifecycle": "predict_then_score",
+      "state_policy": "isolate_per_trial",
+      "task_model": "independent"
+    },
+    "experiment_type_policy": {
+      "state_policy": "isolate_per_trial"
+    },
+    "global_defaults": {
+      "required_evidence_classes": [],
+      "scoring_lifecycle": "predict_then_score",
+      "state_policy": "isolate_per_trial",
+      "task_model": "independent"
+    },
+    "task_override": null
+  },
+  "runtime": {
+    "agent_runtime": {
+      "image": "latent-supply-risk-workspaces:local",
+      "workdir": "/workspace/task/LSR-033"
+    },
+    "integration_level": "cli_events",
+    "network_mode_effective": "none",
+    "network_mode_requested": "none",
+    "task_sandbox": {
+      "executor": "local_docker",
+      "image": "latent-supply-risk-workspaces:local",
+      "workdir": "/workspace/task/LSR-033"
+    }
+  },
+  "schema_version": "trial_metadata_v1",
+  "variant_digest": "sha256:5b16738a3ce6a229a137e0520c03a8141057b7bf71a487532f2369870be5b3a3"
+}

@@ -1,0 +1,3 @@
+{"hooks_schema_version":"hook_events_v1","ts":"2026-05-27T19:00:59.492Z","seq":0,"request_id":"run_1779908459441_kpvhyr","event_type":"agent_step_start"}
+{"hooks_schema_version":"hook_events_v1","ts":"2026-05-27T19:02:59.555Z","seq":1,"request_id":"run_1779908459441_kpvhyr","event_type":"error","error_type":"bridge_error","message":"LLM error (codex/gpt-5.4): Codex request timed out after 120000ms"}
+{"hooks_schema_version":"hook_events_v1","ts":"2026-05-27T19:02:59.557Z","seq":2,"request_id":"run_1779908459441_kpvhyr","event_type":"error","error_type":"run_error","message":"Bridge error: LLM error (codex/gpt-5.4): Codex request timed out after 120000ms"}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-001",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779913296050_3m0c0q",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"Only Beta Components matches company records, but it is inactive for a discontinued product with no open exposure.\",\"result\":\"no_alert\",\"run_id\":\"LSR-001\"}}",
+  "usage": {
+    "latency_ms": 51535,
+    "model_calls": 8,
+    "tokens_in": 37495,
+    "tokens_out": 1544,
+    "tool_calls": 14
+  }
+}

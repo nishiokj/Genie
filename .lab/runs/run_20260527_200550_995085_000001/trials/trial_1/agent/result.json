@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779912355018_xnjtox",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly matches a named supplier, material, component, product, region, or lane in the company records without an unstated bridge.\",\"result\":\"no_alert\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 48061,
+    "model_calls": 9,
+    "tokens_in": 50347,
+    "tokens_out": 1906,
+    "tool_calls": 16
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "files": {
+    "resolved_experiment.json": "sha256:b23ab6cd91629d3c08edbc6e919a08b50dcc8cfbc3988d6c708cfebf6fd4c621",
+    "runtime_assets/run_nova_latent_supply_risk.py": "sha256:f584bfc375ae32817fdb41c8d94f39346f9c39dd4488b1651b37cd7cdbf2833b",
+    "staging_manifest.json": "sha256:de7ab07d451b22b17f4e6855f0529aade2ed819c9c556adc2aeb3cf8cfc8f912",
+    "tasks/tasks.jsonl": "sha256:3af61a1e5fdcba22526b3f26e186412ff4224ee90594891bca0ccf2b9922627e"
+  },
+  "schema_version": "sealed_package_checksums_v2"
+}

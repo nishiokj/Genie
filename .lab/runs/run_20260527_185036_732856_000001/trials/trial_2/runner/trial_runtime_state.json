@@ -1,0 +1,101 @@
+{
+  "schema_version": "trial_runtime_state_v1",
+  "state": {
+    "agent_phase": {
+      "ended_at": "2026-05-27T18:51:13.604170+00:00",
+      "exit_code": 0,
+      "result_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T18:50:41.346734+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185036_732856_000001/trials/trial_2/agent/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185036_732856_000001/trials/trial_2/agent/stdout.log",
+      "timed_out": false
+    },
+    "candidate_artifact": {
+      "artifact_type": "structured_json",
+      "payload": {
+        "case_id": "LSR-052",
+        "model": {
+          "model": "gpt-5.4",
+          "provider": "codex"
+        },
+        "request_id": "run_1779907841550_s3br01",
+        "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Metro Tunnel Authority\"],\"affected_orders\":[\"SO-8207\"],\"constrained_inventory\":true,\"revenue_at_risk\":3360000},\"citations\":{\"headlines\":[\"events/headline-pack.md#H01\"],\"records\":[\"records/bom.yaml#EVB-330\",\"records/suppliers.yaml#SUP-SAFELINE\",\"records/products.yaml#EVB-330\",\"records/orders.yaml#SO-8207\",\"records/inventory.yaml#EVB-330\"]},\"confidence\":\"high\",\"enterprise_path\":[\"H01: Provincial inspectors in Hunan announce a new round of checks at several antimony smelters.\",\"BOM for EVB-330 includes component FJ-31 plenum-rated cable harness with input antimony_trioxide_synergist.\",\"Supplier SafeLine Interconnect supplies FJ-31 and low_smoke_jacket_compound, with tier-2 note that the fire-safety jacket package includes an oxide synergist sourced through Asian compound distributors.\",\"EVB-330 is active and has an open strategic order.\",\"Inventory for EVB-330 is limited relative to open demand, so any supply interruption could constrain fulfillment.\"],\"id\":\"ALERT-EVB330-ANTIMONY-2026-06-17\",\"latent_edge_hypothesis\":\"New inspections at Hunan antimony smelters could tighten availability of antimony-derived flame-retardant synergists used in low-smoke cable compounds, creating a supply risk for Aster Vale's plenum-rated cable harness input chain.\",\"real_world_prior\":\"Antimony trioxide is a common synergist in flame-retardant cable compounds, and smelter inspections can disrupt supply or extend lead times even when the company buys through downstream compounders and distributors.\",\"reasoning\":\"The external event is specifically relevant because H01 concerns antimony smelters, and EVB-330's plenum-fire-safety BOM explicitly depends on antimony_trioxide_synergist through the FJ-31 cable harness. Supplier records further connect that harness to an oxide synergist sourced through Asian compound distributors, making the headline a plausible upstream disruption signal rather than generic macro noise. EVB-330 has a current open strategic order and only 18 units of available inventory against that demand, so the dependency maps to measurable business exposure.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The headline reports inspections, not confirmed shutdowns or output cuts.\",\"The supplier note references Asian compound distributors but does not name the exact tier-2 or tier-3 source in Hunan.\",\"No direct evidence shows current purchase orders for antimony-bearing compound are delayed yet.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-052\"}}",
+        "usage": {
+          "latency_ms": 29696,
+          "model_calls": 4,
+          "tokens_in": 17119,
+          "tokens_out": 1412,
+          "tool_calls": 10
+        }
+      },
+      "source": "none",
+      "state": "invalid"
+    },
+    "cleanup": {
+      "containers": [
+        {
+          "container_id": "ad0641fd23576861ab9c2c51b89100144d3cffa82ef1d2d289614135f2f841ff",
+          "error": null,
+          "role": "grading",
+          "status": "removed"
+        },
+        {
+          "container_id": "6c118247e4d5887a051c4fce957a83e0ab5587ba2fb1924f998c5f3c691ba220",
+          "error": null,
+          "role": "task",
+          "status": "removed"
+        }
+      ]
+    },
+    "ephemeral_networks": [],
+    "ephemerals": [],
+    "fs": {
+      "attempt_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185036_732856_000001/trials/trial_2",
+      "in_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185036_732856_000001/.scratch/trial_2_85831_6/in",
+      "logs_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185036_732856_000001/trials/trial_2/logs",
+      "out_dir": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185036_732856_000001/.scratch/trial_2_85831_6/out",
+      "telemetry_mounts": []
+    },
+    "grading_phase": {
+      "ended_at": "2026-05-27T18:51:13.888921+00:00",
+      "exit_code": 0,
+      "output_state": "valid",
+      "signal": null,
+      "started_at": "2026-05-27T18:51:13.836386+00:00",
+      "stderr_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185036_732856_000001/trials/trial_2/grader/stderr.log",
+      "stdout_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/.lab/runs/run_20260527_185036_732856_000001/trials/trial_2/grader/stdout.log",
+      "timed_out": false
+    },
+    "grading_sandbox": {
+      "container_id": "ad0641fd23576861ab9c2c51b89100144d3cffa82ef1d2d289614135f2f841ff",
+      "strategy": "separate",
+      "workdir": "/grader"
+    },
+    "key": {
+      "attempt": 1,
+      "schedule_idx": 1
+    },
+    "mapping_phase": null,
+    "paused_from_phase": null,
+    "phase": "committed",
+    "slot": {
+      "repl_idx": 0,
+      "schedule_idx": 1,
+      "task_id": "LSR-052",
+      "variant_id": "evidence_first"
+    },
+    "task_sandbox": {
+      "container_id": "6c118247e4d5887a051c4fce957a83e0ab5587ba2fb1924f998c5f3c691ba220",
+      "image": "latent-supply-risk-workspaces:local",
+      "materialization": {
+        "kind": "task_image",
+        "platform": null,
+        "task_bundle_ref": null
+      },
+      "platform": null,
+      "workdir": "/workspace/task/LSR-052"
+    }
+  },
+  "updated_at": "2026-05-27T18:51:14.175891+00:00"
+}

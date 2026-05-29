@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Domain Author</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161a22;
+    --panel-2: #1d2230;
+    --line: #2a3142;
+    --text: #e6e9ef;
+    --muted: #8b93a7;
+    --accent: #6aa6ff;
+    --ok: #5fd28b;
+    --warn: #f0b969;
+    --err: #f06f6f;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "SF Pro Text", sans-serif;
+    background: var(--bg); color: var(--text);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 38px 1fr auto auto;
+    grid-template-areas: "header header" "chat draft" "controls controls" "run run";
+    height: 100vh;
+  }
+  header {
+    grid-area: header;
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 14px;
+    background: #0b0f17;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  header .title { color: var(--text); font-weight: 600; }
+  header .sep { color: var(--line); }
+  header .sid code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; color: var(--text); }
+  header .health {
+    margin-left: auto;
+    display: flex; gap: 8px;
+  }
+  header .dot {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 999px;
+    border: 1px solid var(--line);
+  }
+  header .dot::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--muted);
+  }
+  header .dot.ok::before { background: var(--ok); box-shadow: 0 0 4px var(--ok); }
+  header .dot.warn::before { background: var(--warn); }
+  header .dot.err::before { background: var(--err); }
+
+  .pane { padding: 16px; overflow: auto; }
+  .pane.chat { grid-area: chat; display: flex; flex-direction: column; border-right: 1px solid var(--line); }
+  .pane.draft { grid-area: draft; background: var(--panel); display: flex; flex-direction: column; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+  h2 .badge { font-size: 10px; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--line); text-transform: none; letter-spacing: 0; }
+  h2 .badge.repair { color: var(--warn); border-color: var(--warn); }
+  h2 .badge.error { color: var(--err); border-color: var(--err); }
+  h2 .badge.ok { color: var(--ok); border-color: var(--ok); }
+
+  #messages { flex: 1; overflow: auto; margin-bottom: 12px; min-height: 0; }
+  .msg {
+    padding: 10px 12px; border-radius: 8px; margin-bottom: 8px;
+    line-height: 1.45; white-space: pre-wrap; font-size: 14px;
+  }
+  .msg.user { background: var(--panel-2); }
+  .msg.assistant { background: #1a2030; border: 1px solid var(--line); }
+  .msg.system { background: transparent; color: var(--muted); font-size: 12px; padding: 4px 6px; }
+  .msg .role-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
+  .msg.thinking {
+    color: var(--muted); font-style: italic; padding: 8px 12px;
+    background: transparent; border: 1px dashed var(--line);
+  }
+  .dots::after {
+    content: "."; animation: dots 1.4s steps(4, end) infinite;
+  }
+  @keyframes dots { 0%,20% { content: "."; } 40% { content: ".."; } 60%,100% { content: "..."; } }
+
+  .composer { display: flex; gap: 8px; }
+  textarea, input { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font: inherit; }
+  textarea { flex: 1; resize: none; min-height: 64px; font-size: 14px; }
+  button {
+    background: var(--accent); color: #0b0f17; border: none;
+    border-radius: 6px; padding: 8px 14px; font-weight: 600; cursor: pointer;
+  }
+  button:disabled { background: #3a4357; color: var(--muted); cursor: not-allowed; }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+
+  .chip-row {
+    display: flex; flex-wrap: wrap; gap: 4px 6px;
+    margin-bottom: 8px;
+  }
+  .chip {
+    font-size: 10.5px;
+    padding: 2px 8px; border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    background: transparent;
+    text-transform: lowercase;
+  }
+  .chip.filled { color: var(--ok); border-color: var(--ok); }
+  .chip.thin { color: var(--warn); border-color: var(--warn); }
+  .chip.missing { color: var(--muted); border-color: var(--line); }
+
+  #draft {
+    margin: 0; flex: 1; overflow: auto; min-height: 0;
+    background: #0b0f17; border: 1px solid var(--line); border-radius: 6px;
+    padding: 10px 12px;
+    font: 12px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+    white-space: pre;
+    transition: outline-color 0.4s;
+    outline: 1px solid transparent;
+  }
+  #draft.flash { outline-color: var(--accent); }
+  .draft-msg { margin-top: 8px; font-size: 11px; color: var(--muted); }
+  .draft-msg.warn { color: var(--warn); }
+  .draft-msg.err { color: var(--err); }
+
+  .ready-banner {
+    display: none;
+    margin-top: 8px; padding: 8px 10px;
+    background: rgba(95,210,139,0.08);
+    border: 1px solid var(--ok);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--ok);
+  }
+  .ready-banner.active { display: block; }
+  .controls.finalized #generate {
+    box-shadow: 0 0 0 2px rgba(106,166,255,0.35);
+  }
+
+  .controls {
+    grid-area: controls; padding: 12px 16px;
+    background: var(--panel-2); border-top: 1px solid var(--line);
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  }
+  .knob { display: flex; flex-direction: column; gap: 2px; }
+  .knob label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .knob input { width: 140px; }
+  .status { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .status.ok { color: var(--ok); }
+  .status.warn { color: var(--warn); }
+  .status.err { color: var(--err); }
+
+  .run-pane {
+    grid-area: run; padding: 12px 16px;
+    background: var(--panel); border-top: 1px solid var(--line);
+    max-height: 38vh; overflow: auto;
+    display: none;
+  }
+  .run-pane.active { display: block; }
+  .run-meta { font-size: 11px; color: var(--muted); margin-bottom: 6px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .run-meta .pill { padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); }
+  .run-meta .pill.running { color: var(--accent); border-color: var(--accent); }
+  .run-meta .pill.complete { color: var(--ok); border-color: var(--ok); }
+  .run-meta .pill.failed { color: var(--err); border-color: var(--err); }
+  .run-log {
+    background: #0b0f17; border: 1px solid var(--line); border-radius: 6px;
+    padding: 8px 10px; max-height: 26vh; overflow: auto; white-space: pre;
+    font: 11px/1.45 ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .run-artifacts { font-size: 11px; color: var(--muted); margin-top: 6px; word-break: break-all; }
+  .run-artifacts code { background: var(--panel-2); padding: 1px 4px; border-radius: 4px; }
+
+  .toast {
+    position: fixed; right: 16px; bottom: 16px;
+    background: #2a1818; color: var(--err); border: 1px solid var(--err);
+    padding: 10px 14px; border-radius: 6px;
+    max-width: 480px; font-size: 13px; white-space: pre-wrap;
+    z-index: 100; display: none;
+  }
+  .toast.active { display: block; }
+</style>
+</head>
+<body>
+  <header>
+    <span class="title">Domain Author</span>
+    <span class="sep">|</span>
+    <span class="sid">session: <code id="sid-out">starting…</code></span>
+    <span class="sep">|</span>
+    <span>workspace: <code id="ws-out">—</code></span>
+    <span class="health">
+      <span class="dot" id="dot-app">app</span>
+      <span class="dot" id="dot-substrate">substrate</span>
+      <span class="dot" id="dot-nova">nova</span>
+    </span>
+  </header>
+
+  <div class="pane chat">
+    <h2>Interview</h2>
+    <div id="messages"></div>
+    <div class="composer">
+      <textarea id="input" placeholder="Describe the capability you want to benchmark…" autofocus></textarea>
+      <button id="send" title="Cmd/Ctrl + Enter to send">Send</button>
+    </div>
+  </div>
+
+  <div class="pane draft">
+    <h2>
+      Draft Spec (draft.yaml)
+      <span class="badge" id="draft-badge"></span>
+    </h2>
+    <div class="chip-row" id="chip-row"></div>
+    <pre id="draft">(empty — start the interview)</pre>
+    <div class="draft-msg" id="draft-msg"></div>
+    <div class="ready-banner" id="ready-banner">
+      ✓ Spec finalized. Set the knobs below, then press <b>Generate</b> to run the LangGraph pipeline.
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="knob"><label>target_n</label><input id="k-target-n" type="number" value="1" min="1" /></div>
+    <div class="knob"><label>seed</label><input id="k-seed" type="number" value="42" /></div>
+    <div class="knob"><label>run_id (optional)</label><input id="k-run-id" placeholder="auto" /></div>
+    <div class="knob"><label>model (optional)</label><input id="k-model" placeholder=".env default" /></div>
+    <button id="generate" disabled title="Available once the interview is finalized">Generate</button>
+    <button id="force-finalize" class="ghost" title="Force-write FINALIZED if Nova is dragging its feet">Finalize anyway</button>
+    <button id="cancel-run" class="ghost" style="display:none">Cancel run</button>
+    <span id="status" class="status">connecting…</span>
+  </div>
+
+  <div class="run-pane" id="run-pane">
+    <div class="run-meta">
+      <span class="pill" id="run-state">idle</span>
+      <span>run_id: <code id="run-id-out">—</code></span>
+      <span>elapsed: <span id="run-elapsed">0</span>s</span>
+    </div>
+    <pre class="run-log" id="run-log"></pre>
+    <div class="run-artifacts" id="run-artifacts"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let sessionId = null;
+let finalized = false;
+let pendingAssistant = false;
+let activeRunId = null;
+let runPoller = null;
+
+const history = [];
+
+function setStatus(text, cls) {
+  const el = $("status");
+  el.textContent = text || "";
+  el.className = "status" + (cls ? " " + cls : "");
+}
+function setBadge(text, cls) {
+  const el = $("draft-badge");
+  el.textContent = text || "";
+  el.className = "badge" + (cls ? " " + cls : "");
+  el.style.display = text ? "" : "none";
+}
+function setDraftMsg(text, cls) {
+  const el = $("draft-msg");
+  el.textContent = text || "";
+  el.className = "draft-msg" + (cls ? " " + cls : "");
+}
+function setRunState(state) {
+  const el = $("run-state");
+  el.textContent = state;
+  el.className = "pill " + state;
+}
+function setDot(id, state) {
+  const el = $(id);
+  el.className = "dot " + state;
+}
+function toast(text) {
+  const el = $("toast");
+  el.textContent = text;
+  el.classList.add("active");
+  setTimeout(() => el.classList.remove("active"), 6000);
+}
+
+function renderMessages() {
+  const box = $("messages");
+  box.innerHTML = "";
+  for (const m of history) {
+    const d = document.createElement("div");
+    d.className = "msg " + m.role + (m.thinking ? " thinking" : "");
+    if (m.thinking) {
+      d.innerHTML = '<span>Nova thinking</span><span class="dots"></span>';
+    } else {
+      const tag = document.createElement("div");
+      tag.className = "role-tag";
+      tag.textContent = m.role === "user" ? "You" : (m.role === "assistant" ? "Nova" : "System");
+      d.appendChild(tag);
+      const body = document.createElement("div");
+      body.textContent = m.content;
+      d.appendChild(body);
+    }
+    box.appendChild(d);
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+function flashDraft() {
+  const el = $("draft");
+  el.classList.remove("flash");
+  void el.offsetWidth;
+  el.classList.add("flash");
+  setTimeout(() => el.classList.remove("flash"), 600);
+}
+
+function renderChips(items) {
+  const row = $("chip-row");
+  row.innerHTML = "";
+  if (!items || !items.length) return;
+  for (const it of items) {
+    const c = document.createElement("span");
+    c.className = "chip " + it.state;
+    c.textContent = it.label + (it.state === "filled" ? " ✓" : it.state === "thin" ? " ~" : " ·");
+    c.title = it.field + " — " + it.state;
+    row.appendChild(c);
+  }
+}
+
+function renderDraft(state) {
+  const next = state.draft_yaml || "(Nova has not written draft.yaml yet)";
+  const prev = $("draft").textContent;
+  $("draft").textContent = next;
+  if (next !== prev && state.draft_yaml) flashDraft();
+
+  // Field-fill chip row (load-bearing fields only)
+  renderChips(state.field_status);
+
+  // Badge from normalizer feedback
+  if (state.draft_validation_error) {
+    setBadge("validation error", "error");
+    setDraftMsg(state.draft_validation_error.slice(0, 600), "err");
+  } else if (state.draft_repairs && state.draft_repairs.length) {
+    setBadge("normalized", "repair");
+    setDraftMsg("Repaired: " + state.draft_repairs.join("; "), "warn");
+  } else if (state.draft_yaml) {
+    setBadge("valid", "ok");
+    setDraftMsg("");
+  } else {
+    setBadge("", "");
+    setDraftMsg("");
+  }
+
+  finalized = !!state.finalized;
+  $("generate").disabled = !finalized;
+  $("ready-banner").classList.toggle("active", finalized);
+  document.querySelector(".controls").classList.toggle("finalized", finalized);
+  if (finalized) setStatus("Spec finalized. Set knobs and press Generate.", "ok");
+}
+
+async function forceFinalize() {
+  if (!sessionId) return;
+  if (!confirm("Force-finalize this draft? Nova may not have asked all the questions it wanted.")) return;
+  try {
+    const r = await fetch(`/api/sessions/${sessionId}/finalize`, { method: "POST" });
+    const txt = await r.text();
+    if (!r.ok) throw new Error(txt);
+    // Re-fetch the session to pick up new state + chips
+    const s = await fetch(`/api/sessions/${sessionId}`).then(x => x.json());
+    renderDraft(s);
+    history.push({ role: "system", content: "Finalized manually. domain_id: " + (JSON.parse(txt).domain_id || "?") });
+    renderMessages();
+  } catch (e) {
+    toast("Force-finalize failed: " + e.message);
+  }
+}
+
+async function start() {
+  setStatus("connecting…");
+  try {
+    const r = await fetch("/api/sessions", { method: "POST" });
+    if (!r.ok) throw new Error(await r.text());
+    const j = await r.json();
+    sessionId = j.session_id;
+    $("sid-out").textContent = sessionId;
+    $("ws-out").textContent = j.workspace || "—";
+    setStatus("Session ready. Describe the capability you want to benchmark.");
+    history.push({
+      role: "system",
+      content: "Tell Nova (1) the capability you want to measure, (2) the setting the agent operates in. Nova will follow up; the draft.yaml on the right updates as you go.",
+    });
+    renderMessages();
+    $("input").focus();
+    startHealth();
+  } catch (e) {
+    toast("Failed to start session: " + e.message);
+    setStatus("Could not reach backend", "err");
+  }
+}
+
+async function pollHealth() {
+  try {
+    const r = await fetch("/api/system/healthz");
+    if (!r.ok) throw new Error(String(r.status));
+    const s = await r.json();
+    setDot("dot-app", s.app || "err");
+    setDot("dot-substrate", s.substrate || "err");
+    setDot("dot-nova", s.nova || "err");
+  } catch {
+    setDot("dot-app", "err");
+    setDot("dot-substrate", "err");
+    setDot("dot-nova", "err");
+  }
+}
+function startHealth() {
+  pollHealth();
+  setInterval(pollHealth, 5000);
+}
+
+function addThinking() {
+  history.push({ role: "assistant", thinking: true });
+  renderMessages();
+}
+function removeThinking() {
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].thinking) {
+      history.splice(i, 1);
+      break;
+    }
+  }
+}
+
+async function send() {
+  if (!sessionId) return;
+  const input = $("input");
+  const text = input.value.trim();
+  if (!text || pendingAssistant) return;
+  history.push({ role: "user", content: text });
+  renderMessages();
+  input.value = "";
+  $("send").disabled = true;
+  pendingAssistant = true;
+  setStatus("Nova is thinking…");
+  addThinking();
+  try {
+    const r = await fetch(`/api/sessions/${sessionId}/message`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text }),
+    });
+    const body = await r.text();
+    if (!r.ok) throw new Error(body);
+    const j = JSON.parse(body);
+    removeThinking();
+    history.push({ role: "assistant", content: j.assistant_message || "(no message)" });
+    renderMessages();
+    renderDraft(j);
+    if (!finalized) setStatus("Your turn.");
+  } catch (e) {
+    removeThinking();
+    renderMessages();
+    toast("Turn failed: " + e.message);
+    setStatus("Error: " + e.message.slice(0, 100), "err");
+  } finally {
+    pendingAssistant = false;
+    $("send").disabled = false;
+    $("input").focus();
+  }
+}
+
+async function pollRun() {
+  if (!activeRunId) return;
+  try {
+    const r = await fetch(`/api/runs/${activeRunId}/status?tail_lines=400`);
+    if (!r.ok) throw new Error(await r.text());
+    const s = await r.json();
+    setRunState(s.state);
+    $("run-elapsed").textContent = s.elapsed_s;
+    $("run-log").textContent = s.log_tail || "(no output yet — pipeline initializing)";
+    $("run-log").scrollTop = $("run-log").scrollHeight;
+    const artHtml = Object.entries(s.artifacts || {}).length
+      ? "Artifacts on disk: " + Object.entries(s.artifacts).map(([k, v]) => `<code>${k}: ${v}</code>`).join(" · ")
+      : "No artifacts yet.";
+    $("run-artifacts").innerHTML = artHtml;
+    if (s.state === "complete" || s.state === "failed") {
+      clearInterval(runPoller);
+      runPoller = null;
+      $("cancel-run").style.display = "none";
+      setStatus(`Pipeline ${s.state}. exit=${s.exit_code}`, s.state === "complete" ? "ok" : "err");
+    }
+  } catch (e) {
+    console.warn("poll error:", e);
+  }
+}
+
+async function generate() {
+  if (!finalized) return;
+  setStatus("Writing YAML + spawning pipeline…");
+  const body = {
+    target_n: parseInt($("k-target-n").value, 10) || 1,
+    seed: parseInt($("k-seed").value, 10) || 42,
+  };
+  const rid = $("k-run-id").value.trim();
+  if (rid) body.run_id = rid;
+  const model = $("k-model").value.trim();
+  if (model) body.model = model;
+  try {
+    const r = await fetch(`/api/sessions/${sessionId}/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const txt = await r.text();
+    if (!r.ok) throw new Error(txt);
+    const j = JSON.parse(txt);
+    activeRunId = j.run_id;
+    history.push({
+      role: "system",
+      content: `Wrote ${j.yaml_path}\nLaunched run ${j.run_id}\nlog: ${j.log_path}`,
+    });
+    renderMessages();
+    $("run-pane").classList.add("active");
+    $("run-id-out").textContent = j.run_id;
+    $("cancel-run").style.display = "inline-block";
+    setStatus(`Pipeline running… run_id=${j.run_id}`, "ok");
+    setRunState("running");
+    pollRun();
+    runPoller = setInterval(pollRun, 2000);
+  } catch (e) {
+    toast("Generate failed: " + e.message);
+    setStatus("Generate failed", "err");
+  }
+}
+
+async function cancelRun() {
+  if (!activeRunId) return;
+  await fetch(`/api/runs/${activeRunId}/cancel`, { method: "POST" });
+  setStatus("Cancel requested.", "warn");
+}
+
+$("send").addEventListener("click", send);
+$("input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(); }
+});
+$("generate").addEventListener("click", generate);
+$("force-finalize").addEventListener("click", forceFinalize);
+$("cancel-run").addEventListener("click", cancelRun);
+
+start();
+</script>
+</body>
+</html>

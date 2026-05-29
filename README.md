@@ -6,8 +6,7 @@ A staged LangGraph pipeline that generates benchmark cases, validates them, and 
 
 - Python 3.10+
 - A model provider for live runs: OpenAI, Gemini, xAI/Grok, or Codex subscription auth
-- The sibling `../substrate` repo, because `requirements.txt` installs `../substrate/packages/executioner-python`
-- The `../substrate/target/debug/executioner` binary when a domain uses execution-backed validation
+- `substrate-sdk` from PyPI for execution-backed validation
 
 ## Install
 
@@ -72,9 +71,31 @@ python3 main.py \
   --run-id code-smoke
 ```
 
+Steer the normal design stage toward a specific case idea:
+
+```bash
+python3 main.py \
+  --domain domains/benchmark_haiku.yaml \
+  --instruction "Create a benchmark case about corporate layoffs as late-autumn emotional indirection." \
+  --target-n 1 \
+  --run-id haiku-guided
+```
+
+Skip design/audit and generate one case directly from an instruction within the
+domain rules:
+
+```bash
+python3 main.py \
+  --domain domains/benchmark_haiku.yaml \
+  --from-instruction "Create a haiku benchmark about corporate layoffs as late autumn without direct job-loss language." \
+  --run-id haiku-one-shot
+```
+
 Useful flags:
 
 - `--provider` and `--model` override `.env` for one run.
+- `--instruction` guides the normal design stage without skipping pipeline stages.
+- `--from-instruction` starts at generation with an auto-built design brief for a single case.
 - `--no-progress` hides the terminal progress graph.
 - `--overwrite` replaces artifacts for an existing run id.
 - `--auth-file` points Codex subscription auth at a specific auth file.
@@ -96,6 +117,7 @@ Common review commands:
 
 ```bash
 python3 analyze.py --run-id smoke-run
+python3 perf_report.py smoke-run
 python3 run_report.py smoke-run
 python3 sample_outputs.py smoke-run --limit 1
 ```
@@ -121,6 +143,7 @@ For deeper details, see:
 
 - [Pipeline state machine](docs/PIPELINE_STATE_MACHINE.md)
 - [Pipeline artifact reference](docs/PIPELINE_REFERENCE.md)
+- [Authoring a new domain](docs/DOMAIN_AUTHORING.md)
 
 ## Project Map
 

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-014",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779908075010_ezny0e",
+  "response": "{\"scan\":{\"alerts\":[{\"business_exposure\":{\"affected_customers\":[\"Mercy North Hospitals\"],\"affected_orders\":[\"SO-7844\"],\"constrained_inventory\":true,\"revenue_at_risk\":3692000},\"citations\":{\"headlines\":[\"H01\"],\"records\":[\"records/suppliers.yaml: Lantern Assembly Works tier2_notes and supplies\",\"records/bom.yaml: MTG-220 uses ASM-44 with rosin_ester_flux input\",\"records/orders.yaml: SO-7844 open strategic MTG-220 order\",\"records/inventory.yaml: MTG-220 quantity_available 34\"]},\"confidence\":\"medium\",\"enterprise_path\":[\"H01 South China forestry bureaus extend resin tapping restrictions\",\"Lantern Assembly Works tier2_notes: flux solids sourced through South China resin brokers\",\"Lantern Assembly Works supplies ASM-44 and rosin_ester_flux\",\"ASM-44 is used in MTG-220\",\"Open order SO-7844 for MTG-220 exceeds available inventory\"],\"id\":\"LSR-014-A1\",\"latent_edge_hypothesis\":\"A South China resin-related restriction could disrupt Lantern Assembly Works' tier-2 flux solids sourcing path tied to MTG-220 assemblies.\",\"real_world_prior\":\"Named regional restrictions on materials can propagate into tier-2 specialty input availability when the same region and material domain are explicitly present in supplier records.\",\"reasoning\":\"The headline explicitly names South China and resin-related restrictions. Company records explicitly state that Lantern Assembly Works' flux solids are sourced through South China resin brokers, and Lantern supplies ASM-44/rosin_ester_flux used in MTG-220. MTG-220 has an open strategic order for 260 units while only 34 units are available in inventory, so any disruption along this named regional sourcing path creates review-worthy exposure.\",\"source_headlines\":[\"H01\"],\"uncertainty\":[\"The records identify South China resin brokers at tier 2, but do not quantify current in-transit or on-order exposure.\",\"The headline does not name Lantern Assembly Works directly.\",\"The exact duration and severity of any supply interruption are not stated.\"]}],\"no_alert_rationale\":null,\"result\":\"alerts_found\",\"run_id\":\"LSR-014\"}}",
+  "usage": {
+    "latency_ms": 26642,
+    "model_calls": 2,
+    "tokens_in": 6049,
+    "tokens_out": 1349,
+    "tool_calls": 8
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779910800668_etqcn9",
+  "response": "{\"scan\":{\"result\":\"no_alert\",\"alerts\":[],\"no_alert_rationale\":\"None of the headlines explicitly names a supplier, material, component, product, region, or logistics lane that also appears in the company records. H01 mentions antimony smelters in Hunan, but the records only reference \\\"antimony_trioxide_synergist\\\" and an unspecified oxide synergist via Asian distributors, which would require an unstated chemistry/supply-chain bridge. H04 mentions tunnel operators and ventilation inspections, but does not explicitly name Aster Vale, EVB-330, Metro Tunnel Authority, or any matching logistics lane/region dependency. The remaining headlines are generic and do not directly match recorded company dependencies.\"}",
+  "usage": {
+    "latency_ms": 15943,
+    "model_calls": 2,
+    "tokens_in": 6261,
+    "tokens_out": 686,
+    "tool_calls": 7
+  }
+}

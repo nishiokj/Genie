@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-041",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779911234585_x7470e",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No headline explicitly names a supplier, material, component, product, region, or logistics lane that cleanly and directly matches a company record with a negative business impact without requiring latent-world bridging. Apparent overlaps are either non-disruptive (H02 normal replenishment; H05 operating normally), too generic to tie directly to Aster Vale records (H06 Oregon road work near an unspecified industrial park), or not an explicit company dependency match (H03 Asia-Europe loop; H08 discontinued industrial panels/display-module reseller).\",\"result\":\"no_alert\",\"run_id\":\"LSR-041\"}}",
+  "usage": {
+    "latency_ms": 17552,
+    "model_calls": 2,
+    "tokens_in": 6667,
+    "tokens_out": 854,
+    "tool_calls": 8
+  }
+}

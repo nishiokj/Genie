@@ -1,0 +1,16 @@
+{
+  "case_id": "LSR-052",
+  "model": {
+    "model": "gpt-5.4",
+    "provider": "codex"
+  },
+  "request_id": "run_1779909432271_64mqvi",
+  "response": "{\"scan\":{\"alerts\":[],\"no_alert_rationale\":\"No external headline explicitly names a supplier, material, component, product, region, or logistics lane that also appears in the company records without requiring latent world-knowledge bridges. Potentially related items such as antimony smelters vs. antimony_trioxide_synergist, low-smoke building materials vs. low_smoke_jacket_compound, tunnel ventilation inspections vs. Emergency Ventilation Bridge, rail terminal news vs. rail signal products, and medical imaging airfreight vs. Medical Telemetry Gateway are not explicit record-to-headline matches under the RULES_ONLY standard.\",\"result\":\"no_alert\",\"run_id\":\"LSR-052\"}}",
+  "usage": {
+    "latency_ms": 18915,
+    "model_calls": 2,
+    "tokens_in": 6478,
+    "tokens_out": 932,
+    "tool_calls": 8
+  }
+}

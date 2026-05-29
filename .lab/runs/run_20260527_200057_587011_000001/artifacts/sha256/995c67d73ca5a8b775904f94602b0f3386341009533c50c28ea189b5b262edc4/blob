@@ -1,0 +1,192 @@
+{
+  "artifact_type": "structured_json",
+  "case": {
+    "id": "LSR-052",
+    "inputs": {
+      "host_workspace_path": "/Users/jevinnishioka/Desktop/synth-data-pipeline-agents/data/latent_supply_risk/workspaces/LSR-052",
+      "output_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "scan": {
+            "additionalProperties": false,
+            "properties": {
+              "alerts": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "business_exposure": {
+                      "additionalProperties": true,
+                      "properties": {
+                        "affected_customers": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "affected_orders": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "constrained_inventory": {
+                          "type": "boolean"
+                        },
+                        "revenue_at_risk": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "revenue_at_risk",
+                        "affected_orders",
+                        "affected_customers",
+                        "constrained_inventory"
+                      ],
+                      "type": "object"
+                    },
+                    "citations": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "headlines": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "records": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "headlines",
+                        "records"
+                      ],
+                      "type": "object"
+                    },
+                    "confidence": {
+                      "type": "string"
+                    },
+                    "enterprise_path": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "latent_edge_hypothesis": {
+                      "type": "string"
+                    },
+                    "real_world_prior": {
+                      "type": "string"
+                    },
+                    "reasoning": {
+                      "type": "string"
+                    },
+                    "source_headlines": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "uncertainty": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "confidence",
+                    "source_headlines",
+                    "latent_edge_hypothesis",
+                    "real_world_prior",
+                    "enterprise_path",
+                    "business_exposure",
+                    "reasoning",
+                    "citations",
+                    "uncertainty"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "no_alert_rationale": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "result": {
+                "enum": [
+                  "alerts_found",
+                  "no_alert"
+                ],
+                "type": "string"
+              },
+              "run_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "run_id",
+              "result",
+              "alerts",
+              "no_alert_rationale"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "scan"
+        ],
+        "type": "object"
+      },
+      "prompt": "You are operating the company's daily supply-chain risk scan. Review today's external headline pack and the company operating records. Use real-world knowledge to notice external events that may create latent risk through inputs, materials, logistics, regulations, regions, processes, or supplier dependencies. Raise a risk alert only when you can explain a plausible path from an external event to company-specific business exposure. If no credible path exists, submit a no-alert scan. Separate observed facts from hypotheses and do not remediate. Your final answer must be a JSON object matching output/output_schema.json.",
+      "run_id": "LSR-052",
+      "workspace_files": [
+        "README.md",
+        "events/headline-pack.md",
+        "records/company-profile.md",
+        "records/products.yaml",
+        "records/bom.yaml",
+        "records/suppliers.yaml",
+        "records/orders.yaml",
+        "records/inventory.yaml",
+        "tools/risk_tools.py",
+        "output/output_schema.json"
+      ],
+      "workspace_path": "/workspace/task/LSR-052"
+    },
+    "metadata": {
+      "difficulty": 5,
+      "domain": "latent_supply_risk",
+      "scenario": "antimony_flame_retardant_positive",
+      "zero_alert_run": false
+    }
+  },
+  "design": {
+    "integration_level": "cli_events",
+    "sanitization_profile": "perf_benchmark"
+  },
+  "ids": {
+    "case_id": "LSR-052",
+    "repl_idx": 0,
+    "run_id": "run_20260527_200057_587011_000001",
+    "trial_id": "trial_2",
+    "variant_id": "evidence_first"
+  },
+  "runtime": {
+    "allowed_hosts": [],
+    "case_image": "latent-supply-risk-workspaces:local",
+    "network_mode": "none",
+    "time_limit_ms": 900000,
+    "workdir": "/workspace/task/LSR-052"
+  },
+  "schema_version": "trial_input_v1"
+}

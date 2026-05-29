@@ -475,10 +475,6 @@ def _model_provider(config: ModelConfig) -> str:
     return config.provider.lower().replace("-", "_")
 
 
-def _uses_openai_chat_compat(config: ModelConfig) -> bool:
-    return _model_provider(config) in {"openai", *GEMINI_PROVIDER_ALIASES}
-
-
 def _langchain_chat_provider(config: ModelConfig) -> str:
     if _model_provider(config) in GEMINI_PROVIDER_ALIASES:
         return "openai"
